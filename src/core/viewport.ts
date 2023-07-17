@@ -2,9 +2,11 @@ import {
   ACESFilmicToneMapping,
   Clock,
   EventDispatcher,
+  Material,
   PCFSoftShadowMap,
   PerspectiveCamera,
   Scene,
+  Shader,
   Vector3,
   WebGLRenderer,
 } from 'three';
@@ -23,9 +25,9 @@ class Viewport extends EventDispatcher {
   private animate?: (buttons: { primary: boolean; secondary: boolean; tertiary: boolean; }, delta: number, time: number) => void;
   private readonly clock: Clock;
   private readonly composer: EffectComposer;
+  private readonly csm: CSM;
   public readonly camera: PerspectiveCamera;
   public readonly controls: Controls;
-  public readonly csm: CSM;
   public readonly dom: HTMLElement;
   public readonly renderer: WebGLRenderer;
   public readonly scene: Scene;
@@ -89,6 +91,17 @@ class Viewport extends EventDispatcher {
   setAnimationLoop(animate: (buttons: { primary: boolean; secondary: boolean; tertiary: boolean; }, delta: number, time: number) => void) {
     this.animate = animate;
     this.clock.start();
+  }
+
+  setupMaterialCSM(material: Material) {
+    const { csm } = this;
+    const obc = material.onBeforeCompile.bind(material);
+    csm.setupMaterial(material);
+    const csmobc = material.onBeforeCompile.bind(material);
+    material.onBeforeCompile = (shader: Shader, renderer: WebGLRenderer) => {
+      csmobc(shader, renderer);
+      obc(shader, renderer);
+    };
   }
 
   private render() {

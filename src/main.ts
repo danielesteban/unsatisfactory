@@ -2,13 +2,10 @@ import './main.css';
 import {
   Event,
   Intersection,
-  Material,
   Object3D,
   Raycaster,
-  Shader,
   Vector2,
   Vector3,
-  WebGLRenderer,
 } from 'three';
 import Viewport from './core/viewport';
 import { Brush, brush, setBrush, snap } from './core/brush';
@@ -21,16 +18,14 @@ import Walls from './objects/walls';
 
 const viewport = new Viewport();
 
-const setupMaterial = (material: Material) => {
-  const obc = material.onBeforeCompile.bind(material);
-  viewport.csm.setupMaterial(material);
-  const csmobc = material.onBeforeCompile.bind(material);
-  material.onBeforeCompile = (shader: Shader, renderer: WebGLRenderer) => {
-    csmobc(shader, renderer);
-    obc(shader, renderer);
-  };
-};
-[Belts.setupMaterial(), Containers.setupMaterial(), Foundations.setupMaterial(), Pipes.setupMaterial(), Terrain.setupMaterial(), Walls.setupMaterial()].forEach(setupMaterial);
+[
+  Belts.setupMaterial(),
+  Containers.setupMaterial(),
+  Foundations.setupMaterial(),
+  Pipes.setupMaterial(),
+  Terrain.setupMaterial(),
+  Walls.setupMaterial(),
+].forEach(viewport.setupMaterialCSM.bind(viewport));
 
 const terrain = new Terrain();
 viewport.controls.setHeightmap(terrain);
