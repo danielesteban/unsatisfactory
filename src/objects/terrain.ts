@@ -25,6 +25,7 @@ export class TerrainChunk extends Mesh {
   static setupGeometry() {
     TerrainChunk.geometry = new PlaneGeometry(TerrainChunk.size, TerrainChunk.size, TerrainChunk.size, TerrainChunk.size);
     TerrainChunk.geometry.rotateX(Math.PI * -0.5);
+    TerrainChunk.geometry.computeBoundingSphere();
   }
 
   public readonly chunk: Vector3;
