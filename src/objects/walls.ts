@@ -8,11 +8,8 @@ import {
 } from 'three';
 import Instances from '../core/instances';
 import { loadTexture } from '../textures';
-// @ts-ignore
 import DiffuseMap from '../textures/hexagonal_concrete_paving_diff_1k.jpg';
-// @ts-ignore
 import NormalMap from '../textures/hexagonal_concrete_paving_nor_gl_1k.jpg';
-// @ts-ignore
 import RoughnessMap from '../textures/hexagonal_concrete_paving_rough_1k.jpg';
 
 export type Wall = {

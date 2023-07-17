@@ -9,11 +9,8 @@ import {
 import { SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 import Instances from '../core/instances';
 import { loadTexture } from '../textures';
-// @ts-ignore
 import DiffuseMap from '../textures/rust_coarse_01_diff_1k.jpg';
-// @ts-ignore
 import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.jpg';
-// @ts-ignore
 import RoughnessMap from '../textures/rust_coarse_01_rough_1k.jpg';
 
 export type Container = {

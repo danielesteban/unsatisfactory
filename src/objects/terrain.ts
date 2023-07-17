@@ -11,11 +11,8 @@ import {
 } from 'three';
 import { ImprovedNoise } from 'three/examples/jsm/math/ImprovedNoise.js';
 import { loadTexture } from '../textures';
-// @ts-ignore
 import DiffuseMap from '../textures/coast_sand_rocks_02_diff_1k.jpg';
-// @ts-ignore
 import NormalMap from '../textures/coast_sand_rocks_02_nor_gl_1k.jpg';
-// @ts-ignore
 import RoughnessMap from '../textures/coast_sand_rocks_02_rough_1k.jpg';
 
 export class TerrainChunk extends Mesh {

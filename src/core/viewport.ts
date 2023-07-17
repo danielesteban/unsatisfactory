@@ -17,7 +17,6 @@ import { N8AOPass } from 'n8ao';
 import { SMAAPass } from 'three/examples/jsm/postprocessing/SMAAPass.js';
 import Controls from './controls';
 import { loadEnvironment } from '../textures';
-// @ts-ignore
 import Environment from '../textures/netball_court_1k.exr';
 
 class Viewport extends EventDispatcher {

@@ -12,11 +12,8 @@ import {
 } from 'three';
 import { Container, Connector } from './containers';
 import { loadTexture } from '../textures';
-// @ts-ignore
 import DiffuseMap from '../textures/green_metal_rust_diff_1k.jpg';
-// @ts-ignore
 import NormalMap from '../textures/green_metal_rust_nor_gl_1k.jpg';
-// @ts-ignore
 import RoughnessMap from '../textures/green_metal_rust_rough_1k.jpg';
 
 export class Belt extends Mesh {
