@@ -24,8 +24,8 @@ export class Belt extends Mesh {
   public readonly from: Container;
   public readonly to: Container;
   constructor(material: Material, from: Connector, to: Connector) {
-    const fromConnector = from.container.position.clone().addScaledVector(from.direction, 1).add(Belt.offset);
-    const toConnector = to.container.position.clone().addScaledVector(to.direction, 1).add(Belt.offset);
+    const fromConnector = from.container.position.clone().addScaledVector(from.direction, 0.75).add(Belt.offset);
+    const toConnector = to.container.position.clone().addScaledVector(to.direction, 0.75).add(Belt.offset);
     const offset = fromConnector.distanceTo(toConnector) * 0.3;
     const path = new CubicBezierCurve3(
       fromConnector,

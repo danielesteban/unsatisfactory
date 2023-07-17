@@ -11,6 +11,9 @@ dependencies:
   three:
     specifier: ^0.154.0
     version: 0.154.0
+  three-bvh-csg:
+    specifier: ^0.0.8
+    version: 0.0.8(three-mesh-bvh@0.6.1)(three@0.154.0)
 
 devDependencies:
   '@rollup/plugin-html':
@@ -1348,6 +1351,24 @@ packages:
       commander: 2.20.3
       source-map-support: 0.5.21
     dev: true
+
+  /three-bvh-csg@0.0.8(three-mesh-bvh@0.6.1)(three@0.154.0):
+    resolution: {integrity: sha512-c09fHCTSOn82n1Q2Q9rdWL7lVvs6yaMV+APFhSRXTjtNxAjhtyng+pLoLobIPfcTOjGUQyfkqksW5Vd+sa8yRw==}
+    peerDependencies:
+      three: '>=0.144.0'
+      three-mesh-bvh: ^0.6.0
+    dependencies:
+      three: 0.154.0
+      three-mesh-bvh: 0.6.1(three@0.154.0)
+    dev: false
+
+  /three-mesh-bvh@0.6.1(three@0.154.0):
+    resolution: {integrity: sha512-8fE6UwD5Ep8bAHd3Mp/Vw+7J3T10eGL95Lj98WQ9o3QEtAmlvmMhV+xxhrwYetfawzCPlgPYAB8Dl9+k1JveCQ==}
+    peerDependencies:
+      three: '>= 0.151.0'
+    dependencies:
+      three: 0.154.0
+    dev: false
 
   /three@0.154.0:
     resolution: {integrity: sha512-Uzz8C/5GesJzv8i+Y2prEMYUwodwZySPcNhuJUdsVMH2Yn4Nm8qlbQe6qRN5fOhg55XB0WiLfTPBxVHxpE60ug==}

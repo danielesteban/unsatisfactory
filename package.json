@@ -7,7 +7,8 @@
   "type": "module",
   "dependencies": {
     "n8ao": "^1.6.7",
-    "three": "^0.154.0"
+    "three": "^0.154.0",
+    "three-bvh-csg": "^0.0.8"
   },
   "devDependencies": {
     "@rollup/plugin-html": "^1.0.2",

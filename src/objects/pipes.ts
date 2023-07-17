@@ -21,8 +21,8 @@ export class Pipe extends Mesh {
   public readonly from: Container;
   public readonly to: Container;
   constructor(material: Material, from: Connector, to: Connector) {
-    const fromConnector = from.container.position.clone().addScaledVector(from.direction, 1);
-    const toConnector = to.container.position.clone().addScaledVector(to.direction, 1);
+    const fromConnector = from.container.position.clone().addScaledVector(from.direction, 0.75);
+    const toConnector = to.container.position.clone().addScaledVector(to.direction, 0.75);
     const offset = fromConnector.distanceTo(toConnector) * 0.3;
     const path = new CubicBezierCurve3(
       fromConnector,
