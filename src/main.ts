@@ -11,7 +11,7 @@ import {
   WebGLRenderer,
 } from 'three';
 import Viewport from './core/viewport';
-import { Brush, brush, snap } from './core/brush';
+import { Brush, brush, setBrush, snap } from './core/brush';
 import Belts, { Belt } from './objects/belts';
 import Containers, { Container, Connector } from './objects/containers';
 import Foundations from './objects/foundations';
@@ -142,9 +142,32 @@ const remove = (intersection: Intersection<Object3D<Event>>) => {
   }
 };
 
+const pick = (intersection: Intersection<Object3D<Event>>) => {
+  if (intersection.object instanceof Belt) {
+    setBrush(Brush.belt);
+    return;
+  }
+  if (intersection.object instanceof Containers) {
+    setBrush(Brush.container);
+    return;
+  }
+  if (intersection.object instanceof Foundations) {
+    setBrush(Brush.foundation);
+    return;
+  }
+  if (intersection.object instanceof Pipe) {
+    setBrush(Brush.pipe);
+    return;
+  }
+  if (intersection.object instanceof Walls) {
+    setBrush(Brush.wall);
+    return;
+  }
+};
+
 const center = new Vector2();
 const raycaster = new Raycaster();
-const handleInput = ({ primary, secondary }: { primary: boolean, secondary: boolean }) => {
+const handleInput = ({ primary, secondary, tertiary }: { primary: boolean; secondary: boolean; tertiary: boolean; }) => {
   const hasFrom = from.container !== undefined;
   raycaster.setFromCamera(center, viewport.camera);
   const intersection = raycaster.intersectObjects(viewport.scene.children)[0];
@@ -154,6 +177,9 @@ const handleInput = ({ primary, secondary }: { primary: boolean, secondary: bool
   if (secondary && intersection && intersection.object) {
     remove(intersection);
   }
+  if (tertiary && intersection && intersection.object) {
+    pick(intersection);
+  }
   if (hasFrom) {
     from.container = undefined;
   }
@@ -161,7 +187,7 @@ const handleInput = ({ primary, secondary }: { primary: boolean, secondary: bool
 
 viewport.setAnimationLoop((buttons) => {
   terrain.update(viewport.camera.position, 8);
-  if (buttons.primary || buttons.secondary) {
+  if (buttons.primary || buttons.secondary || buttons.tertiary) {
     handleInput(buttons);
   }
 });

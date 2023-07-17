@@ -19,6 +19,12 @@ export enum Brush {
 
 export let brush: Brush = Brush.foundation;
 
+export const setBrush = (type: Brush) => {
+  items[brush].classList.remove('active');
+  brush = type;
+  items[brush].classList.add('active');
+};
+
 const dom = document.getElementById('brush')!;
 const items = [
   'Foundation',
@@ -43,28 +49,23 @@ document.addEventListener('keydown', (e) => {
   if (e.repeat) {
     return;
   }
-  let current = brush;
   switch (e.code) {
     case 'Digit1':
-      brush = Brush.foundation;
+      setBrush(Brush.foundation);
       break;
     case 'Digit2':
-      brush = Brush.container;
+      setBrush(Brush.container);
       break;
     case 'Digit3':
-      brush = Brush.belt;
+      setBrush(Brush.belt);
       break;
     case 'Digit4':
-      brush = Brush.pipe;
+      setBrush(Brush.pipe);
       break;
     case 'Digit5':
-      brush = Brush.wall;
+      setBrush(Brush.wall);
       break;
-    default:
-      return;
   }
-  items[current].classList.remove('active');
-  items[brush].classList.add('active');
 });
 
 const offsets = {
@@ -88,7 +89,7 @@ export const snap = (brush: Brush, direction: Vector3, intersection: Intersectio
       case Brush.foundation:
         offset = terrainOffsets.foundation
         break;
-        case Brush.wall:
+      case Brush.wall:
         offset = terrainOffsets.wall;
         break;
       default:
