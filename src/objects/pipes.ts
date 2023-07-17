@@ -1,0 +1,80 @@
+import {
+  CubicBezierCurve3,
+  Group,
+  Material,
+  Mesh,
+  MeshStandardMaterial,
+  RepeatWrapping,
+  SRGBColorSpace,
+  TubeGeometry,
+} from 'three';
+import { Container, Connector } from './containers';
+import { loadTexture } from '../textures';
+// @ts-ignore
+import DiffuseMap from '../textures/green_metal_rust_diff_1k.jpg';
+// @ts-ignore
+import NormalMap from '../textures/green_metal_rust_nor_gl_1k.jpg';
+// @ts-ignore
+import RoughnessMap from '../textures/green_metal_rust_rough_1k.jpg';
+
+export class Pipe extends Mesh {
+  public readonly from: Container;
+  public readonly to: Container;
+  constructor(material: Material, from: Connector, to: Connector) {
+    const fromConnector = from.container.position.clone().addScaledVector(from.direction, 1);
+    const toConnector = to.container.position.clone().addScaledVector(to.direction, 1);
+    const offset = fromConnector.distanceTo(toConnector) * 0.3;
+    const path = new CubicBezierCurve3(
+      fromConnector,
+      fromConnector.clone().addScaledVector(from.direction, offset),
+      toConnector.clone().addScaledVector(to.direction, offset),
+      toConnector
+    );
+    const segments = Math.ceil(path.getLength() / 0.1);
+    const geometry = new TubeGeometry(path, segments, 0.125, 8, false);
+    super(geometry, material);
+    this.castShadow = this.receiveShadow = true;
+    this.updateMatrixWorld();
+    this.matrixAutoUpdate = false;
+    this.from = from.container;
+    this.to = to.container;
+  }
+}
+
+class Pipes extends Group {
+  private static material: MeshStandardMaterial | undefined;
+  static setupMaterial() {
+    Pipes.material = new MeshStandardMaterial({
+      map: loadTexture(DiffuseMap),
+      normalMap: loadTexture(NormalMap),
+      roughnessMap: loadTexture(RoughnessMap),
+      metalness: 0.5,
+    });
+    Pipes.material.map!.colorSpace = SRGBColorSpace;
+    Pipes.material.map!.wrapS = Pipes.material.map!.wrapT = RepeatWrapping;
+    return Pipes.material;
+  }
+
+  constructor() {
+    if (!Pipes.material) {
+      Pipes.setupMaterial();
+    }
+    super();
+    this.matrixAutoUpdate = false;
+    this.updateMatrixWorld();
+  }
+
+  create(from: Connector, to: Connector) {
+    const pipe = new Pipe(Pipes.material!, from, to);
+    this.add(pipe);
+    return pipe;
+  }
+
+  override remove(pipe: Pipe) {
+    super.remove(pipe);
+    pipe.geometry.dispose();
+    return this;
+  }
+}
+
+export default Pipes;
