@@ -24,6 +24,12 @@ export type Connector = {
 };
 
 class Containers extends Instances<Container> {
+  private static collider: BufferGeometry | undefined;
+  static setupCollider() {
+    Containers.collider = new BoxGeometry(2, 2, 2);
+    Containers.collider.computeBoundingSphere();
+  }
+
   private static geometry: BufferGeometry | undefined;
   static setupGeometry() {
     const csgEvaluator = new Evaluator();
@@ -42,6 +48,7 @@ class Containers extends Instances<Container> {
       brush = csgEvaluator.evaluate(brush, opening, SUBTRACTION);
     });
     Containers.geometry = (brush! as Mesh).geometry;
+    Containers.geometry.computeBoundingSphere();
   }
 
   private static material: MeshStandardMaterial | undefined;
@@ -57,13 +64,16 @@ class Containers extends Instances<Container> {
   }
 
   constructor() {
+    if (!Containers.collider) {
+      Containers.setupCollider();
+    }
     if (!Containers.geometry) {
       Containers.setupGeometry();
     }
     if (!Containers.material) {
       Containers.setupMaterial();
     }
-    super(Containers.geometry!, Containers.material!);
+    super(Containers.geometry!, Containers.material!, Containers.collider!);
   }
 }
 

@@ -21,6 +21,7 @@ class Foundations extends Instances<Foundation> {
   private static geometry: BoxGeometry | undefined;
   static setupGeometry() {
     Foundations.geometry = new BoxGeometry(4, 1, 4);
+    Foundations.geometry.computeBoundingSphere();
     const uv = Foundations.geometry.getAttribute('uv') as BufferAttribute;
     const index = Foundations.geometry.getIndex()!;
     const aux = new Vector2();

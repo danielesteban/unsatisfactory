@@ -21,6 +21,7 @@ class Walls extends Instances<Wall> {
   private static geometry: BoxGeometry | undefined;
   static setupGeometry() {
     Walls.geometry = new BoxGeometry(4, 4, 0.5);
+    Walls.geometry.computeBoundingSphere();
     const uv = Walls.geometry.getAttribute('uv') as BufferAttribute;
     const index = Walls.geometry.getIndex()!;
     const aux = new Vector2();
