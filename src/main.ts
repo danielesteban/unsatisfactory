@@ -12,6 +12,7 @@ import { Brush, brush, setBrush, snap } from './core/brush';
 import Belts, { Belt } from './objects/belts';
 import Containers, { Container, Connector } from './objects/containers';
 import Foundations from './objects/foundations';
+import Items from './objects/items';
 import Pipes, { Pipe } from './objects/pipes';
 import Terrain from './objects/terrain';
 import Walls from './objects/walls';
@@ -22,6 +23,7 @@ const viewport = new Viewport();
   Belts.setupMaterial(),
   Containers.setupMaterial(),
   Foundations.setupMaterial(),
+  Items.setupMaterial(),
   Pipes.setupMaterial(),
   Terrain.setupMaterial(),
   Walls.setupMaterial(),
