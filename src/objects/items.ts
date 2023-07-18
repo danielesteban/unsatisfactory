@@ -12,9 +12,9 @@ import {
   Vector3,
 } from 'three';
 import { loadTexture } from '../textures';
-import DiffuseMap from '../textures/green_metal_rust_diff_1k.jpg';
-import NormalMap from '../textures/green_metal_rust_nor_gl_1k.jpg';
-import RoughnessMap from '../textures/green_metal_rust_rough_1k.jpg';
+import DiffuseMap from '../textures/rust_coarse_01_diff_1k.jpg';
+import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.jpg';
+import RoughnessMap from '../textures/rust_coarse_01_rough_1k.jpg';
 
 export enum Item {
   box,
@@ -45,7 +45,6 @@ export class Items extends InstancedMesh {
       map: loadTexture(DiffuseMap),
       normalMap: loadTexture(NormalMap),
       roughnessMap: loadTexture(RoughnessMap),
-      metalness: 0.5,
     });
     Items.material.map!.anisotropy = 16;
     Items.material.map!.colorSpace = SRGBColorSpace;
