@@ -6,6 +6,7 @@ import {
   PlaneGeometry,
   RepeatWrapping,
   Shader,
+  ShaderChunk,
   SRGBColorSpace,
   Vector3,
 } from 'three';
@@ -37,15 +38,19 @@ export class TerrainChunk extends Mesh {
   }
 
   private static aux: Vector3 = new Vector3();
+  private static center: Vector3 = new Vector3();
   update(chunk: Vector3, getHeight: (position: Vector3) => number) {
     const { geometry, position: origin } = this;
-    const { aux } = TerrainChunk;
+    const { aux, center } = TerrainChunk;
     this.chunk.copy(chunk);
     origin.copy(chunk).multiplyScalar(TerrainChunk.size);
     const position = geometry.getAttribute('position');
+    let maxRadiusSq = 0;
     for (let i = 0; i < position.count; i++) {
       position.setY(i, getHeight(aux.fromBufferAttribute(position, i).add(origin)));
+      maxRadiusSq = Math.max(maxRadiusSq, center.distanceToSquared(aux.fromBufferAttribute(position, i)));
     }
+    geometry.boundingSphere!.radius = Math.sqrt(maxRadiusSq);
     position.needsUpdate = true;
     this.position.copy(origin);
     this.updateMatrix();
@@ -94,7 +99,55 @@ class Terrain extends Group {
             vec2 coord = abs(fract(position - 0.5) - 0.5) / fwidth(position);
             return 1.0 - min(min(coord.x, coord.y), 1.0);
           }
+          float directNoise(vec2 p) {
+            vec2 ip = floor(p);
+            vec2 u = fract(p);
+            u = u*u*(3.0-2.0*u);
+            float res = mix(
+              mix(rand(ip),rand(ip+vec2(1.0,0.0)),u.x),
+              mix(rand(ip+vec2(0.0,1.0)),rand(ip+vec2(1.0,1.0)),u.x),
+              u.y
+            );
+            return res*res;
+          }
+          float sum(vec4 v) { return v.x+v.y+v.z; }
+          vec4 textureNoTile(sampler2D mapper, in vec2 uv) {
+            // sample variation pattern
+            float k = directNoise(uv);
+            // compute index
+            float index = k*8.0;
+            float f = fract(index);
+            float ia = floor(index);
+            float ib = ia + 1.0;
+
+            // offsets for the different virtual patterns
+            vec2 offa = sin(vec2(3.0,7.0)*ia); // can replace with any other hash
+            vec2 offb = sin(vec2(3.0,7.0)*ib); // can replace with any other hash
+
+            // compute derivatives for mip-mapping
+            vec2 dx = dFdx(uv);
+            vec2 dy = dFdy(uv);
+
+            // sample the two closest virtual patterns
+            vec4 cola = textureGrad(mapper, uv + offa, dx, dy);
+            vec4 colb = textureGrad(mapper, uv + offb, dx, dy);
+
+            // interpolate between the two virtual patterns
+            return mix(cola, colb, smoothstep(0.2,0.8,f-0.1*sum(cola-colb)));
+          }
           `
+        )
+        .replace(
+          '#include <map_fragment>',
+          ShaderChunk.map_fragment.replace(/texture2D/g, 'textureNoTile')
+        )
+        .replace(
+          '#include <normal_fragment_maps>',
+          ShaderChunk.normal_fragment_maps.replace(/texture2D/g, 'textureNoTile')
+        )
+        .replace(
+          '#include <roughnessmap_fragment>',
+          ShaderChunk.roughnessmap_fragment.replace(/texture2D/g, 'textureNoTile')
         )
         .replace(
           'vec4 diffuseColor = vec4( diffuse, opacity );',
