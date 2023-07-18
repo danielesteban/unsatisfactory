@@ -1,4 +1,4 @@
-[unsatisfactory](https://github.com/danielesteban/unsatisfactory)
+[unsatisfactory](https://unsatisfactory.gatunes.com)
 ==
 
 ```bash
