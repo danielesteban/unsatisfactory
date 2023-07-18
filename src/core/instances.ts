@@ -46,7 +46,7 @@ class Instances<InstanceType extends Instance> extends InstancedMesh {
       this.updateInstances();
     } else {
       this.count++;
-      Instances.transform.makeTranslation(data.position);
+      Instances.transform.setPosition(data.position);
       this.setMatrixAt(this.count - 1, Instances.transform);
       this.instanceMatrix.needsUpdate = true;
       this.computeBoundingSphere();
@@ -70,7 +70,7 @@ class Instances<InstanceType extends Instance> extends InstancedMesh {
     const { instances } = this;
     this.count = instances.length;
     instances.forEach(({ position }, i) => {
-      Instances.transform.makeTranslation(position);
+      Instances.transform.setPosition(position);
       this.setMatrixAt(i, Instances.transform);
     });
     this.instanceMatrix.needsUpdate = true;

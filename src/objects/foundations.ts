@@ -1,10 +1,10 @@
 import {
-  BufferAttribute,
   BoxGeometry,
+  BufferAttribute,
   MeshStandardMaterial,
+  SRGBColorSpace,
   Vector2,
   Vector3,
-  SRGBColorSpace,
 } from 'three';
 import Instances from '../core/instances';
 import { loadTexture } from '../textures';

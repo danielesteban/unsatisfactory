@@ -105,7 +105,7 @@ const remove = (intersection: Intersection<Object3D<Event>>) => {
   if (intersection.object instanceof Containers) {
     const container = intersection.object.instances[intersection.instanceId!];
     containers.removeInstance(container);
-    (belts.children as Pipe[])
+    (belts.children as Belt[])
       .reduce((connected, belt) => {
         if (belt.from === container || belt.to === container) {
           connected.push(belt);

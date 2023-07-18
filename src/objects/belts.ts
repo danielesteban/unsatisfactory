@@ -11,6 +11,7 @@ import {
   Vector3,
 } from 'three';
 import { Container, Connector } from './containers';
+import Items from './items';
 import { loadTexture } from '../textures';
 import DiffuseMap from '../textures/green_metal_rust_diff_1k.jpg';
 import NormalMap from '../textures/green_metal_rust_nor_gl_1k.jpg';
@@ -20,6 +21,8 @@ export class Belt extends Mesh {
   private static offset: Vector3 = new Vector3(0, -0.5, 0);
   public readonly from: Container;
   public readonly to: Container;
+  public readonly items: Items;
+
   constructor(material: Material, from: Connector, to: Connector) {
     const fromConnector = from.container.position.clone().addScaledVector(from.direction, 0.75).add(Belt.offset);
     const toConnector = to.container.position.clone().addScaledVector(to.direction, 0.75).add(Belt.offset);
@@ -30,6 +33,25 @@ export class Belt extends Mesh {
       toConnector.clone().addScaledVector(to.direction, offset),
       toConnector
     );
+    {
+      // @dani @hack
+      // this is prolly wrong but it seems to work at preventing weird horizontal extrusions
+      const worldUp = new Vector3(0, 1, 0);
+      const { normals, binormals } = path.computeFrenetFrames(1, false);
+      if (Math.abs(normals[0].dot(worldUp)) < Math.abs(binormals[0].dot(worldUp))) {
+        const flipBinormals = binormals[0].dot(worldUp) > 0;
+        const compute = path.computeFrenetFrames.bind(path);
+        path.computeFrenetFrames = (steps: number, closed: boolean) => {
+          const { normals, binormals, tangents } = compute(steps, closed);
+          if (flipBinormals) {
+            binormals.forEach((n) => n.negate());
+          } else {
+            normals.forEach((n) => n.negate());
+          }
+          return { normals: binormals, binormals: normals, tangents };
+        };
+      }
+    }
     const segments = Math.ceil(path.getLength() / 0.1);
     const shape = new Shape()
       .moveTo(-0.125, -0.5)
@@ -44,6 +66,9 @@ export class Belt extends Mesh {
     this.matrixAutoUpdate = false;
     this.from = from.container;
     this.to = to.container;
+    // @dani @hack This should come from the "from" container
+    this.items = new Items(Math.floor(Math.random() * 3), path);
+    this.add(this.items);
   }
 }
 
