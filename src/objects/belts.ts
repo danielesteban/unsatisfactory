@@ -88,6 +88,7 @@ class Belts extends Group {
       map: loadTexture(DiffuseMap),
       normalMap: loadTexture(NormalMap),
       roughnessMap: loadTexture(RoughnessMap),
+      metalness: 0.3,
     });
     Belts.material.map!.anisotropy = 16;
     Belts.material.map!.colorSpace = SRGBColorSpace;

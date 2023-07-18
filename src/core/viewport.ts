@@ -51,7 +51,6 @@ class Viewport extends EventDispatcher {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = PCFSoftShadowMap;
     this.renderer.toneMapping = ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 0.7;
     this.scene = new Scene();
     this.scene.backgroundBlurriness = 0.3;
     loadEnvironment(Environment, this.renderer).then(({ background, environment }) => {

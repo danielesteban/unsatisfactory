@@ -50,6 +50,7 @@ class Pipes extends Group {
       map: loadTexture(DiffuseMap),
       normalMap: loadTexture(NormalMap),
       roughnessMap: loadTexture(RoughnessMap),
+      metalness: 0.3,
     });
     Pipes.material.map!.anisotropy = 16;
     Pipes.material.map!.colorSpace = SRGBColorSpace;
