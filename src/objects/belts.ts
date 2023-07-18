@@ -18,12 +18,34 @@ import NormalMap from '../textures/green_metal_rust_nor_gl_1k.jpg';
 import RoughnessMap from '../textures/green_metal_rust_rough_1k.jpg';
 
 export class Belt extends Mesh {
-  private static offset: Vector3 = new Vector3(0, -0.5, 0);
+  private static shape: Shape | undefined;
+  static setupShape() {
+    const width = 1;
+    const height = 0.25;
+    const inset = 0.125;
+    const hw = width * 0.5;
+    const hh = height * 0.5;
+    Belt.shape = new Shape()
+      .moveTo(-hh, -hw)
+      .lineTo(-hh, -hw + inset)
+      .lineTo(hh - inset, -hw + inset)
+      .lineTo(hh - inset, hw - inset)
+      .lineTo(-hh, hw - inset)
+      .lineTo(-hh, hw)
+      .lineTo(hh, hw)
+      .lineTo(hh, -hw)
+      .lineTo(-hh, -hw);
+  }
+
+  private static readonly offset: Vector3 = new Vector3(0, -0.5, 0);
   public readonly from: Container;
   public readonly to: Container;
   public readonly items?: Items;
 
   constructor(material: Material, from: Connector, to: Connector) {
+    if (!Belt.shape) {
+      Belt.setupShape();
+    }
     const fromConnector = from.container.position.clone().addScaledVector(from.direction, 0.75).add(Belt.offset);
     const toConnector = to.container.position.clone().addScaledVector(to.direction, 0.75).add(Belt.offset);
     const offset = fromConnector.distanceTo(toConnector) * 0.3;
@@ -53,13 +75,7 @@ export class Belt extends Mesh {
       }
     }
     const segments = Math.ceil(path.getLength() / 0.1);
-    const shape = new Shape()
-      .moveTo(-0.125, -0.5)
-      .lineTo(-0.125, 0.5)
-      .lineTo(0.125, 0.5)
-      .lineTo(0.125, -0.5)
-      .lineTo(-0.125, -0.5);
-    const geometry = new ExtrudeGeometry(shape, { extrudePath: path, steps: segments });
+    const geometry = new ExtrudeGeometry(Belt.shape, { extrudePath: path, steps: segments });
     super(geometry, material);
     this.castShadow = this.receiveShadow = true;
     this.updateMatrixWorld();

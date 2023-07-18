@@ -70,7 +70,7 @@ export class Items extends InstancedMesh {
     this.matrixAutoUpdate = false;
     const { normals, tangents } = path.computeFrenetFrames(count, false);
     for (let i = 0; i < count; i++) {
-      path.getPointAt((i + 0.5) / count, Items.transform.position).addScaledVector(Items.aux.lerpVectors(normals[i], normals[i + 1], 0.5), -0.25);
+      path.getPointAt((i + 0.5) / count, Items.transform.position).addScaledVector(Items.aux.lerpVectors(normals[i], normals[i + 1], 0.5), -0.125);
       Items.transform.lookAt(Items.aux.lerpVectors(tangents[i], tangents[i + 1], 0.5).add(Items.transform.position));
       Items.transform.updateMatrix();
       this.setMatrixAt(i, Items.transform.matrix);
