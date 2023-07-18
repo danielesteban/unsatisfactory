@@ -90,8 +90,11 @@ class Belts extends Group {
       roughnessMap: loadTexture(RoughnessMap),
       metalness: 0.5,
     });
+    Belts.material.map!.anisotropy = 16;
     Belts.material.map!.colorSpace = SRGBColorSpace;
-    Belts.material.map!.wrapS = Belts.material.map!.wrapT = RepeatWrapping;
+    [Belts.material.map!, Belts.material.normalMap!, Belts.material.roughnessMap!].forEach((map) => {
+      map.wrapS = map.wrapT = RepeatWrapping;
+    });
     return Belts.material;
   }
 

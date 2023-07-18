@@ -47,8 +47,11 @@ export class Items extends InstancedMesh {
       roughnessMap: loadTexture(RoughnessMap),
       metalness: 0.5,
     });
+    Items.material.map!.anisotropy = 16;
     Items.material.map!.colorSpace = SRGBColorSpace;
-    Items.material.map!.wrapS = Items.material.map!.wrapT = RepeatWrapping;
+    [Items.material.map!, Items.material.normalMap!, Items.material.roughnessMap!].forEach((map) => {
+      map.wrapS = map.wrapT = RepeatWrapping;
+    });
     return Items.material;
   }
 

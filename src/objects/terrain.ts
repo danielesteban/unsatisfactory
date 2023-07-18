@@ -63,8 +63,10 @@ class Terrain extends Group {
     });
     Terrain.material.map!.anisotropy = 16;
     Terrain.material.map!.colorSpace = SRGBColorSpace;
-    Terrain.material.map!.repeat.set(4, 4);
-    Terrain.material.map!.wrapS = Terrain.material.map!.wrapT = RepeatWrapping;
+    [Terrain.material.map!, Terrain.material.normalMap!, Terrain.material.roughnessMap!].forEach((map) => {
+      map.repeat.set(4, 4);
+      map.wrapS = map.wrapT = RepeatWrapping;
+    });
     Terrain.material.customProgramCacheKey = () => 'Terrain';
     Terrain.material.onBeforeCompile = (shader: Shader) => {
       shader.vertexShader = shader.vertexShader

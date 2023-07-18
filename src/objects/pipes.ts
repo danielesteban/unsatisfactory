@@ -52,8 +52,11 @@ class Pipes extends Group {
       roughnessMap: loadTexture(RoughnessMap),
       metalness: 0.5,
     });
+    Pipes.material.map!.anisotropy = 16;
     Pipes.material.map!.colorSpace = SRGBColorSpace;
-    Pipes.material.map!.wrapS = Pipes.material.map!.wrapT = RepeatWrapping;
+    [Pipes.material.map!, Pipes.material.normalMap!, Pipes.material.roughnessMap!].forEach((map) => {
+      map.wrapS = map.wrapT = RepeatWrapping;
+    });
     return Pipes.material;
   }
 
