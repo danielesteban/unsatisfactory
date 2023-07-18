@@ -36,6 +36,11 @@ export class Pipe extends Mesh {
     this.from = from.container;
     this.to = to.container;
   }
+
+  dispose() {
+    const { geometry } = this;
+    geometry.dispose();
+  }
 }
 
 class Pipes extends Group {
@@ -69,7 +74,7 @@ class Pipes extends Group {
 
   override remove(pipe: Pipe) {
     super.remove(pipe);
-    pipe.geometry.dispose();
+    pipe.dispose();
     return this;
   }
 }

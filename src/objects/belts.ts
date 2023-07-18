@@ -1,7 +1,7 @@
 import {
   CubicBezierCurve3,
-  Group,
   ExtrudeGeometry,
+  Group,
   Material,
   Mesh,
   MeshStandardMaterial,
@@ -21,7 +21,7 @@ export class Belt extends Mesh {
   private static offset: Vector3 = new Vector3(0, -0.5, 0);
   public readonly from: Container;
   public readonly to: Container;
-  public readonly items: Items;
+  public readonly items?: Items;
 
   constructor(material: Material, from: Connector, to: Connector) {
     const fromConnector = from.container.position.clone().addScaledVector(from.direction, 0.75).add(Belt.offset);
@@ -67,8 +67,17 @@ export class Belt extends Mesh {
     this.from = from.container;
     this.to = to.container;
     // @dani @hack This should come from the "from" container
-    this.items = new Items(Math.floor(Math.random() * 3), path);
-    this.add(this.items);
+    const item = Math.floor(Math.random() * 4);
+    if (item) {
+      this.items = new Items(item - 1, path);
+      this.add(this.items);
+    }
+  }
+
+  dispose() {
+    const { geometry, items } = this;
+    geometry.dispose();
+    items?.dispose();
   }
 }
 
@@ -103,7 +112,7 @@ class Belts extends Group {
   
   override remove(belt: Belt) {
     super.remove(belt);
-    belt.geometry.dispose();
+    belt.dispose();
     return this;
   }
 }
