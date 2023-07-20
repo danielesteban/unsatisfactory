@@ -4,6 +4,7 @@ import {
   CapsuleGeometry,
   CylinderGeometry,
   Curve,
+  DynamicDrawUsage,
   InstancedMesh,
   Group,
   Material,
@@ -29,6 +30,7 @@ export enum Item {
 class InstancedItems extends InstancedMesh {
   constructor(geometry: BufferGeometry, material: Material, count: number) {
     super(geometry, material, count);
+    this.instanceMatrix.setUsage(DynamicDrawUsage);
     this.receiveShadow = true;
     this.updateMatrixWorld();
     this.matrixAutoUpdate = false;
