@@ -13,7 +13,6 @@ import NormalMap from '../textures/hexagonal_concrete_paving_nor_gl_1k.jpg';
 import RoughnessMap from '../textures/hexagonal_concrete_paving_rough_1k.jpg';
 
 export type Foundation = {
-  id: string;
   position: Vector3;
 };
 

@@ -79,14 +79,14 @@ class Terrain extends Group {
           '#include <clipping_planes_pars_vertex>',
           /* glsl */`
           #include <clipping_planes_pars_vertex>
-          varying vec2 gridPosition;
+          varying vec3 gridPosition;
           `
         )
         .replace(
           '#include <fog_vertex>',
           /* glsl */`
           #include <fog_vertex>
-          gridPosition = vec3(modelMatrix * vec4(position, 1.0)).xz * 0.5;
+          gridPosition = vec3(modelMatrix * vec4(position, 1.0));
           `
         );
       shader.fragmentShader = shader.fragmentShader
@@ -94,7 +94,7 @@ class Terrain extends Group {
           '#include <clipping_planes_pars_fragment>',
           /* glsl */`
           #include <clipping_planes_pars_fragment>
-          varying vec2 gridPosition;
+          varying vec3 gridPosition;
           float line(vec2 position) {
             vec2 coord = abs(fract(position - 0.5) - 0.5) / fwidth(position);
             return 1.0 - min(min(coord.x, coord.y), 1.0);
@@ -152,7 +152,9 @@ class Terrain extends Group {
         .replace(
           'vec4 diffuseColor = vec4( diffuse, opacity );',
           /* glsl */`
-          float grid = 1.0 - line(gridPosition);
+          float depth = distance(gridPosition, cameraPosition);
+          float decay = exp(-0.01 * 0.01 * depth * depth);
+          float grid = 1.0 - line(gridPosition.xz * 0.5) * decay;
           vec4 diffuseColor = vec4(diffuse * grid, opacity);
           `
         );
@@ -215,8 +217,8 @@ class Terrain extends Group {
       }
     }
 
-    for (let z = -radius; z <= radius; z++) {
-      for (let x = -radius; x <= radius; x++) {
+    for (let z = -radius + 1; z < radius; z++) {
+      for (let x = -radius + 1; x < radius; x++) {
         aux.set(x, 0, z).add(anchor);
         if (aux.distanceTo(anchor) >= radius) {
           continue;

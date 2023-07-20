@@ -1,5 +1,4 @@
 import {
-  ACESFilmicToneMapping,
   Clock,
   EventDispatcher,
   Material,
@@ -17,7 +16,7 @@ import { N8AOPass } from 'n8ao';
 import { SMAAPass } from 'three/examples/jsm/postprocessing/SMAAPass.js';
 import Controls from './controls';
 import { loadEnvironment } from '../textures';
-import Environment from '../textures/netball_court_1k.exr';
+import Environment from '../textures/industrial_sunset_puresky_1k.exr';
 
 class Viewport extends EventDispatcher {
   private static readonly ResizeEvent = { type: 'resize' };
@@ -43,16 +42,14 @@ class Viewport extends EventDispatcher {
     this.clock = new Clock();
     this.controls = new Controls(this.camera, dom);
     this.renderer = new WebGLRenderer({
-      antialias: false,
-      powerPreference: 'high-performance',
+      depth: false,
       stencil: false,
+      powerPreference: 'high-performance',
     });
     this.renderer.setPixelRatio(window.devicePixelRatio || 1);
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = PCFSoftShadowMap;
-    this.renderer.toneMapping = ACESFilmicToneMapping;
     this.scene = new Scene();
-    this.scene.backgroundBlurriness = 0.3;
     loadEnvironment(Environment, this.renderer).then(({ background, environment }) => {
       this.scene.background = background;
       this.scene.environment = environment;
@@ -60,7 +57,7 @@ class Viewport extends EventDispatcher {
     this.csm = new CSM({
       camera: this.camera,
       cascades: 4,
-      lightDirection: (new Vector3(0.5, -1, -0.25)).normalize(),
+      lightDirection: (new Vector3(-0.5, -1, -0.25)).normalize(),
       maxFar: 1000,
       mode: 'practical' as any,
       parent: this.scene,

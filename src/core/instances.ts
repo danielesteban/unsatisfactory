@@ -3,7 +3,6 @@ import {
   InstancedBufferAttribute,
   InstancedMesh,
   Intersection,
-  MathUtils,
   Matrix4,
   Material,
   Raycaster,
@@ -11,7 +10,6 @@ import {
 } from 'three';
 
 interface Instance {
-  id: string;
   position: Vector3;
 }
 
@@ -33,20 +31,16 @@ class Instances<InstanceType extends Instance> extends InstancedMesh {
     this.count = 0;
   }
 
-  addInstance(data: Omit<InstanceType, "id">) {
+  addInstance(instance: InstanceType) {
     const { instances, maxInstanceCount } = this;
-    const instance = {
-      id: MathUtils.generateUUID(),
-      ...data,
-    };
-    instances.push(instance as InstanceType);
+    instances.push(instance);
     if (instances.length > maxInstanceCount) {
       this.maxInstanceCount *= 2;
       this.instanceMatrix = new InstancedBufferAttribute(new Float32Array(this.maxInstanceCount * 16), 16);
       this.updateInstances();
     } else {
       this.count++;
-      Instances.transform.setPosition(data.position);
+      Instances.transform.setPosition(instance.position);
       this.setMatrixAt(this.count - 1, Instances.transform);
       this.instanceMatrix.needsUpdate = true;
       this.computeBoundingSphere();

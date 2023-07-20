@@ -10,8 +10,8 @@ import {
   SRGBColorSpace,
   Vector3,
 } from 'three';
-import { Container, Connector } from './containers';
-import Items from './items';
+import Container, { Connector } from './container';
+import Items, { Item } from './items';
 import { loadTexture } from '../textures';
 import DiffuseMap from '../textures/green_metal_rust_diff_1k.jpg';
 import NormalMap from '../textures/green_metal_rust_nor_gl_1k.jpg';
@@ -40,14 +40,20 @@ export class Belt extends Mesh {
   private static readonly offset: Vector3 = new Vector3(0, -0.5, 0);
   public readonly from: Container;
   public readonly to: Container;
-  public readonly items?: Items;
+
+  private enabled: boolean;
+  private locked: boolean;
+  private readonly items: Items;
+  private readonly rate: number;
+  private readonly slots: Item[];
+  private timer: number;
 
   constructor(material: Material, from: Connector, to: Connector) {
     if (!Belt.shape) {
       Belt.setupShape();
     }
-    const fromConnector = from.container.position.clone().addScaledVector(from.direction, 0.75).add(Belt.offset);
-    const toConnector = to.container.position.clone().addScaledVector(to.direction, 0.75).add(Belt.offset);
+    const fromConnector = from.container.getConnector(from.direction, Belt.offset);
+    const toConnector = to.container.getConnector(to.direction, Belt.offset);
     const offset = fromConnector.distanceTo(toConnector) * 0.3;
     const path = new CubicBezierCurve3(
       fromConnector,
@@ -82,18 +88,64 @@ export class Belt extends Mesh {
     this.matrixAutoUpdate = false;
     this.from = from.container;
     this.to = to.container;
-    // @dani @hack This should come from the "from" container
-    const item = Math.floor(Math.random() * 4);
-    if (item) {
-      this.items = new Items(item - 1, path);
-      this.add(this.items);
-    }
+    this.enabled = true;
+    this.locked = true;
+    this.rate = 1 / 5;
+    this.slots = Array.from({ length: Math.ceil(path.getLength() / 0.5) }, () => Item.none);
+    this.timer = 0;
+    this.items = new Items(this.slots.length, path);
+    this.add(this.items);
   }
 
   dispose() {
     const { geometry, items } = this;
     geometry.dispose();
-    items?.dispose();
+    items.dispose();
+  }
+
+  step(delta: number) {
+    this.timer += delta;
+    const { from, to, items, rate, slots } = this;
+    if (this.timer >= rate) {
+      this.timer -= rate;
+      if (this.locked) {
+        // @dani @hack
+        // This is to allow other belts to input into a backed up container.
+        // Which tells me that the containers should be the ones that pull
+        // instead of the belts being the ones that push.
+        this.locked = false;
+        return;
+      }
+      if (to.canInput()) {
+        slots.unshift(from.output());
+        to.input(slots.pop()!);
+        this.enabled = true;
+        this.locked = !to.canInput();
+      } else if (this.enabled) {
+        // @dani @incomplete
+        // This creates a visual glitch when animating the items backed up at the end of the belt.
+        // A possible fix would be tracking the backed up items and making the items animation aware
+        // of which items should not be animated.
+        let hasMoved = false;
+        for (let i = slots.length - 1; i > 0; i--) {
+          if (slots[i] === Item.none) {
+            slots[i] = slots[i - 1];
+            slots[i - 1] = Item.none;
+            hasMoved = true;
+          }
+        }
+        if (slots[0] === Item.none) {
+          slots[0] = from.output();
+          hasMoved = true;
+        }
+        if (!hasMoved) {
+          this.enabled = false;
+        }
+      }
+    }
+    if (this.enabled) {
+      items.animate(slots, this.timer / rate);
+    }
   }
 }
 
@@ -133,6 +185,10 @@ class Belts extends Group {
     super.remove(belt);
     belt.dispose();
     return this;
+  }
+
+  step(delta: number) {
+    (this.children as Belt[]).forEach((belt) => belt.step(delta));
   }
 }
 

@@ -8,20 +8,12 @@ import {
 } from 'three';
 import { SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 import Instances from '../core/instances';
+import Container from './container';
+import { Item } from './items';
 import { loadTexture } from '../textures';
 import DiffuseMap from '../textures/rust_coarse_01_diff_1k.jpg';
 import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.jpg';
 import RoughnessMap from '../textures/rust_coarse_01_rough_1k.jpg';
-
-export type Container = {
-  id: string;
-  position: Vector3;
-};
-
-export type Connector = {
-  container: Container;
-  direction: Vector3;
-};
 
 class Containers extends Instances<Container> {
   private static collider: BufferGeometry | undefined;
@@ -74,6 +66,10 @@ class Containers extends Instances<Container> {
       Containers.setupMaterial();
     }
     super(Containers.geometry!, Containers.material!, Containers.collider!);
+  }
+
+  create(position: Vector3, items?: Item[]) {
+    return super.addInstance(new Container(position, 1000, items));
   }
 }
 

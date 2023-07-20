@@ -7,8 +7,9 @@ import {
   RepeatWrapping,
   SRGBColorSpace,
   TubeGeometry,
+  Vector3,
 } from 'three';
-import { Container, Connector } from './containers';
+import Container, { Connector } from './container';
 import { loadTexture } from '../textures';
 import DiffuseMap from '../textures/green_metal_rust_diff_1k.jpg';
 import NormalMap from '../textures/green_metal_rust_nor_gl_1k.jpg';
@@ -17,9 +18,12 @@ import RoughnessMap from '../textures/green_metal_rust_rough_1k.jpg';
 export class Pipe extends Mesh {
   public readonly from: Container;
   public readonly to: Container;
+
+  private static readonly offset: Vector3 = new Vector3(0, 0, 0);
+
   constructor(material: Material, from: Connector, to: Connector) {
-    const fromConnector = from.container.position.clone().addScaledVector(from.direction, 0.75);
-    const toConnector = to.container.position.clone().addScaledVector(to.direction, 0.75);
+    const fromConnector = from.container.getConnector(from.direction, Pipe.offset);
+    const toConnector = to.container.getConnector(to.direction, Pipe.offset);
     const offset = fromConnector.distanceTo(toConnector) * 0.3;
     const path = new CubicBezierCurve3(
       fromConnector,
