@@ -90,10 +90,10 @@ const create = (intersection: Intersection<Object3D<Event>>) => {
       }
       if (!from.container) {
         from.direction = direction;
-        from.container = intersection.object.instances[intersection.instanceId!];
+        from.container = containers.getInstance(intersection.instanceId!);
         return;
       }
-      to.container = intersection.object.instances[intersection.instanceId!];
+      to.container = containers.getInstance(intersection.instanceId!);
       to.direction = direction;
       if (from.container === to.container && from.direction.equals(to.direction)) {
         return;
@@ -137,17 +137,17 @@ const remove = (intersection: Intersection<Object3D<Event>>) => {
     return;
   }
   if (intersection.object instanceof Containers) {
-    const container = intersection.object.instances[intersection.instanceId!];
+    const container = containers.getInstance(intersection.instanceId!);
     containers.removeInstance(container);
     removeConnected(container);
     return;
   }
   if (intersection.object instanceof Foundations) {
-    foundations.removeInstance(intersection.object.instances[intersection.instanceId!]);
+    foundations.removeInstance(foundations.getInstance(intersection.instanceId!));
     return;
   }
   if (intersection.object instanceof Miners) {
-    const miner = intersection.object.instances[intersection.instanceId!];
+    const miner = miners.getInstance(intersection.instanceId!);
     miners.removeInstance(miner);
     removeConnected(miner);
     return;
@@ -157,7 +157,7 @@ const remove = (intersection: Intersection<Object3D<Event>>) => {
     return;
   }
   if (intersection.object instanceof Walls) {
-    walls.removeInstance(intersection.object.instances[intersection.instanceId!]);
+    walls.removeInstance(walls.getInstance(intersection.instanceId!));
     return;
   }
 };
@@ -214,7 +214,7 @@ const info = new Info() as (Info & Object3D);
 viewport.scene.add(info);
 const updateInfo = (intersection: Intersection<Object3D<Event>>) => {
   if (intersection?.object instanceof Containers) {
-    const container: Container = intersection.object.instances[intersection.instanceId!];
+    const container: Container = containers.getInstance(intersection.instanceId!);
     info.position.copy(container.position);
     info.position.y += 1.5;
     info.setText(

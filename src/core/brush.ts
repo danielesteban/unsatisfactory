@@ -114,7 +114,7 @@ export const snap = (brush: Brush, direction: Vector3, intersection: Intersectio
     || intersection.object instanceof Foundations
     || intersection.object instanceof Walls
   ) {
-    const instance = intersection.object.instances[intersection.instanceId!];
+    const instance = intersection.object.getInstance(intersection.instanceId!);
     let brushOffset;
     switch (brush) {
       case Brush.container:

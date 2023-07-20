@@ -15,7 +15,7 @@ interface Instance {
 
 class Instances<InstanceType extends Instance> extends InstancedMesh {
   private readonly collider: BufferGeometry | undefined;
-  public readonly instances: InstanceType[];
+  private readonly instances: InstanceType[];
   private maxInstanceCount: number;
   private static transform: Matrix4 = new Matrix4();
 
@@ -29,6 +29,11 @@ class Instances<InstanceType extends Instance> extends InstancedMesh {
     this.instances = [];
     this.maxInstanceCount = this.count;
     this.count = 0;
+  }
+
+  getInstance(index: number) {
+    const { instances } = this;
+    return instances[index]!;
   }
 
   addInstance(instance: InstanceType) {
