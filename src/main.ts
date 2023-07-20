@@ -90,10 +90,10 @@ const create = (intersection: Intersection<Object3D<Event>>) => {
       }
       if (!from.container) {
         from.direction = direction;
-        from.container = containers.getInstance(intersection.instanceId!);
+        from.container = intersection.object.getInstance(intersection.instanceId!);
         return;
       }
-      to.container = containers.getInstance(intersection.instanceId!);
+      to.container = intersection.object.getInstance(intersection.instanceId!);
       to.direction = direction;
       if (from.container === to.container && from.direction.equals(to.direction)) {
         return;
