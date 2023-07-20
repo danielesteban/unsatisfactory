@@ -4,9 +4,11 @@ import {
   Object3D,
   Vector3,
 } from 'three';
+import { Belt } from '../objects/belts';
 import Containers from '../objects/containers';
 import Foundations from '../objects/foundations';
 import Miners from '../objects/miners';
+import { Pipe } from '../objects/pipes';
 import { TerrainChunk } from '../objects/terrain';
 import Walls from '../objects/walls';
 
@@ -21,7 +23,7 @@ export enum Brush {
 
 export let brush: Brush = Brush.foundation;
 
-export const setBrush = (type: Brush) => {
+const setBrush = (type: Brush) => {
   items[brush].classList.remove('active');
   brush = type;
   items[brush].classList.add('active');
@@ -73,6 +75,33 @@ document.addEventListener('keydown', (e) => {
       break;
   }
 });
+
+export const pick = (intersection: Intersection<Object3D<Event>>) => {
+  if (intersection.object instanceof Belt) {
+    setBrush(Brush.belt);
+    return;
+  }
+  if (intersection.object instanceof Containers) {
+    setBrush(Brush.container);
+    return;
+  }
+  if (intersection.object instanceof Foundations) {
+    setBrush(Brush.foundation);
+    return;
+  }
+  if (intersection.object instanceof Miners) {
+    setBrush(Brush.miner);
+    return;
+  }
+  if (intersection.object instanceof Pipe) {
+    setBrush(Brush.pipe);
+    return;
+  }
+  if (intersection.object instanceof Walls) {
+    setBrush(Brush.wall);
+    return;
+  }
+};
 
 const offsets = {
   container: new Vector3(1, 1, 1),

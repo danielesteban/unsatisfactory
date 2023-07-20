@@ -8,7 +8,7 @@ import {
   Vector3,
 } from 'three';
 import Viewport from './core/viewport';
-import { Brush, brush, setBrush, snap } from './core/brush';
+import { Brush, brush, pick, snap } from './core/brush';
 import Belts, { Belt } from './objects/belts';
 import Container, { Connector } from './objects/container';
 import Containers from './objects/containers';
@@ -158,33 +158,6 @@ const remove = (intersection: Intersection<Object3D<Event>>) => {
   }
   if (intersection.object instanceof Walls) {
     walls.removeInstance(walls.getInstance(intersection.instanceId!));
-    return;
-  }
-};
-
-const pick = (intersection: Intersection<Object3D<Event>>) => {
-  if (intersection.object instanceof Belt) {
-    setBrush(Brush.belt);
-    return;
-  }
-  if (intersection.object instanceof Containers) {
-    setBrush(Brush.container);
-    return;
-  }
-  if (intersection.object instanceof Foundations) {
-    setBrush(Brush.foundation);
-    return;
-  }
-  if (intersection.object instanceof Miners) {
-    setBrush(Brush.miner);
-    return;
-  }
-  if (intersection.object instanceof Pipe) {
-    setBrush(Brush.pipe);
-    return;
-  }
-  if (intersection.object instanceof Walls) {
-    setBrush(Brush.wall);
     return;
   }
 };
