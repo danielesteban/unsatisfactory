@@ -8,17 +8,20 @@ interface Heightmap {
   getHeight: (position: Vector3) => number;
 }
 
+export type Buttons = {
+  primary: boolean;
+  secondary: boolean;
+  tertiary: boolean;
+  interact: boolean;
+};
+
 class Controls {
   private static readonly height = 1.6;
   private static readonly velocityMin = Math.log(2);
   private static readonly velocityMax = Math.log(64);
   private static readonly velocityRange = Controls.velocityMax - Controls.velocityMin;
 
-  public readonly buttons: {
-    primary: boolean;
-    secondary: boolean;
-    tertiary: boolean;
-  };
+  public readonly buttons: Buttons;
   private readonly camera: PerspectiveCamera;
   private heightmap: Heightmap | undefined;
   private isLocked: boolean;
@@ -35,6 +38,7 @@ class Controls {
       primary: false,
       secondary: false,
       tertiary: false,
+      interact: false,
     };
     this.camera = camera;
     this.isLocked = false;
@@ -60,20 +64,21 @@ class Controls {
   }
 
   unlock() {
-    const { buttons, isLocked } = this;
+    const { isLocked } = this;
     if (isLocked) {
-      buttons.primary = false;
-      buttons.secondary = false;
-      buttons.tertiary = false;
       document.exitPointerLock();
     }
   }
 
   onLock() {
-    const { movement } = this;
+    const { buttons, movement } = this;
     this.isLocked = !!document.pointerLockElement;
     document.body.classList[this.isLocked ? 'add' : 'remove']('pointerlock');
     if (!this.isLocked) {
+      buttons.primary = false;
+      buttons.secondary = false;
+      buttons.tertiary = false;
+      buttons.interact = false;
       movement.set(0, 0, 0);
     }
   }
@@ -130,7 +135,7 @@ class Controls {
   }
 
   onKeyDown(e: KeyboardEvent) {
-    const { isLocked, movement } = this;
+    const { buttons, isLocked, movement } = this;
     if (!isLocked || e.repeat) {
       return;
     }
@@ -154,11 +159,14 @@ class Controls {
       case 'ShiftRight':
         movement.y = -1;
         break;
+      case 'KeyF':
+        buttons.interact = true;
+        break;
     }
   }
 
   onKeyUp(e: KeyboardEvent) {
-    const { isLocked, movement } = this;
+    const { buttons, isLocked, movement } = this;
     if (!isLocked) {
       return;
     }
@@ -181,6 +189,9 @@ class Controls {
       case 'ShiftLeft':
       case 'ShiftRight':
         if (movement.y < 0) movement.y = 0;
+        break;
+      case 'KeyF':
+        buttons.interact = false;
         break;
     }
   }

@@ -14,13 +14,13 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 // @ts-ignore
 import { N8AOPass } from 'n8ao';
 import { SMAAPass } from 'three/examples/jsm/postprocessing/SMAAPass.js';
-import Controls from './controls';
+import Controls, { Buttons } from './controls';
 import { loadEnvironment } from '../textures';
 import Environment from '../textures/industrial_sunset_puresky_1k.exr';
 
 class Viewport extends EventDispatcher {
   private static readonly ResizeEvent = { type: 'resize' };
-  private animate?: (buttons: { primary: boolean; secondary: boolean; tertiary: boolean; }, delta: number, time: number) => void;
+  private animate?: (buttons: Buttons, delta: number, time: number) => void;
   private readonly clock: Clock;
   private readonly composer: EffectComposer;
   private readonly csm: CSM;
@@ -83,7 +83,7 @@ class Viewport extends EventDispatcher {
     this.renderer.setAnimationLoop(this.render.bind(this));
   }
   
-  setAnimationLoop(animate: (buttons: { primary: boolean; secondary: boolean; tertiary: boolean; }, delta: number, time: number) => void) {
+  setAnimationLoop(animate: (buttons: Buttons, delta: number, time: number) => void) {
     this.animate = animate;
     this.clock.start();
   }
@@ -111,6 +111,7 @@ class Viewport extends EventDispatcher {
     controls.buttons.primary = false;
     controls.buttons.secondary = false;
     controls.buttons.tertiary = false;
+    controls.buttons.interact = false;
     csm.update();
     composer.render();
   }

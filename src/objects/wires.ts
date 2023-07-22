@@ -6,14 +6,14 @@ import {
   MeshStandardMaterial,
   TubeGeometry,
 } from 'three';
-import Container from '../core/container';
+import { PoweredContainer } from '../core/container';
 import { Generator } from './generators';
 
 export class Wire extends Mesh {
-  public readonly from: Container;
-  public readonly to: Container;
+  public readonly from: PoweredContainer;
+  public readonly to: PoweredContainer;
 
-  constructor(material: Material, from: Container, to: Container) {
+  constructor(material: Material, from: PoweredContainer, to: PoweredContainer) {
     const fromConnector = from.getWireConnector();
     const toConnector = to.getWireConnector();
     const direction = toConnector.clone().sub(fromConnector);
@@ -63,7 +63,7 @@ class Wires extends Group {
     this.updateMatrixWorld();
   }
 
-  create(from: Container, to: Container) {
+  create(from: PoweredContainer, to: PoweredContainer) {
     const wire = new Wire(Wires.material!, from, to);
     this.add(wire);
     this.updatePower();
@@ -72,7 +72,7 @@ class Wires extends Group {
 
   override remove(wire: Wire) {
     super.remove(wire);
-    [wire.from, wire.to].forEach((container) => container.setPower(false));
+    [wire.from, wire.to].forEach((container) => container.setPowered(false));
     wire.dispose();
     this.updatePower();
     return this;
@@ -89,7 +89,7 @@ class Wires extends Group {
           connections = [];
           map.set(container, connections);
           if (!isGenerator) {
-            container.setPower(false);
+            container.setPowered(false);
           }
         }
         const connected = container === wire.from ? wire.to : wire.from;
@@ -99,27 +99,29 @@ class Wires extends Group {
       });
       return grid;
     }, { generators: new Map(), connections: new Map() } as {
-      generators: Map<Generator, Container[]>;
-      connections: Map<Container, Container[]>;
+      generators: Map<Generator, PoweredContainer[]>;
+      connections: Map<PoweredContainer, PoweredContainer[]>;
     });
     grid.generators.forEach((connections, generator) => {
       let available = generator.power;
       const visited = new Map();
-      const power = (connections: Container[]) => {
+      const flow = (connections: PoweredContainer[]) => (
         connections.forEach((container) => {
           if (visited.has(container)) {
             return;
           }
           visited.set(container, true);
-          const required = container.needsPower();
-          if (required > 0 && required <= available) {
-            available -= required;
-            container.setPower(true);
+          if (!container.isPowered()) {
+            const required = container.getConsumption();
+            if (required <= available) {
+              available -= required;
+              container.setPowered(true);
+            }
           }
-          power(grid.connections.get(container)!);
-        });
-      };
-      power(connections);
+          flow(grid.connections.get(container)!);
+        })
+      );
+      flow(connections);
     });
   }
 }

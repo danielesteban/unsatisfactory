@@ -12,7 +12,7 @@ import Viewport from './core/viewport';
 import { Brush, brush, rotation, pick, snap } from './core/brush';
 import Belts, { Belt } from './objects/belts';
 import Buffers from './objects/buffers';
-import Container, { Connector } from './core/container';
+import Container, { PoweredContainer, Connector } from './core/container';
 import Fabricators from './objects/fabricators';
 import Foundations from './objects/foundations';
 import Generators from './objects/generators';
@@ -21,6 +21,7 @@ import Miners from './objects/miners';
 import Terrain from './objects/terrain';
 import Walls from './objects/walls';
 import Wires, { Wire } from './objects/wires';
+import UI from './ui';
 import Debug from './debug';
 
 const viewport = new Viewport();
@@ -66,11 +67,11 @@ viewport.scene.add(walls);
 const wires = new Wires();
 viewport.scene.add(wires);
 
-const from: Omit<Connector, "container"> & { container: Container | undefined; } = {
+const from: Omit<Connector, "container"> & { container: Container | PoweredContainer | undefined; } = {
   container: undefined,
   direction: new Vector3(),
 };
-const to: Omit<Connector, "container"> & { container: Container | undefined; } = {
+const to: Omit<Connector, "container"> & { container: Container | PoweredContainer | undefined; } = {
   container: undefined,
   direction: new Vector3(),
 };
@@ -149,7 +150,7 @@ const create = (intersection: Intersection<Object3D<Event>>) => {
       if (from.container === to.container) {
         return;
       }
-      wires.create(from.container, to.container);
+      wires.create(from.container as PoweredContainer, to.container as PoweredContainer);
       break;
   }
 };
@@ -202,10 +203,18 @@ const remove = (intersection: Intersection<Object3D<Event>>) => {
   }
 };
 
+const interaction = (intersection: Intersection<Object3D<Event>>) => {
+  if (intersection.object instanceof Fabricators) {
+    const instance = intersection.object.getInstance(intersection.instanceId!);
+    UI('Fabricator', { instance });
+    return;
+  }
+};
+
 const center = new Vector2();
 const raycaster = new Raycaster();
 const handleInput = (
-  { primary, secondary, tertiary }: { primary: boolean; secondary: boolean; tertiary: boolean; },
+  { primary, secondary, tertiary, interact }: { primary: boolean; secondary: boolean; tertiary: boolean; interact: boolean; },
   intersection: Intersection<Object3D<Event>>
 ) => {
   const hasFrom = from.container !== undefined;
@@ -218,6 +227,9 @@ const handleInput = (
   if (tertiary && intersection?.object) {
     pick(intersection);
   }
+  if (interact && intersection?.object) {
+    interaction(intersection);
+  }
   if (hasFrom) {
     from.container = undefined;
   }
@@ -228,7 +240,7 @@ viewport.setAnimationLoop((buttons, delta) => {
   terrain.update(viewport.camera.position, 10);
   raycaster.setFromCamera(center, viewport.camera);
   const intersection = raycaster.intersectObjects(viewport.scene.children)[0];
-  if (buttons.primary || buttons.secondary || buttons.tertiary) {
+  if (buttons.primary || buttons.secondary || buttons.tertiary || buttons.interact) {
     handleInput(buttons, intersection);
   }
 });

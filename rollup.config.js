@@ -5,6 +5,8 @@ import html from '@rollup/plugin-html';
 import livereload from 'rollup-plugin-livereload';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import postcss from 'rollup-plugin-postcss';
+import svelte from 'rollup-plugin-svelte';
+import sveltePreprocess from 'svelte-preprocess';
 import serve from 'rollup-plugin-serve';
 import terser from '@rollup/plugin-terser';
 import typescript from '@rollup/plugin-typescript';
@@ -25,6 +27,7 @@ export default {
   plugins: [
     url({ include: ['**/*.exr', '**/*.jpg'], destDir: 'dist/assets', publicPath: '/assets/' }),
     nodeResolve({ extensions: ['.js', '.ts'] }),
+    svelte({ preprocess: sveltePreprocess({ sourceMap: !production }) }),
     typescript({ sourceMap: !production, inlineSources: !production }),
     postcss({ extract: true, minimize: production }),
     html({

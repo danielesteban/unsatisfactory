@@ -9,14 +9,14 @@ import {
 } from 'three';
 import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 import Instances from '../core/instances';
-import Container from '../core/container';
+import { PoweredContainer } from '../core/container';
 import { Item } from './items';
 import { loadTexture } from '../textures';
 import DiffuseMap from '../textures/rust_coarse_01_diff_1k.jpg';
 import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.jpg';
 import RoughnessMap from '../textures/rust_coarse_01_rough_1k.jpg';
 
-export class Fabricator extends Container {
+export class Fabricator extends PoweredContainer {
   private tick: number;
   private rate: number;
 
@@ -48,8 +48,8 @@ export class Fabricator extends Container {
   }
 
   override output() {
-    const { items, powered, rate } = this;
-    if (!powered || ++this.tick < rate) {
+    const { enabled, items, powered, rate } = this;
+    if (!enabled || !powered || ++this.tick < rate) {
       return Item.none;
     }
     this.tick = 0;
@@ -57,7 +57,7 @@ export class Fabricator extends Container {
   }
 
   override getWireConnector(): Vector3 {
-    return this.position.clone().addScaledVector(Container.worldUp, 2.5);
+    return this.position.clone().addScaledVector(PoweredContainer.worldUp, 2.5);
   }
 };
 

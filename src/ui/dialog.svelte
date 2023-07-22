@@ -1,0 +1,40 @@
+<script lang="ts">
+  export let close: () => void;
+  let dom: HTMLDivElement;
+  const pointerdown = ({ target }: PointerEvent) => {
+    if (target !== dom) {
+      return;
+    }
+    close();
+  };
+</script>
+
+<div bind:this={dom} class="overlay" on:pointerdown={pointerdown}>
+  <div class="container">
+    <slot></slot>
+  </div>
+</div>
+
+<style>
+  .overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(0.5rem);
+  }
+
+  .container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(2rem);
+    border-radius: 1rem;
+    width: 600px;
+    height: 400px;
+  }
+</style>

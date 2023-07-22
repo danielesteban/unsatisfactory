@@ -7,17 +7,13 @@ class Container {
   public readonly position: Vector3;
   public readonly rotation: number;
   protected readonly capacity: number;
-  protected readonly consumption: number;
   protected readonly items: Item[];
-  protected powered: boolean;
 
-  constructor(position: Vector3, rotation: number, capacity: number, consumption: number = 0, items: Item[] = []) {
+  constructor(position: Vector3, rotation: number, capacity: number, items: Item[] = []) {
     this.position = position;
     this.rotation = rotation;
     this.capacity = capacity;
-    this.consumption = consumption;
     this.items = items;
-    this.powered = false;
   }
 
   count() {
@@ -45,20 +41,49 @@ class Container {
   getConnector(direction: Vector3, offset: Vector3) {
     return this.position.clone().addScaledVector(direction, 0.75).add(offset);
   }
+};
+
+export class PoweredContainer extends Container {
+  protected readonly consumption: number;
+  protected enabled: boolean;
+  protected powered: boolean;
+
+  constructor(position: Vector3, rotation: number, capacity: number, consumption: number, items: Item[] = []) {
+    super(position, rotation, capacity, items);
+    this.consumption = consumption;
+    this.enabled = true;
+    this.powered = false;
+  }
+
+  override canInput() {
+    return this.enabled && super.canInput();
+  }
 
   protected static worldUp: Vector3 = new Vector3(0, 1, 0);
   getWireConnector(): Vector3 {
-    return this.position.clone().addScaledVector(Container.worldUp, 1.5);
+    return this.position.clone().addScaledVector(PoweredContainer.worldUp, 1.5);
   }
 
-  needsPower() {
-    return this.powered ? 0 : this.consumption;
+  getConsumption() {
+    return this.consumption;
   }
 
-  setPower(status: boolean) {
+  isEnabled() {
+    return this.enabled;
+  }
+
+  setEnabled(status: boolean) {
+    this.enabled = status;
+  }
+
+  isPowered() {
+    return this.powered;
+  }
+
+  setPowered(status: boolean) {
     this.powered = status;
   }
-};
+}
 
 export type Connector = {
   container: Container;

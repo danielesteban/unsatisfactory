@@ -9,16 +9,16 @@ import {
 } from 'three';
 import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 import Instances from '../core/instances';
-import Container from '../core/container';
+import { PoweredContainer } from '../core/container';
 import { loadTexture } from '../textures';
 import DiffuseMap from '../textures/rust_coarse_01_diff_1k.jpg';
 import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.jpg';
 import RoughnessMap from '../textures/rust_coarse_01_rough_1k.jpg';
 
-export class Generator extends Container {
+export class Generator extends PoweredContainer {
   public readonly power: number;
   constructor(position: Vector3, rotation: number, power: number) {
-    super(position, rotation, 0);
+    super(position, rotation, 0, 0);
     this.power = power;
   }
 };
