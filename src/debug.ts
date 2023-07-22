@@ -19,10 +19,11 @@ export default (belts: Belts, buffers: Buffers, fabricators: Fabricators, founda
   const minerA = miners.create(new Vector3(2, 2.5, -8), 0, Item.ore);
   const minerB = miners.create(new Vector3(2, 2.5, -6), 0, Item.ore);
   const minerC = miners.create(new Vector3(2, 2.5, -4), 0, Item.ore);
-  const buffer = buffers.create(new Vector3(-3, 1.5, -6), 0, false);
+  const buffer = buffers.create(new Vector3(-3, 1.5, -6), 0);
   const fabricatorA = fabricators.create(new Vector3(-8, 2.5, -6), 0);
   const fabricatorB = fabricators.create(new Vector3(-16, 2.5, 0), Math.PI * 0.5);
-  const sink = buffers.create(new Vector3(-16, -0.5, 6), 0, true);
+  const sink = buffers.create(new Vector3(-16, -0.5, 6), 0);
+  sink.setSink(true);
   belts.create(
     {
       container: minerA,

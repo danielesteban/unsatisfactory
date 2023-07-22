@@ -16,10 +16,11 @@ import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.jpg';
 import RoughnessMap from '../textures/rust_coarse_01_rough_1k.jpg';
 
 export class Buffer extends Container {
-  public sink: boolean;
-  constructor(position: Vector3, rotation: number, sink: boolean) {
+  private sink: boolean;
+
+  constructor(position: Vector3, rotation: number) {
     super(position, rotation, 3);
-    this.sink = sink;
+    this.sink = false;
   }
 
   override canInput() {
@@ -30,6 +31,14 @@ export class Buffer extends Container {
     if (!this.sink) {
       super.input(item);
     }
+  }
+
+  isSink() {
+    return this.sink;
+  }
+
+  setSink(status: boolean) {
+    this.sink = status;
   }
 };
 
@@ -86,8 +95,8 @@ class Buffers extends Instances<Buffer> {
     super(Buffers.geometry!, Buffers.material!, Buffers.collider!);
   }
 
-  create(position: Vector3, rotation: number, sink: boolean = false) {
-    return super.addInstance(new Buffer(position, rotation, sink));
+  create(position: Vector3, rotation: number) {
+    return super.addInstance(new Buffer(position, rotation));
   }
 }
 

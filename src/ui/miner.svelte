@@ -3,14 +3,14 @@
   import Heading from './components/heading.svelte';
   import Modules from './components/modules.svelte';
   import Power from './components/power.svelte';
-  import { Fabricator } from '../objects/fabricators';
+  import { Miner } from '../objects/miners';
 
   export let close: () => void;
-  export let instance: Fabricator;
+  export let instance: Miner;
 </script>
 
 <Dialog close={close}>
-  <Heading>Fabricator</Heading>
+  <Heading>Miner</Heading>
   <Modules>
     <Power instance={instance} />
   </Modules>

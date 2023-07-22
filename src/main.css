@@ -38,7 +38,7 @@ button {
   line-height: inherit;
   color: inherit;
   background: rgba(0, 0, 0, .5);
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
   display: flex;
   align-items: center;
   justify-content: center;

@@ -204,15 +204,16 @@ const remove = (intersection: Intersection<Object3D<Event>>) => {
 };
 
 const interaction = (intersection: Intersection<Object3D<Event>>) => {
-  if (intersection.object instanceof Fabricators) {
-    const instance = intersection.object.getInstance(intersection.instanceId!);
-    UI('Fabricator', { instance });
+  if (
+    intersection.object instanceof Buffers
+    || intersection.object instanceof Fabricators
+    || intersection.object instanceof Miners
+  ) {
+    UI(intersection.object.getInstance(intersection.instanceId!));
     return;
   }
 };
 
-const center = new Vector2();
-const raycaster = new Raycaster();
 const handleInput = (
   { primary, secondary, tertiary, interact }: { primary: boolean; secondary: boolean; tertiary: boolean; interact: boolean; },
   intersection: Intersection<Object3D<Event>>
@@ -235,12 +236,14 @@ const handleInput = (
   }
 };
 
+const center = new Vector2();
+const raycaster = new Raycaster();
 viewport.setAnimationLoop((buttons, delta) => {
   belts.step(delta);
   terrain.update(viewport.camera.position, 10);
-  raycaster.setFromCamera(center, viewport.camera);
-  const intersection = raycaster.intersectObjects(viewport.scene.children)[0];
   if (buttons.primary || buttons.secondary || buttons.tertiary || buttons.interact) {
+    raycaster.setFromCamera(center, viewport.camera);
+    const intersection = raycaster.intersectObjects(viewport.scene.children)[0];
     handleInput(buttons, intersection);
   }
 });
