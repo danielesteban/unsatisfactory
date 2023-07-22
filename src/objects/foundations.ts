@@ -14,6 +14,7 @@ import RoughnessMap from '../textures/hexagonal_concrete_paving_rough_1k.jpg';
 
 export type Foundation = {
   position: Vector3;
+  rotation: number;
 };
 
 class Foundations extends Instances<Foundation> {

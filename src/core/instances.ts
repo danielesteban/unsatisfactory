@@ -5,22 +5,27 @@ import {
   Intersection,
   Matrix4,
   Material,
+  Quaternion,
   Raycaster,
   Vector3,
 } from 'three';
 
 interface Instance {
   position: Vector3;
+  rotation: number;
 }
 
 class Instances<InstanceType extends Instance> extends InstancedMesh {
   private readonly collider: BufferGeometry | undefined;
   private readonly instances: InstanceType[];
   private maxInstanceCount: number;
+  private static rotation: Quaternion = new Quaternion();
+  private static scale: Vector3 = new Vector3(1, 1, 1);
   private static transform: Matrix4 = new Matrix4();
+  private static worldUp: Vector3 = new Vector3(0, 1, 0);
 
   constructor(geometry: BufferGeometry, material: Material, collider?: BufferGeometry) {
-    super(geometry, material, 32);
+    super(geometry, material, 16);
     this.castShadow = this.receiveShadow = true;
     this.updateMatrixWorld();
     this.matrixAutoUpdate = false;
@@ -45,7 +50,11 @@ class Instances<InstanceType extends Instance> extends InstancedMesh {
       this.updateInstances();
     } else {
       this.count++;
-      Instances.transform.setPosition(instance.position);
+      Instances.transform.compose(
+        instance.position,
+        Instances.rotation.setFromAxisAngle(Instances.worldUp, instance.rotation),
+        Instances.scale
+      );
       this.setMatrixAt(this.count - 1, Instances.transform);
       this.instanceMatrix.needsUpdate = true;
       this.computeBoundingSphere();
@@ -68,8 +77,13 @@ class Instances<InstanceType extends Instance> extends InstancedMesh {
   private updateInstances() {
     const { instances } = this;
     this.count = instances.length;
-    instances.forEach(({ position }, i) => {
+    instances.forEach(({ position, rotation }, i) => {
       Instances.transform.setPosition(position);
+      Instances.transform.compose(
+        position,
+        Instances.rotation.setFromAxisAngle(Instances.worldUp, rotation),
+        Instances.scale
+      );
       this.setMatrixAt(i, Instances.transform);
     });
     this.instanceMatrix.needsUpdate = true;

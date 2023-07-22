@@ -14,6 +14,7 @@ import RoughnessMap from '../textures/hexagonal_concrete_paving_rough_1k.jpg';
 
 export type Wall = {
   position: Vector3;
+  rotation: number;
 };
 
 class Walls extends Instances<Wall> {

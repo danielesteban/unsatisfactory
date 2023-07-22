@@ -8,18 +8,36 @@ import {
 } from 'three';
 import { SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 import Instances from '../core/instances';
-import Container from './container';
+import Container from '../core/container';
 import { Item } from './items';
 import { loadTexture } from '../textures';
 import DiffuseMap from '../textures/rust_coarse_01_diff_1k.jpg';
 import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.jpg';
 import RoughnessMap from '../textures/rust_coarse_01_rough_1k.jpg';
 
-class Containers extends Instances<Container> {
+export class Buffer extends Container {
+  public sink: boolean;
+  constructor(position: Vector3, rotation: number, sink: boolean) {
+    super(position, rotation, 3);
+    this.sink = sink;
+  }
+
+  override canInput() {
+    return this.sink ? true : super.canInput();
+  }
+
+  override input(item: Item) {
+    if (!this.sink) {
+      super.input(item);
+    }
+  }
+};
+
+class Buffers extends Instances<Buffer> {
   private static collider: BufferGeometry | undefined;
   static setupCollider() {
-    Containers.collider = new BoxGeometry(2, 2, 2);
-    Containers.collider.computeBoundingSphere();
+    Buffers.collider = new BoxGeometry(2, 2, 2);
+    Buffers.collider.computeBoundingSphere();
   }
 
   private static geometry: BufferGeometry | undefined;
@@ -39,38 +57,38 @@ class Containers extends Instances<Container> {
       opening.updateMatrixWorld();
       brush = csgEvaluator.evaluate(brush, opening, SUBTRACTION);
     });
-    Containers.geometry = (brush! as Mesh).geometry;
-    Containers.geometry.computeBoundingSphere();
+    Buffers.geometry = (brush! as Mesh).geometry;
+    Buffers.geometry.computeBoundingSphere();
   }
 
   private static material: MeshStandardMaterial | undefined;
   static setupMaterial() {
-    Containers.material = new MeshStandardMaterial({
+    Buffers.material = new MeshStandardMaterial({
       map: loadTexture(DiffuseMap),
       normalMap: loadTexture(NormalMap),
       roughnessMap: loadTexture(RoughnessMap),
     });
-    Containers.material.map!.anisotropy = 16;
-    Containers.material.map!.colorSpace = SRGBColorSpace;
-    return Containers.material;
+    Buffers.material.map!.anisotropy = 16;
+    Buffers.material.map!.colorSpace = SRGBColorSpace;
+    return Buffers.material;
   }
 
   constructor() {
-    if (!Containers.collider) {
-      Containers.setupCollider();
+    if (!Buffers.collider) {
+      Buffers.setupCollider();
     }
-    if (!Containers.geometry) {
-      Containers.setupGeometry();
+    if (!Buffers.geometry) {
+      Buffers.setupGeometry();
     }
-    if (!Containers.material) {
-      Containers.setupMaterial();
+    if (!Buffers.material) {
+      Buffers.setupMaterial();
     }
-    super(Containers.geometry!, Containers.material!, Containers.collider!);
+    super(Buffers.geometry!, Buffers.material!, Buffers.collider!);
   }
 
-  create(position: Vector3, items?: Item[]) {
-    return super.addInstance(new Container(position, 1000, items));
+  create(position: Vector3, rotation: number, sink: boolean = false) {
+    return super.addInstance(new Buffer(position, rotation, sink));
   }
 }
 
-export default Containers;
+export default Buffers;

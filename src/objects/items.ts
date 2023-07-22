@@ -2,17 +2,18 @@ import {
   BoxGeometry,
   BufferGeometry,
   CapsuleGeometry,
-  CylinderGeometry,
   Curve,
+  CylinderGeometry,
   DynamicDrawUsage,
   InstancedMesh,
   Group,
   Material,
   Matrix4,
   MeshStandardMaterial,
-  RepeatWrapping,
   Object3D,
+  RepeatWrapping,
   SRGBColorSpace,
+  TetrahedronGeometry,
   Vector3,
 } from 'three';
 import { loadTexture } from '../textures';
@@ -25,6 +26,7 @@ export enum Item {
   box,
   capsule,
   cylinder,
+  ore,
 }
 
 class InstancedItems extends InstancedMesh {
@@ -65,16 +67,24 @@ export class Items extends Group {
   private static geometries: Record<Exclude<Item, Item.none>, BufferGeometry> | undefined;
   static setupGeometries() {
     const box = new BoxGeometry(0.25, 0.25, 0.25);
+    box.translate(0, 0.125, 0);
     box.computeBoundingSphere();
     const capsule = new CapsuleGeometry(0.125, 0.125);
     capsule.rotateZ(Math.PI * 0.5);
+    capsule.translate(0, 0.125, 0);
     capsule.computeBoundingSphere();
     const cylinder = new CylinderGeometry(0.125, 0.125, 0.25);
+    cylinder.translate(0, 0.125, 0);
     cylinder.computeBoundingSphere();
+    const ore = new TetrahedronGeometry(0.2, 2);
+    ore.scale(1.5, 1, 1);
+    ore.translate(0, 0.2, 0);
+    ore.computeBoundingSphere();
     Items.geometries = {
       [Item.box]: box,
       [Item.capsule]: capsule,
       [Item.cylinder]: cylinder,
+      [Item.ore]: ore,
     };
   }
 
@@ -95,7 +105,6 @@ export class Items extends Group {
 
   private readonly instances: Record<Exclude<Item, Item.none>, InstancedItems | undefined>;
   private readonly path: Curve<Vector3>;
-  private readonly normals: Vector3[];
   private readonly tangents: Vector3[];
 
   constructor(count: number, path: Curve<Vector3>) {
@@ -112,10 +121,10 @@ export class Items extends Group {
       [Item.box]: undefined,
       [Item.capsule]: undefined,
       [Item.cylinder]: undefined,
+      [Item.ore]: undefined,
     };
     this.path = path;
-    const { normals, tangents } = path.computeFrenetFrames(count, false);
-    this.normals = normals;
+    const { tangents } = path.computeFrenetFrames(count, false);
     this.tangents = tangents;
   }
 
@@ -125,11 +134,11 @@ export class Items extends Group {
 
   private static aux: Vector3 = new Vector3();
   private static transform: Object3D = new Object3D();
-  animate(items: Item[], step: number) {
-    const { children, instances, path, normals, tangents } = this;
-    const count = items.length;
+  animate(slots: { item: Item; locked: boolean; }[], step: number) {
+    const { children, instances, path, tangents } = this;
+    const count = slots.length;
     (children as InstancedItems[]).forEach((items) => items.reset());
-    items.forEach((item, i) => {
+    slots.forEach(({ item, locked }, i) => {
       if (item === Item.none) {
         return;
       }
@@ -137,8 +146,9 @@ export class Items extends Group {
         instances[item] = new InstancedItems(Items.geometries![item], Items.material!, count);
         this.add(instances[item]!);
       }
-      path.getPointAt((i + step) / count, Items.transform.position).addScaledVector(Items.aux.lerpVectors(normals[i], normals[i + 1], step), -0.125);
-      Items.transform.lookAt(Items.aux.lerpVectors(tangents[i], tangents[i + 1], step).add(Items.transform.position));
+      const alpha = locked ? 1 : step;
+      path.getPointAt((i + alpha) / count, Items.transform.position);
+      Items.transform.lookAt(Items.aux.lerpVectors(tangents[i], tangents[i + 1], alpha).add(Items.transform.position));
       Items.transform.updateMatrix();
       instances[item]!.addInstance(Items.transform.matrix);
     });

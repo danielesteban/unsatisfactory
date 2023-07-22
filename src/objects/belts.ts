@@ -10,7 +10,7 @@ import {
   SRGBColorSpace,
   Vector3,
 } from 'three';
-import Container, { Connector } from './container';
+import Container, { Connector } from '../core/container';
 import Items, { Item } from './items';
 import { loadTexture } from '../textures';
 import DiffuseMap from '../textures/green_metal_rust_diff_1k.jpg';
@@ -42,11 +42,8 @@ export class Belt extends Mesh {
   public readonly to: Container;
 
   private enabled: boolean;
-  private locked: boolean;
   private readonly items: Items;
-  private readonly rate: number;
-  private readonly slots: Item[];
-  private timer: number;
+  private readonly slots: { item: Item; locked: boolean; }[];
 
   constructor(material: Material, from: Connector, to: Connector) {
     if (!Belt.shape) {
@@ -89,10 +86,7 @@ export class Belt extends Mesh {
     this.from = from.container;
     this.to = to.container;
     this.enabled = true;
-    this.locked = true;
-    this.rate = 1 / 5;
-    this.slots = Array.from({ length: Math.ceil(path.getLength() / 0.5) }, () => Item.none);
-    this.timer = 0;
+    this.slots = Array.from({ length: Math.ceil(path.getLength() / 0.5) }, () => ({ item: Item.none, locked: false }));
     this.items = new Items(this.slots.length, path);
     this.add(this.items);
   }
@@ -103,48 +97,42 @@ export class Belt extends Mesh {
     items.dispose();
   }
 
-  step(delta: number) {
-    this.timer += delta;
-    const { from, to, items, rate, slots } = this;
-    if (this.timer >= rate) {
-      this.timer -= rate;
-      if (this.locked) {
-        // @dani @hack
-        // This is to allow other belts to input into a backed up container.
-        // Which tells me that the containers should be the ones that pull
-        // instead of the belts being the ones that push.
-        this.locked = false;
-        return;
-      }
-      if (to.canInput()) {
-        slots.unshift(from.output());
-        to.input(slots.pop()!);
-        this.enabled = true;
-        this.locked = !to.canInput();
-      } else if (this.enabled) {
-        // @dani @incomplete
-        // This creates a visual glitch when animating the items backed up at the end of the belt.
-        // A possible fix would be tracking the backed up items and making the items animation aware
-        // of which items should not be animated.
-        let hasMoved = false;
-        for (let i = slots.length - 1; i > 0; i--) {
-          if (slots[i] === Item.none) {
-            slots[i] = slots[i - 1];
-            slots[i - 1] = Item.none;
-            hasMoved = true;
-          }
-        }
-        if (slots[0] === Item.none) {
-          slots[0] = from.output();
-          hasMoved = true;
-        }
-        if (!hasMoved) {
-          this.enabled = false;
-        }
-      }
+  animate(step: number) {
+    const { enabled, items, slots } = this;
+    if (enabled) {
+      items.animate(slots, step);
     }
+  }
+
+  step() {
+    const { from, to, slots } = this;
+    if (to.canInput()) {
+      to.input(slots[slots.length - 1].item);
+      slots[slots.length - 1].item = Item.none;
+      this.enabled = true;
+    }
+
     if (this.enabled) {
-      items.animate(slots, this.timer / rate);
+      let isSaturated = true;
+      for (let i = slots.length - 1; i > 0; i--) {
+        if (slots[i].item === Item.none && slots[i - 1].item !== Item.none) {
+          slots[i].item = slots[i - 1].item;
+          slots[i].locked = false;
+          slots[i - 1].item = Item.none;
+          isSaturated = false;
+        } else {
+          slots[i].locked = true;
+        }
+      }
+      if (slots[0].item === Item.none) {
+        const output = from.output();
+        slots[0].item = output;
+        slots[0].locked = false;
+        isSaturated = false;
+      }
+      if (isSaturated) {
+        this.enabled = false;
+      }
     }
   }
 }
@@ -166,6 +154,8 @@ class Belts extends Group {
     return Belts.material;
   }
 
+  private timer: number;
+
   constructor() {
     if (!Belts.material) {
       Belts.setupMaterial();
@@ -173,6 +163,7 @@ class Belts extends Group {
     super();
     this.matrixAutoUpdate = false;
     this.updateMatrixWorld();
+    this.timer = 0;
   }
 
   create(from: Connector, to: Connector) {
@@ -188,7 +179,14 @@ class Belts extends Group {
   }
 
   step(delta: number) {
-    (this.children as Belt[]).forEach((belt) => belt.step(delta));
+    this.timer += delta;
+    const rate = 1 / 5;
+    while (this.timer > rate) {
+      this.timer -= rate;
+      (this.children as Belt[]).forEach((belt) => belt.step());
+    }
+    const step = this.timer / rate;
+    (this.children as Belt[]).forEach((belt) => belt.animate(step));
   }
 }
 
