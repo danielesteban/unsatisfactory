@@ -14,6 +14,7 @@ import Miners from '../objects/miners';
 import { TerrainChunk } from '../objects/terrain';
 import Walls from '../objects/walls';
 import { Wire } from '../objects/wires';
+import UI from '../ui/brush.svelte';
 
 export enum Brush {
   foundation,
@@ -29,34 +30,27 @@ export enum Brush {
 export let brush: Brush = Brush.foundation;
 export let rotation: number = 0;
 
-const setBrush = (type: Brush) => {
-  items[brush].classList.remove('active');
-  brush = type;
-  items[brush].classList.add('active');
-};
-
-const dom = document.getElementById('brush')!;
-const items = [
-  'Foundation',
-  'Wall',
-  'Belt',
-  'Buffer',
-  'Wire',
-  'Fabricator',
-  'Miner',
-  'Generator',
-].map((name, i) => {
-  const wrapper = document.createElement('div');
-  const num = document.createElement('div');
-  num.innerText = `${i + 1}`;
-  wrapper.appendChild(num);
-  const item = document.createElement('div');
-  item.innerText = name;
-  wrapper.appendChild(item);
-  dom.appendChild(wrapper);
-  return wrapper;
+const ui = new UI({
+  props: {
+    brush: brush as Brush,
+    brushes: [
+      { id: Brush.foundation, name: 'Foundation' },
+      { id: Brush.wall, name: 'Wall' },
+      { id: Brush.belt, name: 'Belt' },
+      { id: Brush.buffer, name: 'Buffer' },
+      { id: Brush.wire, name: 'Wire' },
+      { id: Brush.fabricator, name: 'Fabricator' },
+      { id: Brush.miner, name: 'Miner' },
+      { id: Brush.generator, name: 'Generator' },
+    ],
+  },
+  target: document.getElementById('ui')!,
 });
-items[brush].classList.add('active');
+
+const setBrush = (type: Brush) => {
+  brush = type;
+  ui.$set({ brush });
+};
 
 document.addEventListener('keydown', (e) => {
   if (e.repeat) {

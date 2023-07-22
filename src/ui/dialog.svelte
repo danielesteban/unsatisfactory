@@ -1,6 +1,12 @@
 <script lang="ts">
   export let close: () => void;
   let dom: HTMLDivElement;
+  const keyup = ({ code, repeat }: KeyboardEvent) => {
+    if (code !== 'Escape' || repeat) {
+      return;
+    }
+    close();
+  };
   const pointerdown = ({ target }: PointerEvent) => {
     if (target !== dom) {
       return;
@@ -8,6 +14,8 @@
     close();
   };
 </script>
+
+<svelte:document on:keyup={keyup} />
 
 <div bind:this={dom} class="overlay" on:pointerdown={pointerdown}>
   <div class="container">
