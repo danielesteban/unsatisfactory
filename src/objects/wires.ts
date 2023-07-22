@@ -85,9 +85,10 @@ class Wires extends Group {
   updatePowerGrid() {
     const { children } = this;
     if (this.grid) {
-      this.grid.containers.forEach((_connections, container) => (
-        container.removeEventListener('enabled', this.updatePower)
-      ));
+      this.grid.containers.forEach((_connections, container) => {
+        container.setPowered(false);
+        container.removeEventListener('enabled', this.updatePower);
+      });
     }
     this.grid = (children as Wire[]).reduce((grid, wire) => {
       [wire.from, wire.to].forEach((container) => {
