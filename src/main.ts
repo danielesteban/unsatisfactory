@@ -207,6 +207,7 @@ const interaction = (intersection: Intersection<Object3D<Event>>) => {
   if (
     intersection.object instanceof Buffers
     || intersection.object instanceof Fabricators
+    || intersection.object instanceof Generators
     || intersection.object instanceof Miners
   ) {
     UI(intersection.object.getInstance(intersection.instanceId!));

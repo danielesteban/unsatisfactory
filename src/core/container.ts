@@ -1,15 +1,18 @@
 import {
+  BaseEvent,
+  EventDispatcher,
   Vector3,
 } from 'three';
 import { Item } from '../objects/items';
 
-class Container {
+class Container<Event extends BaseEvent = BaseEvent> extends EventDispatcher<Event> {
   public readonly position: Vector3;
   public readonly rotation: number;
   protected readonly capacity: number;
   protected readonly items: Item[];
 
   constructor(position: Vector3, rotation: number, capacity: number, items: Item[] = []) {
+    super();
     this.position = position;
     this.rotation = rotation;
     this.capacity = capacity;
@@ -43,7 +46,18 @@ class Container {
   }
 };
 
-export class PoweredContainer extends Container {
+export type PoweredContainerEvent = BaseEvent & (
+  {
+    type: 'enabled';
+    status: boolean;
+  }
+  | {
+    type: 'powered';
+    status: boolean;
+  }
+);
+
+export class PoweredContainer extends Container<PoweredContainerEvent> {
   protected readonly consumption: number;
   protected enabled: boolean;
   protected powered: boolean;
@@ -74,6 +88,7 @@ export class PoweredContainer extends Container {
 
   setEnabled(status: boolean) {
     this.enabled = status;
+    this.dispatchEvent({ type: 'enabled', status });
   }
 
   isPowered() {
@@ -82,6 +97,7 @@ export class PoweredContainer extends Container {
 
   setPowered(status: boolean) {
     this.powered = status;
+    this.dispatchEvent({ type: 'powered', status });
   }
 }
 

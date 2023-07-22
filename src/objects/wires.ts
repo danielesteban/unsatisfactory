@@ -61,36 +61,43 @@ class Wires extends Group {
     super();
     this.matrixAutoUpdate = false;
     this.updateMatrixWorld();
+    this.updatePower = this.updatePower.bind(this);
   }
 
   create(from: PoweredContainer, to: PoweredContainer) {
     const wire = new Wire(Wires.material!, from, to);
     this.add(wire);
-    this.updatePower();
+    this.updatePowerGrid();
     return wire;
   }
 
   override remove(wire: Wire) {
     super.remove(wire);
-    [wire.from, wire.to].forEach((container) => container.setPowered(false));
     wire.dispose();
-    this.updatePower();
+    this.updatePowerGrid();
     return this;
   }
 
-  updatePower() {
+  private grid?: {
+    containers: Map<PoweredContainer, PoweredContainer[]>;
+    generators: Map<Generator, PoweredContainer[]>;
+  };
+  updatePowerGrid() {
     const { children } = this;
-    const grid = (children as Wire[]).reduce((grid, wire) => {
+    if (this.grid) {
+      this.grid.containers.forEach((_connections, container) => (
+        container.removeEventListener('enabled', this.updatePower)
+      ));
+    }
+    this.grid = (children as Wire[]).reduce((grid, wire) => {
       [wire.from, wire.to].forEach((container) => {
         const isGenerator = container instanceof Generator;
-        const map = isGenerator ? grid.generators : grid.connections;
+        const map = isGenerator ? grid.generators : grid.containers;
         let connections = map.get(container);
         if (!connections) {
           connections = [];
           map.set(container, connections);
-          if (!isGenerator) {
-            container.setPowered(false);
-          }
+          container.addEventListener('enabled', this.updatePower);
         }
         const connected = container === wire.from ? wire.to : wire.from;
         if (!(connected instanceof Generator)) {
@@ -98,12 +105,20 @@ class Wires extends Group {
         }
       });
       return grid;
-    }, { generators: new Map(), connections: new Map() } as {
-      generators: Map<Generator, PoweredContainer[]>;
-      connections: Map<PoweredContainer, PoweredContainer[]>;
-    });
+    }, { containers: new Map(), generators: new Map() });
+    this.updatePower();
+  }
+
+  updatePower() {
+    const { grid } = this;
+    if (!grid) {
+      return this.updatePowerGrid();
+    }
+    grid.containers.forEach((_connections, container) => (
+      container.setPowered(false)
+    ));
     grid.generators.forEach((connections, generator) => {
-      let available = generator.power;
+      let available = generator.getPower();
       const visited = new Map();
       const flow = (connections: PoweredContainer[]) => (
         connections.forEach((container) => {
@@ -111,14 +126,14 @@ class Wires extends Group {
             return;
           }
           visited.set(container, true);
-          if (!container.isPowered()) {
+          if (container.isEnabled() && !container.isPowered()) {
             const required = container.getConsumption();
             if (required <= available) {
               available -= required;
               container.setPowered(true);
             }
           }
-          flow(grid.connections.get(container)!);
+          flow(grid.containers.get(container)!);
         })
       );
       flow(connections);

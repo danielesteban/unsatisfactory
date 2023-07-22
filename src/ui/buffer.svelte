@@ -1,18 +1,26 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte';
   import Dialog from './components/dialog.svelte';
   import Heading from './components/heading.svelte';
   import Modules from './components/modules.svelte';
   import Module from './components/module.svelte';
-  import { Buffer } from '../objects/buffers';
+  import { Buffer, BufferEvent } from '../objects/buffers';
 
   export let close: () => void;
   export let instance: Buffer;
 
-  let enabled = instance.isSink();
-  const toggle = () => {
-    enabled = !instance.isSink();
-    instance.setSink(enabled);
+  const toggle = () => (
+    instance.setSink(!instance.isSink())
+  );
+
+  let sink = instance.isSink();
+  const onSink = ({ status }: BufferEvent) => {
+    sink = status;
   };
+  instance.addEventListener('sink', onSink);
+  onDestroy(() => (
+    instance.removeEventListener('sink', onSink)
+  ));
 </script>
 
 <Dialog close={close}>
@@ -21,8 +29,8 @@
     <Module>
       <div slot="name">Sink</div>
       <div>
-        <button on:click={toggle} class:enabled={enabled}>
-          {enabled ? 'ON' : 'OFF'}
+        <button on:click={toggle} class:enabled={sink}>
+          {sink ? 'ON' : 'OFF'}
         </button>
       </div>
     </Module>

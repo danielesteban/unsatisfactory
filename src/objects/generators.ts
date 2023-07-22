@@ -16,10 +16,14 @@ import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.jpg';
 import RoughnessMap from '../textures/rust_coarse_01_rough_1k.jpg';
 
 export class Generator extends PoweredContainer {
-  public readonly power: number;
+  private readonly power: number;
   constructor(position: Vector3, rotation: number, power: number) {
     super(position, rotation, 0, 0);
     this.power = power;
+  }
+
+  getPower() {
+    return this.enabled ? this.power : 0;
   }
 };
 

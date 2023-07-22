@@ -1,4 +1,5 @@
 import {
+  BaseEvent,
   BoxGeometry,
   BufferGeometry,
   Mesh,
@@ -15,7 +16,14 @@ import DiffuseMap from '../textures/rust_coarse_01_diff_1k.jpg';
 import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.jpg';
 import RoughnessMap from '../textures/rust_coarse_01_rough_1k.jpg';
 
-export class Buffer extends Container {
+export type BufferEvent = BaseEvent & (
+  {
+    type: 'sink';
+    status: boolean;
+  }
+);
+
+export class Buffer extends Container<BufferEvent> {
   private sink: boolean;
 
   constructor(position: Vector3, rotation: number) {
@@ -39,6 +47,7 @@ export class Buffer extends Container {
 
   setSink(status: boolean) {
     this.sink = status;
+    this.dispatchEvent({ type: 'sink', status });
   }
 };
 
