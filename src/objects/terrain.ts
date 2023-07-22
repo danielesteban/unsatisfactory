@@ -153,8 +153,8 @@ class Terrain extends Group {
           'vec4 diffuseColor = vec4( diffuse, opacity );',
           /* glsl */`
           float depth = distance(gridPosition, cameraPosition);
-          float decay = exp(-0.01 * 0.01 * depth * depth);
-          float grid = 1.0 - line(gridPosition.xz * 0.5) * decay;
+          float decay = exp(-0.02 * 0.02 * depth * depth);
+          float grid = 1.0 - line(gridPosition.xz * 0.5) * 0.8 * decay;
           vec4 diffuseColor = vec4(diffuse * grid, opacity);
           `
         );

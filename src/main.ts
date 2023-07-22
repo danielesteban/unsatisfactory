@@ -241,7 +241,7 @@ const center = new Vector2();
 const raycaster = new Raycaster();
 viewport.setAnimationLoop((buttons, delta) => {
   belts.step(delta);
-  terrain.update(viewport.camera.position, 10);
+  terrain.update(viewport.camera.position, 8);
   if (buttons.primary || buttons.secondary || buttons.tertiary || buttons.interact) {
     raycaster.setFromCamera(center, viewport.camera);
     const intersection = raycaster.intersectObjects(viewport.scene.children)[0];
