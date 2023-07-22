@@ -133,7 +133,7 @@ export default (belts: Belts, buffers: Buffers, fabricators: Fabricators, founda
     }
   }
   foundations.addInstance({ position: generator.position.clone().add(new Vector3(0, -1.5, 0)), rotation: 0 });
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 8; i++) {
     foundations.addInstance({ position: fabricatorB.position.clone().add(new Vector3(0, -2.5 - i, 0)), rotation: 0 });
     foundations.addInstance({ position: fabricatorC.position.clone().add(new Vector3(0, -2.5 - i, 0)), rotation: 0 });
   }
