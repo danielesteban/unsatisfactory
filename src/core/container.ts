@@ -24,7 +24,7 @@ class Container<Event extends BaseEvent = BaseEvent> extends EventDispatcher<Eve
     return items.length;
   }
 
-  canInput() {
+  canInput(_item: Item) {
     const { capacity, items } = this;
     return items.length < capacity;
   }
@@ -69,8 +69,8 @@ export class PoweredContainer extends Container<PoweredContainerEvent> {
     this.powered = false;
   }
 
-  override canInput() {
-    return this.enabled && super.canInput();
+  override canInput(item: Item) {
+    return this.enabled && super.canInput(item);
   }
 
   protected static worldUp: Vector3 = new Vector3(0, 1, 0);

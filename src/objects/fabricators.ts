@@ -10,20 +10,32 @@ import {
 import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 import Instances from '../core/instances';
 import { PoweredContainer } from '../core/container';
-import { Item } from './items';
+import { Item, Recipe, Recipes } from './items';
 import { loadTexture } from '../textures';
 import DiffuseMap from '../textures/rust_coarse_01_diff_1k.jpg';
 import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.jpg';
 import RoughnessMap from '../textures/rust_coarse_01_rough_1k.jpg';
 
 export class Fabricator extends PoweredContainer {
+  protected readonly outputItems: Item[];
+  private recipe: Recipe;
   private tick: number;
-  private rate: number;
 
   constructor(position: Vector3, rotation: number) {
-    super(position, rotation, 1, 10);
+    super(position, rotation, 0, 10);
+    this.outputItems = [];
+    this.recipe = Recipes[0];
     this.tick = 0;
-    this.rate = 1;
+  }
+
+  getRecipe() {
+    return this.recipe;
+  }
+
+  setRecipe(recipe: Recipe) {
+    this.items.length = 0;
+    this.recipe = recipe;
+    this.dispatchEvent({ type: 'recipe', data: recipe } as any);
   }
 
   private static connectorOffset: Vector3 = new Vector3(0, -1, 0);
@@ -34,26 +46,34 @@ export class Fabricator extends PoweredContainer {
       .add(offset);
   }
 
-  private static fabricate(item: Item) {
-    switch (item) {
-      default:
-        return item;
-      case Item.ore:
-        return Item.capsule;
-      case Item.capsule:
-        return Item.cylinder;
-      case Item.cylinder:
-        return Item.box;
-    }
+  override canInput(item: Item) {
+    const { enabled, items, recipe } = this;
+    return !!(
+      enabled
+      && recipe.input.item === item
+      && items.length < recipe.input.count
+    );
   }
 
   override output() {
-    const { enabled, items, powered, rate } = this;
-    if (!enabled || !powered || ++this.tick < rate) {
+    const { enabled, items, powered, recipe, outputItems } = this;
+    if (outputItems.length) {
+      return outputItems.pop()!;
+    }
+    if (
+      !enabled
+      || !powered
+      || items.length < recipe.input.count
+      || ++this.tick < recipe.rate
+    ) {
       return Item.none;
     }
+    items.length = 0;
     this.tick = 0;
-    return Fabricator.fabricate(items.pop() || Item.none);
+    for (let i = 0; i < recipe.output.count; i++) {
+      outputItems.unshift(recipe.output.item);
+    }
+    return outputItems.pop()!;
   }
 
   override getWireConnector(): Vector3 {

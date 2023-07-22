@@ -106,9 +106,10 @@ export class Belt extends Mesh {
 
   step() {
     const { from, to, slots } = this;
-    if (to.canInput()) {
-      to.input(slots[slots.length - 1].item);
-      slots[slots.length - 1].item = Item.none;
+    const output = slots[slots.length - 1];
+    if (output.item !== Item.none && to.canInput(output.item)) {
+      to.input(output.item);
+      output.item = Item.none;
       this.enabled = true;
     }
 
@@ -125,8 +126,7 @@ export class Belt extends Mesh {
         }
       }
       if (slots[0].item === Item.none) {
-        const output = from.output();
-        slots[0].item = output;
+        slots[0].item = from.output();
         slots[0].locked = false;
         isSaturated = false;
       }

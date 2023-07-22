@@ -29,6 +29,48 @@ export enum Item {
   ore,
 }
 
+export type Recipe = {
+  input: { item: Item; count: number; };
+  output: { item: Item; count: number; };
+  rate: number;
+};
+
+export const Recipes: Recipe[] = [
+  {
+    input: {
+      item: Item.ore,
+      count: 1,
+    },
+    output: {
+      item: Item.capsule,
+      count: 1,
+    },
+    rate: 1,
+  },
+  {
+    input: {
+      item: Item.capsule,
+      count: 1,
+    },
+    output: {
+      item: Item.cylinder,
+      count: 1,
+    },
+    rate: 2,
+  },
+  {
+    input: {
+      item: Item.capsule,
+      count: 1,
+    },
+    output: {
+      item: Item.box,
+      count: 1,
+    },
+    rate: 2,
+  }
+];
+
 class InstancedItems extends InstancedMesh {
   constructor(geometry: BufferGeometry, material: Material, count: number) {
     super(geometry, material, count);
