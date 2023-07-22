@@ -81,12 +81,12 @@ document.addEventListener('keydown', (e) => {
     case 'Digit8':
       setBrush(Brush.generator);
       break;
-    case 'KeyQ': {
+    case 'KeyR': {
       rotation += Math.PI * 0.25;
       while (rotation > Math.PI) rotation -= Math.PI * 2;
       break;
     }
-    case 'KeyE': {
+    case 'KeyT': {
       rotation -= Math.PI * 0.25;
       while (rotation < -Math.PI) rotation += Math.PI * 2;
       break;

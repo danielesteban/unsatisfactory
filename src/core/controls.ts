@@ -159,7 +159,7 @@ class Controls {
       case 'ShiftRight':
         movement.y = -1;
         break;
-      case 'KeyF':
+      case 'KeyE':
         buttons.interact = true;
         break;
     }
@@ -190,7 +190,7 @@ class Controls {
       case 'ShiftRight':
         if (movement.y < 0) movement.y = 0;
         break;
-      case 'KeyF':
+      case 'KeyE':
         buttons.interact = false;
         break;
     }
