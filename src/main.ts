@@ -10,7 +10,7 @@ import {
 } from 'three';
 import Viewport from './core/viewport';
 import { Brush, brush, rotation, pick, snap } from './core/brush';
-import { serialize, deserialize, version } from './core/loader';
+import { download, load, serialize, deserialize } from './core/loader';
 import Belts, { Belt } from './objects/belts';
 import Buffers from './objects/buffers';
 import Container, { PoweredContainer, Connector } from './core/container';
@@ -278,40 +278,6 @@ viewport.setAnimationLoop((buttons, delta) => {
   }
 });
 
-const download = () => {
-  const downloader = document.createElement('a');
-  const blob = new Blob([JSON.stringify(serialize(belts, buffers, fabricators, foundations, generators, miners, walls, wires, viewport.camera))], { type: 'application/json' });
-  downloader.href = URL.createObjectURL(blob);
-  downloader.download = 'unsatisfactory.json';
-  downloader.click();
-};
-
-const load = () => {
-  const loader = document.createElement('input');
-  loader.type = 'file';
-  loader.accept = '.json';
-  loader.addEventListener('change', ({ target: { files: [file] } }: any) => {
-    if (!file) {
-      return;
-    }
-    const url = URL.createObjectURL(file);
-    fetch(url).then((r) => r.json()).then((serialized) => {
-      if (serialized.version !== version) {
-        throw new Error();
-      }
-      localStorage.setItem('autosave', JSON.stringify(serialized));
-      location.reload();
-    })
-    .finally(() => URL.revokeObjectURL(url));
-  });
-  loader.click();
-};
-
-const reset = () => {
-  localStorage.clear();
-  location.reload();
-};
-
 const save = () => {
   localStorage.setItem(
     'autosave',
@@ -322,10 +288,15 @@ const save = () => {
 
 const settings = new Settings({
   props: {
+    download: () => (
+      download(serialize(belts, buffers, fabricators, foundations, generators, miners, walls, wires, viewport.camera))
+    ),
     lastSave: new Date(),
-    download,
     load,
-    reset,
+    reset: () => {
+      localStorage.clear();
+      location.reload();
+    },
     save,
   },
   target: document.getElementById('ui')!,

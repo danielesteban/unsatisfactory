@@ -124,3 +124,34 @@ export const deserialize = (
   camera.rotation.fromArray(serialized.camera[1] as [number, number, number]);
   camera.userData.targetRotation.copy(camera.rotation);
 };
+
+export const load = () => {
+  const loader = document.createElement('input');
+  loader.type = 'file';
+  loader.accept = '.json';
+  loader.addEventListener('change', ({ target: { files: [file] } }: any) => {
+    if (!file) {
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    fetch(url).then((r) => r.json()).then((serialized) => {
+      if (serialized.version !== version) {
+        throw new Error();
+      }
+      localStorage.setItem('autosave', JSON.stringify(serialized));
+      location.reload();
+    })
+    .finally(() => URL.revokeObjectURL(url));
+  });
+  loader.click();
+};
+
+export const download = (
+  serialized: ReturnType<typeof serialize>
+) => {
+  const downloader = document.createElement('a');
+  const blob = new Blob([JSON.stringify(serialized)], { type: 'application/json' });
+  downloader.href = URL.createObjectURL(blob);
+  downloader.download = 'unsatisfactory.json';
+  downloader.click();
+};
