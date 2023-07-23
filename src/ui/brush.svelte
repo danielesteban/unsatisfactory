@@ -20,11 +20,14 @@
     bottom: 1rem;
     left: 50%;
     transform: translate(-50%, 0);
-    display: flex;
     background: rgba(0, 0, 0, .2);
     padding: 0.25rem;
     gap: 0.25rem;
     border-radius: 0.5rem;
+    display: none;
+  }
+  :global(body.pointerlock) .brushes {
+    display: flex;
   }
   .brush {
     display: flex;

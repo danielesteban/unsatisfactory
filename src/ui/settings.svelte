@@ -68,7 +68,9 @@
     min-width: auto;
     height: auto;
   }
-
+  :global(body.pointerlock) .settings {
+    display: none;
+  }
   .settings > svg {
     fill: currentColor;
     stroke: #000;
@@ -77,20 +79,13 @@
     height: 1.5rem;
     pointer-events: none;
   }
-
-  :global(body.pointerlock) .settings {
-    display: none;
-  }
-  
   .last {
     color: #aaa;
   }
-
   .buttons {
     display: flex;
     gap: 0.25rem;
   }
-
   .reset {
     background: rgba(255, 90, 90, .5);
   }

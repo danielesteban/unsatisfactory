@@ -53,7 +53,7 @@ const setBrush = (type: Brush) => {
 };
 
 document.addEventListener('keydown', (e) => {
-  if (e.repeat) {
+  if (e.repeat || !document.body.classList.contains('pointerlock')) {
     return;
   }
   switch (e.code) {
