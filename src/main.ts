@@ -19,6 +19,7 @@ import Foundations from './objects/foundations';
 import Generators from './objects/generators';
 import Items, { Item } from './objects/items';
 import Miners from './objects/miners';
+import Poles from './objects/poles';
 import Terrain from './objects/terrain';
 import Walls from './objects/walls';
 import Wires, { Wire } from './objects/wires';
@@ -36,6 +37,7 @@ const viewport = new Viewport();
   Generators.setupMaterial(),
   Items.setupMaterial(),
   Miners.setupMaterial(),
+  Poles.setupMaterial(),
   Terrain.setupMaterial(),
   Walls.setupMaterial(),
   Wires.setupMaterial(),
@@ -62,6 +64,9 @@ viewport.scene.add(generators);
 
 const miners = new Miners(viewport.sfx);
 viewport.scene.add(miners);
+
+const poles = new Poles();
+viewport.scene.add(poles);
 
 const walls = new Walls();
 viewport.scene.add(walls);
@@ -137,6 +142,9 @@ const create = (intersection: Intersection<Object3D<Event>>) => {
     case Brush.miner:
       miners.create(snap(intersection), rotation, Item.ore);
       return;
+    case Brush.pole:
+      poles.create(snap(intersection), rotation);
+      return;
     case Brush.wall:
       walls.create(snap(intersection), rotation);
       return;
@@ -146,6 +154,7 @@ const create = (intersection: Intersection<Object3D<Event>>) => {
           intersection.object instanceof Fabricators
           || intersection.object instanceof Generators
           || intersection.object instanceof Miners
+          || intersection.object instanceof Poles
         )
       ) {
         return 'nope';
@@ -195,6 +204,7 @@ const remove = (intersection: Intersection<Object3D<Event>>) => {
     || intersection.object instanceof Fabricators
     || intersection.object instanceof Generators
     || intersection.object instanceof Miners
+    || intersection.object instanceof Poles
   ) {
     const container = intersection.object.getInstance(intersection.instanceId!);
     intersection.object.removeInstance(container as any);
@@ -286,7 +296,7 @@ viewport.setAnimationLoop((buttons, delta) => {
 const save = () => {
   localStorage.setItem(
     'autosave',
-    JSON.stringify(serialize(belts, buffers, fabricators, foundations, generators, miners, walls, wires, viewport.camera))
+    JSON.stringify(serialize(belts, buffers, fabricators, foundations, generators, miners, poles, walls, wires, viewport.camera))
   );
   settings.$set({ lastSave: new Date() });
 };
@@ -295,7 +305,7 @@ const settings = new Settings({
   props: {
     lastSave: new Date(),
     download: () => (
-      download(serialize(belts, buffers, fabricators, foundations, generators, miners, walls, wires, viewport.camera))
+      download(serialize(belts, buffers, fabricators, foundations, generators, miners, poles, walls, wires, viewport.camera))
     ),
     load: async () => {
       const serialized = await load();
@@ -316,11 +326,11 @@ if (stored) {
   stored = JSON.parse(stored)!;
   deserialize(
     stored as any,
-    belts, buffers, fabricators, foundations, generators, miners, walls, wires,
+    belts, buffers, fabricators, foundations, generators, miners, poles, walls, wires,
     viewport.camera,
   );
 } else {
-  Debug(belts, buffers, fabricators, foundations, generators, miners, wires, walls);
+  Debug(belts, buffers, fabricators, foundations, generators, miners, poles, walls, wires);
 }
 
 setInterval(save, 60000);

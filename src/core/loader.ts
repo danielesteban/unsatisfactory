@@ -7,17 +7,18 @@ import Foundations from '../objects/foundations';
 import Generators, { Generator }  from '../objects/generators';
 import { Recipes }  from '../objects/items';
 import Miners, { Miner } from '../objects/miners';
+import Poles, { Pole } from '../objects/poles';
 import Walls from '../objects/walls';
 import Wires, { Wire } from '../objects/wires';
 
 export const version = 1;
 
 export const serialize = (
-  belts: Belts, buffers: Buffers, fabricators: Fabricators, foundations: Foundations, generators: Generators, miners: Miners, walls: Walls, wires: Wires,
+  belts: Belts, buffers: Buffers, fabricators: Fabricators, foundations: Foundations, generators: Generators, miners: Miners, poles: Poles, walls: Walls, wires: Wires,
   camera: Camera,
 ) => {
   const containers = new WeakMap<Container, number>();
-  const serializeInstances = (instances: Buffers | Fabricators | Foundations | Generators | Miners | Walls) => (
+  const serializeInstances = (instances: Buffers | Fabricators | Foundations | Generators | Miners | Poles | Walls) => (
     Array.from({ length: instances.count }, (_v, i) => {
       const instance = instances.getInstance(i);
       if (instance instanceof Container) {
@@ -40,6 +41,9 @@ export const serialize = (
     if (instance instanceof Miner) {
       key = 3;
     }
+    if (instance instanceof Pole) {
+      key = 4;
+    }
     return [key, containers.get(instance)];
   };
   return {
@@ -48,6 +52,7 @@ export const serialize = (
     foundations: serializeInstances(foundations),
     generators: serializeInstances(generators),
     miners: serializeInstances(miners),
+    poles: serializeInstances(poles),
     walls: serializeInstances(walls),
     belts: (belts.children as Belt[]).map((belt) => [
       serializeContainer(belt.from.container),
@@ -66,7 +71,7 @@ export const serialize = (
 
 export const deserialize = (
   serialized: ReturnType<typeof serialize>,
-  belts: Belts, buffers: Buffers, fabricators: Fabricators, foundations: Foundations, generators: Generators, miners: Miners, walls: Walls, wires: Wires,
+  belts: Belts, buffers: Buffers, fabricators: Fabricators, foundations: Foundations, generators: Generators, miners: Miners, poles: Poles, walls: Walls, wires: Wires,
   camera: Camera,
 ) => {
   const aux = new Vector3();
@@ -100,6 +105,9 @@ export const deserialize = (
       }
       return miner;
     }),
+    (serialized.poles as [number[], number][]).map(([position, rotation]) => (
+      poles.create(aux.fromArray(position), rotation)
+    )),
   ];
   (serialized.foundations as [number[], number][]).forEach(([position, rotation]) => (
     foundations.create(aux.fromArray(position), rotation)

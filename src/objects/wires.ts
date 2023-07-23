@@ -19,13 +19,20 @@ export class Wire extends Mesh {
     const direction = toConnector.clone().sub(fromConnector);
     const offset = direction.length() * 0.3;
     direction.normalize();
-    const horizontal = direction.clone();
-    horizontal.y = 0;
-    direction.lerp(horizontal, 0.7);
+    const fromDirection = direction.clone();
+    const fromDownwards = fromDirection.clone();
+    fromDownwards.y = -1;
+    fromDownwards.normalize();
+    fromDirection.lerp(fromDownwards, 0.3);
+    const toDirection = direction.clone().negate();
+    const toDownwards = toDirection.clone();
+    toDownwards.y = -1;
+    toDownwards.normalize();
+    toDirection.lerp(toDownwards, 0.3);
     const path = new CubicBezierCurve3(
       fromConnector,
-      fromConnector.clone().addScaledVector(direction, offset),
-      toConnector.clone().addScaledVector(direction.negate(), offset),
+      fromConnector.clone().addScaledVector(fromDirection, offset),
+      toConnector.clone().addScaledVector(toDirection, offset),
       toConnector
     );
     const segments = Math.ceil(path.getLength() / 0.1);
@@ -86,7 +93,9 @@ class Wires extends Group {
     const { children } = this;
     if (this.grid) {
       this.grid.containers.forEach((_connections, container) => {
-        container.setPowered(false);
+        if (container.getConsumption()) {
+          container.setPowered(false);
+        }
         container.removeEventListener('enabled', this.updatePower);
       });
     }
@@ -115,9 +124,11 @@ class Wires extends Group {
     if (!grid) {
       return this.updatePowerGrid();
     }
-    grid.containers.forEach((_connections, container) => (
-      container.setPowered(false)
-    ));
+    grid.containers.forEach((_connections, container) => {
+      if (container.getConsumption()) {
+        container.setPowered(false);
+      }
+    });
     grid.generators.forEach((connections, generator) => {
       let available = generator.getPower();
       const visited = new Map();

@@ -11,6 +11,7 @@ import Fabricators from '../objects/fabricators';
 import Foundations from '../objects/foundations';
 import Generators from '../objects/generators';
 import Miners from '../objects/miners';
+import Poles from '../objects/poles';
 import { TerrainChunk } from '../objects/terrain';
 import Walls from '../objects/walls';
 import { Wire } from '../objects/wires';
@@ -25,6 +26,7 @@ export enum Brush {
   fabricator,
   miner,
   generator,
+  pole,
 };
 
 export let brush: Brush = Brush.foundation;
@@ -42,6 +44,7 @@ const ui = new UI({
       { id: Brush.fabricator, name: 'Fabricator' },
       { id: Brush.miner, name: 'Miner' },
       { id: Brush.generator, name: 'Generator' },
+      { id: Brush.pole, name: 'Pole' },
     ],
   },
   target: document.getElementById('ui')!,
@@ -80,6 +83,9 @@ document.addEventListener('keydown', (e) => {
       break;
     case 'Digit8':
       setBrush(Brush.generator);
+      break;
+    case 'Digit9':
+      setBrush(Brush.pole);
       break;
     case 'KeyR': {
       rotation += Math.PI * 0.25;
@@ -124,6 +130,11 @@ export const pick = (intersection: Intersection<Object3D<Event>>) => {
     rotation = intersection.object.getInstance(intersection.instanceId!).rotation;
     return;
   }
+  if (intersection.object instanceof Poles) {
+    setBrush(Brush.pole);
+    rotation = intersection.object.getInstance(intersection.instanceId!).rotation;
+    return;
+  }
   if (intersection.object instanceof Walls) {
     setBrush(Brush.wall);
     rotation = intersection.object.getInstance(intersection.instanceId!).rotation;
@@ -141,6 +152,7 @@ const offsets = {
   foundation: new Vector3(2, 0.5, 2),
   generator: new Vector3(2, 1, 2),
   miner: new Vector3(1, 2, 1),
+  pole: new Vector3(0.5, 2.5, 0.5),
   wall: new Vector3(2, 2, 0.25),
 };
 const terrainOffsets = {
@@ -149,6 +161,7 @@ const terrainOffsets = {
   foundation: new Vector3(0, 0.5, 0),
   generator: new Vector3(0, 1, 0),
   miner: new Vector3(0, 2, 0),
+  pole: new Vector3(0, 2.5, 0),
   wall: new Vector3(0, 2, 0),
 };
 
@@ -176,6 +189,9 @@ export const snap = (intersection: Intersection<Object3D<Event>>) => {
       case Brush.miner:
         offset = terrainOffsets.miner;
         break;
+      case Brush.pole:
+        offset = terrainOffsets.pole;
+        break;
       case Brush.wall:
         offset = terrainOffsets.wall;
         break;
@@ -190,6 +206,7 @@ export const snap = (intersection: Intersection<Object3D<Event>>) => {
     || intersection.object instanceof Foundations
     || intersection.object instanceof Generators
     || intersection.object instanceof Miners
+    || intersection.object instanceof Poles
     || intersection.object instanceof Walls
   ) {
     const instance = intersection.object.getInstance(intersection.instanceId!);
@@ -210,6 +227,9 @@ export const snap = (intersection: Intersection<Object3D<Event>>) => {
       case Brush.miner:
         brushOffset = offsets.miner;
         break;
+      case Brush.pole:
+        brushOffset = offsets.pole;
+        break;
       case Brush.wall:
         brushOffset = offsets.wall;
         break;
@@ -227,6 +247,8 @@ export const snap = (intersection: Intersection<Object3D<Event>>) => {
       offset = offsets.generator;
     } else if (intersection.object instanceof Miners) {
       offset = offsets.miner;
+    } else if (intersection.object instanceof Poles) {
+      offset = offsets.pole;
     } else if (intersection.object instanceof Walls) {
       offset = offsets.wall;
     } else {

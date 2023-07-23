@@ -6,10 +6,11 @@ import Foundations from './objects/foundations';
 import Generators  from './objects/generators';
 import { Item, Recipes } from './objects/items';
 import Miners from './objects/miners';
+import Poles from './objects/poles';
 import Walls from './objects/walls';
 import Wires from './objects/wires';
 
-export default (belts: Belts, buffers: Buffers, fabricators: Fabricators, foundations: Foundations, generators: Generators, miners: Miners, wires: Wires, walls: Walls) => {
+export default (belts: Belts, buffers: Buffers, fabricators: Fabricators, foundations: Foundations, generators: Generators, miners: Miners, _poles: Poles, walls: Walls, wires: Wires) => {
   const generator = generators.create(new Vector3(12, 2.75, -6), 0);
   const minerA = miners.create(new Vector3(2, 2.5, -8), 0, Item.ore);
   const minerB = miners.create(new Vector3(2, 2.5, -6), 0, Item.ore);
