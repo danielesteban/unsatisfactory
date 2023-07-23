@@ -103,7 +103,7 @@ class SFX extends Group {
     }
   }
 
-  getSound(id: keyof typeof Sounds, position: Vector3, detune: number = (Math.random() - 0.5) * 1000, loop: boolean = true, volume: number = 0.4): SoundPromise {
+  getSound(id: keyof typeof Sounds, position: Vector3, detune: number = (Math.random() - 0.5) * 1200, loop: boolean = true, volume: number = 0.4): SoundPromise {
     let aborted = false;
     let paused = false;
     let sound: PositionalAudio | undefined;
@@ -177,7 +177,6 @@ class SFX extends Group {
       sound.userData.id = id;
       sound.matrixAutoUpdate = false;
       sound.setBuffer(buffers[id]);
-      sound.setRefDistance(0.5);
       pool.push(sound);
       this.add(sound);
     }

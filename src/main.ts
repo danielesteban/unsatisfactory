@@ -243,9 +243,11 @@ const handleInput = (
   const hasFrom = from.container !== undefined;
   if (primary && intersection?.face) {
     create(intersection);
+    viewport.sfx.playAt("build", intersection.point, Math.random() * 600);
   }
   if (secondary && intersection?.object) {
     remove(intersection);
+    viewport.sfx.playAt("build", intersection.point, Math.random() * -600);
   }
   if (tertiary && intersection?.object) {
     pick(intersection);
