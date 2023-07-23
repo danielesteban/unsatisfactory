@@ -10,7 +10,7 @@ import Miners, { Miner } from '../objects/miners';
 import Walls from '../objects/walls';
 import Wires, { Wire } from '../objects/wires';
 
-const version = 1;
+export const version = 1;
 
 export const serialize = (belts: Belts, buffers: Buffers, fabricators: Fabricators, foundations: Foundations, generators: Generators, miners: Miners, walls: Walls, wires: Wires) => {
   const containers = new WeakMap<Container, number>();

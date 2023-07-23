@@ -5,6 +5,8 @@
   import Module from './components/module.svelte';
   
   export let lastSave: Date;
+  export let download: () => void;
+  export let load: () => void;
   export let reset: () => void;
   export let save: () => void;
 
@@ -31,6 +33,17 @@
       <div>
         <button on:click={save}>
           Save
+        </button>
+      </div>
+    </Module>
+    <Module>
+      <div slot="name">File</div>
+      <div class="buttons">
+        <button on:click={download}>
+          Export
+        </button>
+        <button on:click={load}>
+          Import
         </button>
       </div>
     </Module>
@@ -71,6 +84,11 @@
   
   .last {
     color: #aaa;
+  }
+
+  .buttons {
+    display: flex;
+    gap: 0.25rem;
   }
 
   .reset {
