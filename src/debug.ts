@@ -9,11 +9,6 @@ import Miners from './objects/miners';
 import Walls from './objects/walls';
 import Wires from './objects/wires';
 
-// @dani @hack?
-// This thing definitely needs a way of serializing/deserializing
-// the objects so premade stuff can be saved/loaded.
-// But, in the meantime... here's a debug "factory".
-
 export default (belts: Belts, buffers: Buffers, fabricators: Fabricators, foundations: Foundations, generators: Generators, miners: Miners, wires: Wires, walls: Walls) => {
   const generator = generators.create(new Vector3(12, 2.75, -6), 0);
   const minerA = miners.create(new Vector3(2, 2.5, -8), 0, Item.ore);
