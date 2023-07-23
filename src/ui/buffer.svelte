@@ -1,3 +1,9 @@
+<script lang="ts" context="module">
+  import { tap } from '../sounds';
+  const sfx = new Audio(tap);
+  sfx.volume = 0.2;
+</script>
+
 <script lang="ts">
   import { onDestroy } from 'svelte';
   import Dialog from './components/dialog.svelte';
@@ -9,9 +15,10 @@
   export let close: () => void;
   export let instance: Buffer;
 
-  const toggle = () => (
-    instance.setSink(!instance.isSink())
-  );
+  const toggle = () => {
+    instance.setSink(!instance.isSink());
+    sfx.paused && sfx.play();
+  };
 
   let sink = instance.isSink();
   const onSink = ({ status }: BufferEvent) => {

@@ -1,3 +1,9 @@
+<script lang="ts" context="module">
+  import { breaker } from '../../sounds';
+  const sfx = new Audio(breaker);
+  sfx.volume = 0.2;
+</script>  
+
 <script lang="ts">
   import { onDestroy } from 'svelte';
   import Module from '../components/module.svelte';
@@ -5,9 +11,10 @@
 
   export let instance: PoweredContainer;
 
-  const toggle = () => (
-    instance.setEnabled(!instance.isEnabled())
-  );
+  const toggle = () => {
+    instance.setEnabled(!instance.isEnabled());
+    sfx.paused && sfx.play();
+  };
 
   let enabled = instance.isEnabled();
   const onEnabled = ({ status }: PoweredContainerEvent) => {
