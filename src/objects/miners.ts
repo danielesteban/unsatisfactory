@@ -4,13 +4,14 @@ import {
   CylinderGeometry,
   Mesh,
   MeshStandardMaterial,
+  PositionalAudio,
   SRGBColorSpace,
   Vector3,
 } from 'three';
 import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 import Instances from '../core/instances';
 import { PoweredContainer } from '../core/container';
-import SFX, { SoundPromise } from '../core/sfx';
+import SFX from '../core/sfx';
 import { Item } from './items';
 import { loadTexture } from '../textures';
 import DiffuseMap from '../textures/rust_coarse_01_diff_1k.jpg';
@@ -19,10 +20,12 @@ import RoughnessMap from '../textures/rust_coarse_01_rough_1k.jpg';
 
 export class Miner extends PoweredContainer {
   private readonly item: Item;
-  private tick: number;
   private rate: number;
+  private readonly sfx: SFX;
+  private sound?: PositionalAudio;
+  private tick: number;
 
-  constructor(position: Vector3, rotation: number, item: Item, sfx: SoundPromise) {
+  constructor(position: Vector3, rotation: number, item: Item, sfx: SFX) {
     super(position, rotation, 0, 10);
     this.item = item;
     this.rate = 3;
@@ -30,12 +33,21 @@ export class Miner extends PoweredContainer {
     this.tick = 0;
   }
 
+  override dispose() {
+    if (this.sound?.isPlaying) {
+      this.sound.stop();
+    }
+  }
+
   override output() {
-    const { enabled, item, powered, rate } = this;
+    const { enabled, item, position, powered, rate, sfx } = this;
     if (!enabled || !powered || ++this.tick < rate) {
       return Item.none;
     }
     this.tick = 0;
+    if (!this.sound?.isPlaying) {
+      this.sound = sfx.playAt('machine', position, Math.random() * 0.1, (Math.random() - 0.5) * 1200);
+    }
     return item;
   }
 
@@ -127,7 +139,7 @@ class Miners extends Instances<Miner> {
   create(position: Vector3, rotation: number, item: Item) {
     const { sfx } = this;
     const instance = super.addInstance(
-      new Miner(position, rotation, item, sfx.getSound('machine', position.clone()))
+      new Miner(position, rotation, item, sfx)
     );
     return instance;
   }

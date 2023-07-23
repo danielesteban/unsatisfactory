@@ -4,13 +4,14 @@ import {
   CylinderGeometry,
   Mesh,
   MeshStandardMaterial,
+  PositionalAudio,
   SRGBColorSpace,
   Vector3,
 } from 'three';
 import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 import Instances from '../core/instances';
 import { PoweredContainer } from '../core/container';
-import SFX, { SoundPromise } from '../core/sfx';
+import SFX from '../core/sfx';
 import { Item, Recipe, Recipes } from './items';
 import { loadTexture } from '../textures';
 import DiffuseMap from '../textures/rust_coarse_01_diff_1k.jpg';
@@ -20,9 +21,11 @@ import RoughnessMap from '../textures/rust_coarse_01_rough_1k.jpg';
 export class Fabricator extends PoweredContainer {
   private readonly outputItems: Item[];
   private recipe: Recipe;
+  private readonly sfx: SFX;
+  private sound?: PositionalAudio;
   private tick: number;
 
-  constructor(position: Vector3, rotation: number, recipe: Recipe, sfx: SoundPromise) {
+  constructor(position: Vector3, rotation: number, recipe: Recipe, sfx: SFX) {
     super(position, rotation, 0, 10);
     this.outputItems = [];
     this.recipe = recipe;
@@ -38,6 +41,12 @@ export class Fabricator extends PoweredContainer {
     this.items.length = 0;
     this.recipe = recipe;
     this.dispatchEvent({ type: 'recipe', data: recipe } as any);
+  }
+
+  override dispose() {
+    if (this.sound?.isPlaying) {
+      this.sound.stop();
+    }
   }
 
   private static connectorOffset: Vector3 = new Vector3(0, -1, 0);
@@ -58,7 +67,7 @@ export class Fabricator extends PoweredContainer {
   }
 
   override output() {
-    const { enabled, items, powered, recipe, outputItems } = this;
+    const { enabled, items, powered, recipe, outputItems, position, sfx } = this;
     if (outputItems.length) {
       return outputItems.pop()!;
     }
@@ -70,8 +79,11 @@ export class Fabricator extends PoweredContainer {
     ) {
       return Item.none;
     }
-    items.length = 0;
     this.tick = 0;
+    if (!this.sound?.isPlaying) {
+      this.sound = sfx.playAt('machine', position, Math.random() * 0.1, (Math.random() - 0.5) * 1200);
+    }
+    items.length = 0;
     for (let i = 0; i < recipe.output.count; i++) {
       outputItems.unshift(recipe.output.item);
     }
@@ -156,7 +168,7 @@ class Fabricators extends Instances<Fabricator> {
   create(position: Vector3, rotation: number, recipe: Recipe = Recipes[0]) {
     const { sfx } = this;
     const instance = super.addInstance(
-      new Fabricator(position, rotation, recipe, sfx.getSound('machine', position.clone()))
+      new Fabricator(position, rotation, recipe, sfx)
     );
     return instance;
   }

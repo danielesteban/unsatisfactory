@@ -10,13 +10,6 @@ import {
 import * as Sounds from '../sounds';
 import UI from '../ui/sfx.svelte';
 
-export type SoundPromise = {
-  then: (resolve: (sfx: PositionalAudio | undefined) => void) => void;
-  abort: () => void;
-  pause: () => void;
-  resume: () => void;
-};
-
 class SFX extends Group {
   private readonly ambient: {
     sounds: (keyof typeof Sounds)[],
@@ -103,70 +96,7 @@ class SFX extends Group {
     }
   }
 
-  getSound(id: keyof typeof Sounds, position: Vector3, detune: number = (Math.random() - 0.5) * 1200, loop: boolean = true, volume: number = 0.4): SoundPromise {
-    let aborted = false;
-    let paused = false;
-    let sound: PositionalAudio | undefined;
-    const promise = (new Promise<void>((resolve) => {
-      const { buffers, listener, queued } = this;
-      if (!buffers || !listener) {
-        queued.push(resolve);
-        return;
-      }
-      resolve();
-    }))
-    .then(() => {
-      const { buffers, listener } = this;
-      if (aborted) {
-        return;
-      }
-      sound = new PositionalAudio(listener!);
-      sound.matrixAutoUpdate = false;
-      sound.setBuffer(buffers![id]);
-      sound.setLoop(loop);
-      sound.setRefDistance(0.5);
-      this.add(sound);
-      sound.position.copy(position);
-      sound.updateMatrix();
-      if (!paused) {
-        sound.play(sound.listener.timeDelta + Math.random());
-        sound.setDetune(detune);
-        sound.setVolume(volume);
-      }
-      return sound;
-    });
-    return {
-      then: (resolve) => promise.then(resolve),
-      abort: () => {
-        aborted = true;
-        if (sound?.isPlaying) {
-          sound.stop();
-        }
-      },
-      pause: () => {
-        if (!sound) {
-          paused = true;
-          return;
-        }
-        if (sound.isPlaying) {
-          sound.pause();
-        }
-      },
-      resume: () => {
-        if (!sound) {
-          paused = false;
-          return;
-        }
-        if (!sound.isPlaying) {
-          sound.play(sound.listener.timeDelta + Math.random());
-          sound.setDetune(detune);
-          sound.setVolume(volume);
-        }
-      },
-    };
-  }
-
-  playAt(id: keyof typeof Sounds, position: Vector3, detune: number = 0, volume: number = 0.4) {
+  playAt(id: keyof typeof Sounds, position: Vector3, delta: number = 0, detune: number = 0, volume: number = 0.4) {
     const { buffers, listener, pool } = this;
     if (!buffers || !listener) {
       return;
@@ -182,7 +112,7 @@ class SFX extends Group {
     }
     sound.position.copy(position);
     sound.updateMatrix();
-    sound.play(sound.listener.timeDelta);
+    sound.play(sound.listener.timeDelta + delta);
     sound.setDetune(detune);
     sound.setVolume(volume);
     return sound;

@@ -263,11 +263,11 @@ const handleInput = (
   const hasFrom = from.container !== undefined;
   if (primary && intersection?.face) {
     const sound = create(intersection) || 'build';
-    viewport.sfx.playAt(sound, intersection.point, sound === 'nope' ? 0 : Math.random() * (sound === 'wire' ? 100 : 600));
+    viewport.sfx.playAt(sound, intersection.point, 0, sound === 'nope' ? 0 : Math.random() * (sound === 'wire' ? 100 : 600));
   }
   if (secondary && intersection?.object) {
     const sound = remove(intersection) || 'build';
-    viewport.sfx.playAt(sound, intersection.point, sound === 'nope' ? 0 : Math.random() * -600);
+    viewport.sfx.playAt(sound, intersection.point, 0, sound === 'nope' ? 0 : Math.random() * -600);
   }
   if (tertiary && intersection?.object) {
     pick(intersection);

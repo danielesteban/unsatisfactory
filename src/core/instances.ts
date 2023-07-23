@@ -11,12 +11,10 @@ import {
   Raycaster,
   Vector3,
 } from 'three';
-import { SoundPromise } from './sfx';
 
 export class Instance<Event extends BaseEvent = BaseEvent> extends EventDispatcher<Event> {
   public readonly position: Vector3;
   public readonly rotation: number;
-  protected sfx?: SoundPromise;
 
   constructor(position: Vector3, rotation: number) {
     super();
@@ -25,10 +23,7 @@ export class Instance<Event extends BaseEvent = BaseEvent> extends EventDispatch
   }
   
   dispose() {
-    const { sfx } = this;
-    if (sfx) {
-      sfx.abort();
-    }
+
   }
 
   serialize() {
