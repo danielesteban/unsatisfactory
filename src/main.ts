@@ -22,6 +22,7 @@ import Terrain from './objects/terrain';
 import Walls from './objects/walls';
 import Wires, { Wire } from './objects/wires';
 import UI, { setTooltip } from './ui';
+import { serialize } from './core/loader';
 import Debug from './debug';
 
 const viewport = new Viewport();
@@ -158,7 +159,7 @@ const create = (intersection: Intersection<Object3D<Event>>) => {
 const removeConnected = (container: Container) => {
   (belts.children as Belt[])
     .reduce((connected, belt) => {
-      if (belt.from === container || belt.to === container) {
+      if (belt.from.container === container || belt.to.container === container) {
         connected.push(belt);
       }
       return connected;
@@ -270,3 +271,9 @@ viewport.setAnimationLoop((buttons, delta) => {
 });
 
 Debug(belts, buffers, fabricators, foundations, generators, miners, wires, walls);
+
+// @dani @debug
+// Serialization test
+console.log(
+  serialize(belts, buffers, fabricators, foundations, generators, miners, wires, walls)
+);

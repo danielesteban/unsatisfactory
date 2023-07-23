@@ -3,7 +3,7 @@ import Belts from './objects/belts';
 import Buffers from './objects/buffers';
 import Fabricators from './objects/fabricators';
 import Foundations from './objects/foundations';
-import Generators from './objects/generators';
+import Generators  from './objects/generators';
 import { Item, Recipes } from './objects/items';
 import Miners from './objects/miners';
 import Walls from './objects/walls';
@@ -147,24 +147,4 @@ export default (belts: Belts, buffers: Buffers, fabricators: Fabricators, founda
   for (let i = 0; i < 2; i++) {
     walls.create(minerB.position.clone().add(new Vector3(1.25, 0, i * 4 - 2)), Math.PI * 0.5);
   }
-
-  // @dani @debug
-  // Serialization test
-
-  // const serializeInstances = (instances: Buffers | Fabricators | Foundations | Generators | Miners | Walls) => (
-  //   Array.from({ length: instances.count }, (_v, i) => (
-  //     instances.getInstance(i).serialize()
-  //   ))
-  // );
-  // const serialized = {
-  //   buffers: serializeInstances(buffers),
-  //   fabricators: serializeInstances(fabricators),
-  //   foundations: serializeInstances(foundations),
-  //   generators: serializeInstances(generators),
-  //   miners: serializeInstances(miners),
-  //   walls: serializeInstances(walls),
-  //   // @dani @incomplete
-  //   // belts & wires
-  // };
-  // console.log(serialized);
 };

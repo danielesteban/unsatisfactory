@@ -10,7 +10,7 @@ import {
   SRGBColorSpace,
   Vector3,
 } from 'three';
-import Container, { Connector } from '../core/container';
+import { Connector } from '../core/container';
 import Items, { Item } from './items';
 import { loadTexture } from '../textures';
 import DiffuseMap from '../textures/green_metal_rust_diff_1k.jpg';
@@ -38,8 +38,8 @@ export class Belt extends Mesh {
   }
 
   private static readonly offset: Vector3 = new Vector3(0, -0.5, 0);
-  public readonly from: Container;
-  public readonly to: Container;
+  public readonly from: Connector;
+  public readonly to: Connector;
 
   private enabled: boolean;
   private readonly items: Items;
@@ -83,8 +83,8 @@ export class Belt extends Mesh {
     this.castShadow = this.receiveShadow = true;
     this.updateMatrixWorld();
     this.matrixAutoUpdate = false;
-    this.from = from.container;
-    this.to = to.container;
+    this.from = from;
+    this.to = to;
     this.enabled = true;
     this.slots = Array.from({ length: Math.ceil(path.getLength() / 0.5) }, () => ({ item: Item.none, locked: false }));
     this.items = new Items(this.slots.length, path);
@@ -107,8 +107,8 @@ export class Belt extends Mesh {
   step() {
     const { from, to, slots } = this;
     const output = slots[slots.length - 1];
-    if (output.item !== Item.none && to.canInput(output.item)) {
-      to.input(output.item);
+    if (output.item !== Item.none && to.container.canInput(output.item)) {
+      to.container.input(output.item);
       output.item = Item.none;
       this.enabled = true;
     }
@@ -126,7 +126,7 @@ export class Belt extends Mesh {
         }
       }
       if (slots[0].item === Item.none) {
-        slots[0].item = from.output();
+        slots[0].item = from.container.output();
         slots[0].locked = false;
         isSaturated = false;
       }
