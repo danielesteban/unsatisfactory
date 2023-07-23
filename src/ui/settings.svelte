@@ -19,8 +19,8 @@
 </script>
 
 <button class="settings" on:pointerdown={toggle}>
-  <svg viewBox="0 0 16 16">
-    <path d="M9 13.829A3.004 3.004 0 0 0 11 11a3.003 3.003 0 0 0-2-2.829V0H7v8.171A3.004 3.004 0 0 0 5 11c0 1.306.836 2.417 2 2.829V16h2v-2.171zm-5-6A3.004 3.004 0 0 0 6 5a3.003 3.003 0 0 0-2-2.829V0H2v2.171A3.004 3.004 0 0 0 0 5c0 1.306.836 2.417 2 2.829V16h2V7.829zm10 0A3.004 3.004 0 0 0 16 5a3.003 3.003 0 0 0-2-2.829V0h-2v2.171A3.004 3.004 0 0 0 10 5c0 1.306.836 2.417 2 2.829V16h2V7.829zM12 6V4h2v2h-2zM2 6V4h2v2H2zm5 6v-2h2v2H7z" fill-rule="evenodd"/>
+  <svg viewBox="0 0 15 15">
+    <path d="M1.5 1C0.671573 1 0 1.67157 0 2.5V12.5C0 13.3284 0.671573 14 1.5 14H13.5C14.3284 14 15 13.3284 15 12.5V4.5C15 3.67157 14.3284 3 13.5 3H7.70711L5.70711 1H1.5Z"/>
   </svg>
 </button>
 
@@ -63,7 +63,7 @@
   .settings {
     position: absolute;
     top: 1rem;
-    right: 4rem;
+    right: 3.5rem;
     background: transparent;
     min-width: auto;
     height: auto;
@@ -72,7 +72,7 @@
   .settings > svg {
     fill: currentColor;
     stroke: #000;
-    stroke-width: 0.25;
+    stroke-width: 0.4;
     width: 1.5rem;
     height: 1.5rem;
     pointer-events: none;
