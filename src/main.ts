@@ -50,7 +50,7 @@ viewport.scene.add(belts);
 const buffers = new Buffers();
 viewport.scene.add(buffers);
 
-const fabricators = new Fabricators();
+const fabricators = new Fabricators(viewport.sfx);
 viewport.scene.add(fabricators);
 
 const foundations = new Foundations();
@@ -59,7 +59,7 @@ viewport.scene.add(foundations);
 const generators = new Generators();
 viewport.scene.add(generators);
 
-const miners = new Miners();
+const miners = new Miners(viewport.sfx);
 viewport.scene.add(miners);
 
 const walls = new Walls();
@@ -269,6 +269,8 @@ viewport.setAnimationLoop((buttons, delta) => {
     handleInput(buttons, intersection);
   }
 });
+
+viewport.sfx.setAmbient(['ambient']);
 
 let stored = localStorage.getItem('autosave');
 if (stored) {

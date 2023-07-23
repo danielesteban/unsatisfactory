@@ -80,6 +80,9 @@ export class PoweredContainer extends Container<PoweredContainerEvent> {
   setEnabled(status: boolean) {
     this.enabled = status;
     this.dispatchEvent({ type: 'enabled', status });
+    if (this.sfx) {
+      this.sfx[this.enabled && this.powered ? 'resume' : 'pause']();
+    }
   }
 
   isPowered() {
@@ -89,6 +92,9 @@ export class PoweredContainer extends Container<PoweredContainerEvent> {
   setPowered(status: boolean) {
     this.powered = status;
     this.dispatchEvent({ type: 'powered', status });
+    if (this.sfx) {
+      this.sfx[this.enabled && this.powered ? 'resume' : 'pause']();
+    }
   }
 
   override serialize() {

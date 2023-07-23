@@ -10,6 +10,7 @@ import {
 import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 import Instances from '../core/instances';
 import { PoweredContainer } from '../core/container';
+import SFX, { SoundPromise } from '../core/sfx';
 import { Item } from './items';
 import { loadTexture } from '../textures';
 import DiffuseMap from '../textures/rust_coarse_01_diff_1k.jpg';
@@ -21,11 +22,12 @@ export class Miner extends PoweredContainer {
   private tick: number;
   private rate: number;
 
-  constructor(position: Vector3, rotation: number, item: Item) {
+  constructor(position: Vector3, rotation: number, item: Item, sfx: SoundPromise) {
     super(position, rotation, 0, 10);
     this.item = item;
-    this.tick = 0;
     this.rate = 3;
+    this.sfx = sfx;
+    this.tick = 0;
   }
 
   override output() {
@@ -106,7 +108,9 @@ class Miners extends Instances<Miner> {
     return Miners.material;
   }
 
-  constructor() {
+  private readonly sfx: SFX;
+
+  constructor(sfx: SFX) {
     if (!Miners.collider) {
       Miners.setupCollider();
     }
@@ -117,10 +121,15 @@ class Miners extends Instances<Miner> {
       Miners.setupMaterial();
     }
     super(Miners.geometry!, Miners.material!, Miners.collider!);
+    this.sfx = sfx;
   }
 
   create(position: Vector3, rotation: number, item: Item) {
-    return super.addInstance(new Miner(position, rotation, item));
+    const { sfx } = this;
+    const instance = super.addInstance(
+      new Miner(position, rotation, item, sfx.getSound('machine', position.clone()))
+    );
+    return instance;
   }
 }
 

@@ -25,7 +25,7 @@ export default {
     sourcemap: !production,
   },
   plugins: [
-    url({ include: ['**/*.exr', '**/*.jpg'], destDir: 'dist/assets', publicPath: '/assets/' }),
+    url({ include: ['**/*.exr', '**/*.jpg', '**/*.ogg'], destDir: 'dist/assets', publicPath: '/assets/' }),
     nodeResolve({ extensions: ['.js', '.ts'] }),
     svelte({ preprocess: sveltePreprocess({ sourceMap: !production }) }),
     typescript({ sourceMap: !production, inlineSources: !production }),

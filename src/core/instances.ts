@@ -11,14 +11,24 @@ import {
   Raycaster,
   Vector3,
 } from 'three';
+import { SoundPromise } from './sfx';
 
 export class Instance<Event extends BaseEvent = BaseEvent> extends EventDispatcher<Event> {
   public readonly position: Vector3;
   public readonly rotation: number;
+  protected sfx?: SoundPromise;
+
   constructor(position: Vector3, rotation: number) {
     super();
     this.position = position.clone();
     this.rotation = rotation;
+  }
+  
+  dispose() {
+    const { sfx } = this;
+    if (sfx) {
+      sfx.abort();
+    }
   }
 
   serialize() {
@@ -85,6 +95,7 @@ class Instances<InstanceType extends Instance> extends InstancedMesh {
       return;
     }
     instances.splice(i, 1);
+    instance.dispose();
     this.updateInstances();
     this.visible = this.count > 0;
   }

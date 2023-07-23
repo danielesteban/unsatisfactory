@@ -15,6 +15,7 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { N8AOPass } from 'n8ao';
 import { SMAAPass } from 'three/examples/jsm/postprocessing/SMAAPass.js';
 import Controls, { Buttons } from './controls';
+import SFX from './sfx';
 import { loadEnvironment } from '../textures';
 import Environment from '../textures/industrial_sunset_puresky_1k.exr';
 
@@ -29,6 +30,7 @@ class Viewport extends EventDispatcher {
   public readonly dom: HTMLElement;
   public readonly renderer: WebGLRenderer;
   public readonly scene: Scene;
+  public readonly sfx: SFX;
 
   constructor() {
     super();
@@ -54,6 +56,8 @@ class Viewport extends EventDispatcher {
       this.scene.background = background;
       this.scene.environment = environment;
     });
+    this.sfx = new SFX();
+    this.scene.add(this.sfx);
     this.csm = new CSM({
       camera: this.camera,
       cascades: 4,
@@ -100,7 +104,7 @@ class Viewport extends EventDispatcher {
   }
 
   private render() {
-    const { clock, composer, controls, csm } = this;
+    const { camera, clock, composer, controls, csm, sfx } = this;
     if (!this.animate) {
       return;
     }
@@ -112,6 +116,7 @@ class Viewport extends EventDispatcher {
     controls.buttons.secondary = false;
     controls.buttons.tertiary = false;
     controls.buttons.interact = false;
+    sfx.updateListener(camera);
     csm.update();
     composer.render();
   }

@@ -10,6 +10,7 @@ import {
 import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 import Instances from '../core/instances';
 import { PoweredContainer } from '../core/container';
+import SFX, { SoundPromise } from '../core/sfx';
 import { Item, Recipe, Recipes } from './items';
 import { loadTexture } from '../textures';
 import DiffuseMap from '../textures/rust_coarse_01_diff_1k.jpg';
@@ -17,14 +18,15 @@ import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.jpg';
 import RoughnessMap from '../textures/rust_coarse_01_rough_1k.jpg';
 
 export class Fabricator extends PoweredContainer {
-  protected readonly outputItems: Item[];
+  private readonly outputItems: Item[];
   private recipe: Recipe;
   private tick: number;
 
-  constructor(position: Vector3, rotation: number, recipe: Recipe) {
+  constructor(position: Vector3, rotation: number, recipe: Recipe, sfx: SoundPromise) {
     super(position, rotation, 0, 10);
     this.outputItems = [];
     this.recipe = recipe;
+    this.sfx = sfx;
     this.tick = 0;
   }
 
@@ -135,7 +137,9 @@ class Fabricators extends Instances<Fabricator> {
     return Fabricators.material;
   }
 
-  constructor() {
+  private readonly sfx: SFX;
+
+  constructor(sfx: SFX) {
     if (!Fabricators.collider) {
       Fabricators.setupCollider();
     }
@@ -146,10 +150,15 @@ class Fabricators extends Instances<Fabricator> {
       Fabricators.setupMaterial();
     }
     super(Fabricators.geometry!, Fabricators.material!, Fabricators.collider!);
+    this.sfx = sfx;
   }
 
   create(position: Vector3, rotation: number, recipe: Recipe = Recipes[0]) {
-    return super.addInstance(new Fabricator(position, rotation, recipe));
+    const { sfx } = this;
+    const instance = super.addInstance(
+      new Fabricator(position, rotation, recipe, sfx.getSound('machine', position.clone()))
+    );
+    return instance;
   }
 }
 
