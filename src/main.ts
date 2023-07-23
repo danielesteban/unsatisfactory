@@ -280,7 +280,7 @@ viewport.setAnimationLoop((buttons, delta) => {
 
 const download = () => {
   const downloader = document.createElement('a');
-  const blob = new Blob([JSON.stringify(serialize(belts, buffers, fabricators, foundations, generators, miners, walls, wires))], { type: 'application/json' });
+  const blob = new Blob([JSON.stringify(serialize(belts, buffers, fabricators, foundations, generators, miners, walls, wires, viewport.camera))], { type: 'application/json' });
   downloader.href = URL.createObjectURL(blob);
   downloader.download = 'unsatisfactory.json';
   downloader.click();
@@ -315,7 +315,7 @@ const reset = () => {
 const save = () => {
   localStorage.setItem(
     'autosave',
-    JSON.stringify(serialize(belts, buffers, fabricators, foundations, generators, miners, walls, wires))
+    JSON.stringify(serialize(belts, buffers, fabricators, foundations, generators, miners, walls, wires, viewport.camera))
   );
   settings.$set({ lastSave: new Date() });
 };
@@ -333,10 +333,11 @@ const settings = new Settings({
 
 let stored = localStorage.getItem('autosave');
 if (stored) {
-  stored = JSON.parse(stored);
+  stored = JSON.parse(stored)!;
   deserialize(
     stored as any,
-    belts, buffers, fabricators, foundations, generators, miners, walls, wires
+    belts, buffers, fabricators, foundations, generators, miners, walls, wires,
+    viewport.camera,
   );
 } else {
   Debug(belts, buffers, fabricators, foundations, generators, miners, wires, walls);

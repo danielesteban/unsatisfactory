@@ -1,4 +1,4 @@
-import { Vector3 } from 'three';
+import { Camera, Vector3 } from 'three';
 import Container, { PoweredContainer } from './container';
 import Belts, { Belt } from '../objects/belts';
 import Buffers, { Buffer } from '../objects/buffers';
@@ -12,7 +12,10 @@ import Wires, { Wire } from '../objects/wires';
 
 export const version = 1;
 
-export const serialize = (belts: Belts, buffers: Buffers, fabricators: Fabricators, foundations: Foundations, generators: Generators, miners: Miners, walls: Walls, wires: Wires) => {
+export const serialize = (
+  belts: Belts, buffers: Buffers, fabricators: Fabricators, foundations: Foundations, generators: Generators, miners: Miners, walls: Walls, wires: Wires,
+  camera: Camera,
+) => {
   const containers = new WeakMap<Container, number>();
   const serializeInstances = (instances: Buffers | Fabricators | Foundations | Generators | Miners | Walls) => (
     Array.from({ length: instances.count }, (_v, i) => {
@@ -56,13 +59,15 @@ export const serialize = (belts: Belts, buffers: Buffers, fabricators: Fabricato
       serializeContainer(wire.from),
       serializeContainer(wire.to),
     ]),
+    camera: [camera.position.toArray(), camera.rotation.toArray().slice(0, 3)],
     version,
   };
 };
 
 export const deserialize = (
   serialized: ReturnType<typeof serialize>,
-  belts: Belts, buffers: Buffers, fabricators: Fabricators, foundations: Foundations, generators: Generators, miners: Miners, walls: Walls, wires: Wires
+  belts: Belts, buffers: Buffers, fabricators: Fabricators, foundations: Foundations, generators: Generators, miners: Miners, walls: Walls, wires: Wires,
+  camera: Camera,
 ) => {
   const aux = new Vector3();
   const auxB = new Vector3();
@@ -114,4 +119,8 @@ export const deserialize = (
       containers[to[0]][to[1]] as PoweredContainer,
     )
   ));
+  camera.position.fromArray(serialized.camera[0] as number[]);
+  camera.userData.targetPosition.copy(camera.position);
+  camera.rotation.fromArray(serialized.camera[1] as [number, number, number]);
+  camera.userData.targetRotation.copy(camera.rotation);
 };
