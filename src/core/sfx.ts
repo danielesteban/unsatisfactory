@@ -103,7 +103,7 @@ class SFX extends Group {
     }
   }
 
-  getSound(id: keyof typeof Sounds, position: Vector3, detune: number = (Math.random() - 0.5) * 1000, loop: boolean = true, volume: number = 0.2): SoundPromise {
+  getSound(id: keyof typeof Sounds, position: Vector3, detune: number = (Math.random() - 0.5) * 1000, loop: boolean = true, volume: number = 0.4): SoundPromise {
     let aborted = false;
     let paused = false;
     let sound: PositionalAudio | undefined;
@@ -158,7 +158,7 @@ class SFX extends Group {
           return;
         }
         if (!sound.isPlaying) {
-          sound.play(sound.listener.timeDelta);
+          sound.play(sound.listener.timeDelta + Math.random());
           sound.setDetune(detune);
           sound.setVolume(volume);
         }
@@ -166,7 +166,7 @@ class SFX extends Group {
     };
   }
 
-  playAt(id: keyof typeof Sounds, position: Vector3, detune: number = 0, volume: number = 0.2) {
+  playAt(id: keyof typeof Sounds, position: Vector3, detune: number = 0, volume: number = 0.4) {
     const { buffers, listener, pool } = this;
     if (!buffers || !listener) {
       return;
