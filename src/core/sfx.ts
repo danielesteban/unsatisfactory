@@ -130,9 +130,9 @@ class SFX extends Group {
       sound.updateMatrix();
       if (!paused) {
         sound.play(sound.listener.timeDelta + Math.random());
+        sound.setDetune(detune);
+        sound.setVolume(volume);
       }
-      sound.setDetune(detune);
-      sound.setVolume(volume);
       return sound;
     });
     return {
@@ -159,6 +159,8 @@ class SFX extends Group {
         }
         if (!sound.isPlaying) {
           sound.play(sound.listener.timeDelta);
+          sound.setDetune(detune);
+          sound.setVolume(volume);
         }
       },
     };
