@@ -69,11 +69,11 @@ viewport.scene.add(walls);
 const wires = new Wires();
 viewport.scene.add(wires);
 
-const from: Omit<Connector, "container"> & { container: Container | PoweredContainer | undefined; } = {
+const from: Omit<Connector, 'container'> & { container: Container | PoweredContainer | undefined; } = {
   container: undefined,
   direction: new Vector3(),
 };
-const to: Omit<Connector, "container"> & { container: Container | PoweredContainer | undefined; } = {
+const to: Omit<Connector, 'container'> & { container: Container | PoweredContainer | undefined; } = {
   container: undefined,
   direction: new Vector3(),
 };
