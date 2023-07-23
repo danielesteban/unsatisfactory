@@ -98,7 +98,7 @@ const create = (intersection: Intersection<Object3D<Event>>) => {
           && Math.abs(direction.dot(worldNorth)) > 0
         )
       ) {
-        return;
+        return 'nope';
       }
       if (!from.container) {
         from.container = intersection.object.getInstance(intersection.instanceId!);
@@ -108,32 +108,32 @@ const create = (intersection: Intersection<Object3D<Event>>) => {
       to.container = intersection.object.getInstance(intersection.instanceId!);
       to.direction.copy(direction);
       if (from.container === to.container && from.direction.equals(to.direction)) {
-        return;
+        return 'nope';
       }
       quaternion.setFromAxisAngle(worldUp, from.container.rotation);
       from.direction.applyQuaternion(quaternion);
       quaternion.setFromAxisAngle(worldUp, to.container.rotation);
       to.direction.applyQuaternion(quaternion);
       belts.create(from as Connector, to as Connector);
-      break;
+      return;
     case Brush.buffer:
       buffers.create(snap(intersection), rotation);
-      break;
+      return;
     case Brush.fabricator:
       fabricators.create(snap(intersection), rotation);
-      break;
+      return;
     case Brush.foundation:
       foundations.create(snap(intersection), rotation);
-      break;
+      return;
     case Brush.generator:
       generators.create(snap(intersection), rotation);
-      break;
+      return;
     case Brush.miner:
       miners.create(snap(intersection), rotation, Item.ore);
-      break;
+      return;
     case Brush.wall:
       walls.create(snap(intersection), rotation);
-      break;
+      return;
     case Brush.wire:
       if (
         !(
@@ -142,7 +142,7 @@ const create = (intersection: Intersection<Object3D<Event>>) => {
           || intersection.object instanceof Miners
         )
       ) {
-        return;
+        return 'nope';
       }
       if (!from.container) {
         from.container = intersection.object.getInstance(intersection.instanceId!);
@@ -150,11 +150,12 @@ const create = (intersection: Intersection<Object3D<Event>>) => {
       }
       to.container = intersection.object.getInstance(intersection.instanceId!);
       if (from.container === to.container) {
-        return;
+        return 'nope';
       }
       wires.create(from.container as PoweredContainer, to.container as PoweredContainer);
-      break;
+      return;
   }
+  return 'nope';
 };
 
 const removeConnected = (container: Container) => {
@@ -203,6 +204,7 @@ const remove = (intersection: Intersection<Object3D<Event>>) => {
     wires.remove(intersection.object);
     return;
   }
+  return 'nope';
 };
 
 const interactionLimit = 12;
@@ -242,12 +244,12 @@ const handleInput = (
 ) => {
   const hasFrom = from.container !== undefined;
   if (primary && intersection?.face) {
-    create(intersection);
-    viewport.sfx.playAt("build", intersection.point, Math.random() * 600);
+    const sound = create(intersection) || 'build';
+    viewport.sfx.playAt(sound, intersection.point, sound === 'nope' ? 0 : Math.random() * 600);
   }
   if (secondary && intersection?.object) {
-    remove(intersection);
-    viewport.sfx.playAt("build", intersection.point, Math.random() * -600);
+    const sound = remove(intersection) || 'build';
+    viewport.sfx.playAt(sound, intersection.point, sound === 'nope' ? 0 : Math.random() * -600);
   }
   if (tertiary && intersection?.object) {
     pick(intersection);
