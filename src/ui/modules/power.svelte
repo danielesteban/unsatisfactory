@@ -35,7 +35,7 @@
 <Module>
   <div slot="name">Power Consumption</div>
   <div>
-    {consumption}mW <span class="status"> ∙ {status}</span>
+    {consumption}MW <span class="status"> ∙ {status}</span>
   </div>
 </Module>
 

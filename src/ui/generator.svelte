@@ -27,7 +27,7 @@
     <Module>
       <div slot="name">Power Generation</div>
       <div>
-        {power}mW
+        {power}MW
       </div>
     </Module>
   </Modules>
