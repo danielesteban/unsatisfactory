@@ -21,7 +21,7 @@ import Miners from './objects/miners';
 import Terrain from './objects/terrain';
 import Walls from './objects/walls';
 import Wires, { Wire } from './objects/wires';
-import UI from './ui';
+import UI, { setTooltip } from './ui';
 import Debug from './debug';
 
 const viewport = new Viewport();
@@ -203,6 +203,22 @@ const remove = (intersection: Intersection<Object3D<Event>>) => {
   }
 };
 
+const interactionLimit = 12;
+const hover = (intersection: Intersection<Object3D<Event>>) => {
+  let tooltip;
+  if (
+    intersection?.object instanceof Buffers
+    || intersection?.object instanceof Fabricators
+    || intersection?.object instanceof Generators
+    || intersection?.object instanceof Miners
+  ) {
+    const instance = intersection.object.getInstance(intersection.instanceId!);
+    if (instance.position.distanceTo(viewport.camera.position) <= interactionLimit) {
+      tooltip = instance;
+    }
+  }
+  setTooltip(tooltip);
+};
 const interaction = (intersection: Intersection<Object3D<Event>>) => {
   if (
     intersection.object instanceof Buffers
@@ -210,8 +226,11 @@ const interaction = (intersection: Intersection<Object3D<Event>>) => {
     || intersection.object instanceof Generators
     || intersection.object instanceof Miners
   ) {
-    UI(intersection.object.getInstance(intersection.instanceId!));
-    return;
+    const instance = intersection.object.getInstance(intersection.instanceId!);
+    if (instance.position.distanceTo(viewport.camera.position) <= interactionLimit) {
+      UI(instance);
+      return;
+    }
   }
 };
 
@@ -242,9 +261,10 @@ const raycaster = new Raycaster();
 viewport.setAnimationLoop((buttons, delta) => {
   belts.step(delta);
   terrain.update(viewport.camera.position, 8);
+  raycaster.setFromCamera(center, viewport.camera);
+  const intersection = raycaster.intersectObjects(viewport.scene.children)[0];
+  hover(intersection);
   if (buttons.primary || buttons.secondary || buttons.tertiary || buttons.interact) {
-    raycaster.setFromCamera(center, viewport.camera);
-    const intersection = raycaster.intersectObjects(viewport.scene.children)[0];
     handleInput(buttons, intersection);
   }
 });

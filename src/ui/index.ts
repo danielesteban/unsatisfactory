@@ -7,6 +7,7 @@ import BufferUI from './buffer.svelte';
 import FabricatorUI from './fabricator.svelte';
 import GeneratorUI from './generator.svelte';
 import MinerUI from './miner.svelte';
+import Cursor from './cursor.svelte';
 
 let current: SvelteComponent | undefined = undefined;
 const target = document.getElementById('ui')!;
@@ -50,4 +51,22 @@ export default (instance: Buffer | Fabricator | Generator | Miner) => {
     });
   }
   current = dialog;
+};
+
+const cursor = new Cursor({ target });
+export const setTooltip = (instance?: Buffer | Fabricator | Generator | Miner) => {
+  let configure;
+  if (instance instanceof Buffer) {
+    configure = 'Buffer';
+  }
+  if (instance instanceof Fabricator) {
+    configure = 'Fabricator';
+  }
+  if (instance instanceof Generator) {
+    configure = 'Generator';
+  }
+  if (instance instanceof Miner) {
+    configure = 'Miner';
+  }
+  cursor.$set({ configure });
 };
