@@ -19,11 +19,6 @@ class Container<Event extends BaseEvent = BaseEvent> extends EventDispatcher<Eve
     this.items = items;
   }
 
-  count() {
-    const { items } = this;
-    return items.length;
-  }
-
   canInput(_item: Item) {
     const { capacity, items } = this;
     return items.length < capacity;
