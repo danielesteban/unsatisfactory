@@ -32,6 +32,7 @@
     bottom: 0;
     background: rgba(0, 0, 0, 0.2);
     backdrop-filter: blur(0.5rem);
+    z-index: 1;
   }
 
   .container {

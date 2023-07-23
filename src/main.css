@@ -57,6 +57,7 @@ canvas {
   right: 1rem;
   text-align: right;
   text-shadow: 0 0 0.5rem rgba(0, 0, 0, .5);
+  z-index: 2;
 }
 
 body.loading #viewport {

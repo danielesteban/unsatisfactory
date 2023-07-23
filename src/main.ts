@@ -23,6 +23,7 @@ import Terrain from './objects/terrain';
 import Walls from './objects/walls';
 import Wires, { Wire } from './objects/wires';
 import UI, { setTooltip } from './ui';
+import Settings from './ui/settings.svelte';
 import Debug from './debug';
 
 const viewport = new Viewport();
@@ -270,7 +271,27 @@ viewport.setAnimationLoop((buttons, delta) => {
   }
 });
 
-viewport.sfx.setAmbient(['ambient']);
+const reset = () => {
+  localStorage.clear();
+  location.reload();
+};
+
+const save = () => {
+  localStorage.setItem(
+    'autosave',
+    JSON.stringify(serialize(belts, buffers, fabricators, foundations, generators, miners, walls, wires))
+  );
+  settings.$set({ lastSave: new Date() });
+};
+
+const settings = new Settings({
+  props: {
+    lastSave: new Date(),
+    reset,
+    save,
+  },
+  target: document.getElementById('ui')!,
+});
 
 let stored = localStorage.getItem('autosave');
 if (stored) {
@@ -283,9 +304,4 @@ if (stored) {
   Debug(belts, buffers, fabricators, foundations, generators, miners, wires, walls);
 }
 
-setInterval(() => {
-  localStorage.setItem(
-    'autosave',
-    JSON.stringify(serialize(belts, buffers, fabricators, foundations, generators, miners, walls, wires))
-  );
-}, 30000);
+setInterval(save, 60000);

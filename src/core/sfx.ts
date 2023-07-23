@@ -21,7 +21,7 @@ class SFX extends Group {
   private readonly ambient: {
     sounds: (keyof typeof Sounds)[],
     players: Audio[],
-  } = { sounds: [], players: [] };
+  } = { sounds: ['ambient'], players: [] };
   private readonly music: {
     url?: string,
     player?: HTMLAudioElement,
