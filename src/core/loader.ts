@@ -125,7 +125,7 @@ export const deserialize = (
   camera.userData.targetRotation.copy(camera.rotation);
 };
 
-export const load = () => {
+export const load = () => new Promise((resolve, reject) => {
   const loader = document.createElement('input');
   loader.type = 'file';
   loader.accept = '.json';
@@ -138,13 +138,14 @@ export const load = () => {
       if (serialized.version !== version) {
         throw new Error();
       }
-      localStorage.setItem('autosave', JSON.stringify(serialized));
-      location.reload();
+      return serialized;
     })
+    .then(resolve)
+    .catch(reject)
     .finally(() => URL.revokeObjectURL(url));
   });
   loader.click();
-};
+});
 
 export const download = (
   serialized: ReturnType<typeof serialize>

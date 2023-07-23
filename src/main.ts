@@ -288,11 +288,15 @@ const save = () => {
 
 const settings = new Settings({
   props: {
+    lastSave: new Date(),
     download: () => (
       download(serialize(belts, buffers, fabricators, foundations, generators, miners, walls, wires, viewport.camera))
     ),
-    lastSave: new Date(),
-    load,
+    load: async () => {
+      const serialized = await load();
+      localStorage.setItem('autosave', JSON.stringify(serialized));
+      location.reload();
+    },
     reset: () => {
       localStorage.clear();
       location.reload();
