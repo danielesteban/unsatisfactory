@@ -211,10 +211,13 @@ const interactionLimit = 12;
 const hover = (intersection: Intersection<Object3D<Event>>) => {
   let tooltip;
   if (
-    intersection?.object instanceof Buffers
-    || intersection?.object instanceof Fabricators
-    || intersection?.object instanceof Generators
-    || intersection?.object instanceof Miners
+    from.container === undefined
+    && (
+      intersection?.object instanceof Buffers
+      || intersection?.object instanceof Fabricators
+      || intersection?.object instanceof Generators
+      || intersection?.object instanceof Miners
+    )
   ) {
     const instance = intersection.object.getInstance(intersection.instanceId!);
     if (instance.position.distanceTo(viewport.camera.position) <= interactionLimit) {
