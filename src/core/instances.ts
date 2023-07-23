@@ -1,5 +1,7 @@
 import {
+  BaseEvent,
   BufferGeometry,
+  EventDispatcher,
   InstancedBufferAttribute,
   InstancedMesh,
   Intersection,
@@ -10,9 +12,22 @@ import {
   Vector3,
 } from 'three';
 
-interface Instance {
-  position: Vector3;
-  rotation: number;
+export class Instance<Event extends BaseEvent = BaseEvent> extends EventDispatcher<Event> {
+  public readonly position: Vector3;
+  public readonly rotation: number;
+  constructor(position: Vector3, rotation: number) {
+    super();
+    this.position = position;
+    this.rotation = rotation;
+  }
+
+  serialize() {
+    const { position, rotation } = this;
+    return [
+      position.toArray(),
+      rotation,
+    ];
+  }
 }
 
 class Instances<InstanceType extends Instance> extends InstancedMesh {

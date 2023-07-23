@@ -6,16 +6,13 @@ import {
   Vector2,
   Vector3,
 } from 'three';
-import Instances from '../core/instances';
+import Instances, { Instance } from '../core/instances';
 import { loadTexture } from '../textures';
 import DiffuseMap from '../textures/hexagonal_concrete_paving_diff_1k.jpg';
 import NormalMap from '../textures/hexagonal_concrete_paving_nor_gl_1k.jpg';
 import RoughnessMap from '../textures/hexagonal_concrete_paving_rough_1k.jpg';
 
-export type Wall = {
-  position: Vector3;
-  rotation: number;
-};
+export class Wall extends Instance {};
 
 class Walls extends Instances<Wall> {
   private static geometry: BoxGeometry | undefined;
@@ -64,6 +61,10 @@ class Walls extends Instances<Wall> {
       Walls.setupMaterial();
     }
     super(Walls.geometry!, Walls.material!);
+  }
+
+  create(position: Vector3, rotation: number) {
+    return super.addInstance(new Wall(position, rotation));
   }
 }
 

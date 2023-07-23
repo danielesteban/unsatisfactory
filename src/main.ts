@@ -121,7 +121,7 @@ const create = (intersection: Intersection<Object3D<Event>>) => {
       fabricators.create(snap(intersection), rotation);
       break;
     case Brush.foundation:
-      foundations.addInstance({ position: snap(intersection), rotation });
+      foundations.create(snap(intersection), rotation);
       break;
     case Brush.generator:
       generators.create(snap(intersection), rotation);
@@ -130,7 +130,7 @@ const create = (intersection: Intersection<Object3D<Event>>) => {
       miners.create(snap(intersection), rotation, Item.ore);
       break;
     case Brush.wall:
-      walls.addInstance({ position: snap(intersection), rotation });
+      walls.create(snap(intersection), rotation);
       break;
     case Brush.wire:
       if (

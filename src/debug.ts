@@ -129,22 +129,42 @@ export default (belts: Belts, buffers: Buffers, fabricators: Fabricators, founda
   wires.create(fabricatorA, fabricatorC);
   for (let z = -1; z < 1; z++) {
     for (let x = -2; x < 3; x++) {
-      foundations.addInstance({ position: new Vector3(x * 4 - 8, 0, z * 4 - 4), rotation: 0 });
+      foundations.create(new Vector3(x * 4 - 8, 0, z * 4 - 4), 0);
     }
   }
-  foundations.addInstance({ position: generator.position.clone().add(new Vector3(0, -1.5, 0)), rotation: 0 });
+  foundations.create(generator.position.clone().add(new Vector3(0, -1.5, 0)), 0);
   for (let i = 0; i < 8; i++) {
-    foundations.addInstance({ position: fabricatorB.position.clone().add(new Vector3(0, -2.5 - i, 0)), rotation: 0 });
-    foundations.addInstance({ position: fabricatorC.position.clone().add(new Vector3(0, -2.5 - i, 0)), rotation: 0 });
+    foundations.create(fabricatorB.position.clone().add(new Vector3(0, -2.5 - i, 0)), 0);
+    foundations.create(fabricatorC.position.clone().add(new Vector3(0, -2.5 - i, 0)), 0);
   }
   for (let i = 0; i < 2; i++) {
-    walls.addInstance({ position: fabricatorA.position.clone().add(new Vector3(0, 0, i === 0 ? -1.25 : 1.25)), rotation: 0 });
+    walls.create(fabricatorA.position.clone().add(new Vector3(0, 0, i === 0 ? -1.25 : 1.25)), 0);
   }
   for (let i = 0; i < 2; i++) {
-    walls.addInstance({ position: fabricatorB.position.clone().add(new Vector3(i === 0 ? -1.25 : 1.25, 0, 0)), rotation: Math.PI * 0.5 });
-    walls.addInstance({ position: fabricatorC.position.clone().add(new Vector3(i === 0 ? -1.25 : 1.25, 0, 0)), rotation: Math.PI * 0.5 });
+    walls.create(fabricatorB.position.clone().add(new Vector3(i === 0 ? -1.25 : 1.25, 0, 0)), Math.PI * 0.5);
+    walls.create(fabricatorC.position.clone().add(new Vector3(i === 0 ? -1.25 : 1.25, 0, 0)), Math.PI * 0.5);
   }
   for (let i = 0; i < 2; i++) {
-    walls.addInstance({ position: minerB.position.clone().add(new Vector3(1.25, 0, i * 4 - 2)), rotation: Math.PI * 0.5 });
+    walls.create(minerB.position.clone().add(new Vector3(1.25, 0, i * 4 - 2)), Math.PI * 0.5);
   }
+
+  // @dani @debug
+  // Serialization test
+
+  // const serializeInstances = (instances: Buffers | Fabricators | Foundations | Generators | Miners | Walls) => (
+  //   Array.from({ length: instances.count }, (_v, i) => (
+  //     instances.getInstance(i).serialize()
+  //   ))
+  // );
+  // const serialized = {
+  //   buffers: serializeInstances(buffers),
+  //   fabricators: serializeInstances(fabricators),
+  //   foundations: serializeInstances(foundations),
+  //   generators: serializeInstances(generators),
+  //   miners: serializeInstances(miners),
+  //   walls: serializeInstances(walls),
+  //   // @dani @incomplete
+  //   // belts & wires
+  // };
+  // console.log(serialized);
 };

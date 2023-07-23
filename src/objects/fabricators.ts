@@ -79,6 +79,14 @@ export class Fabricator extends PoweredContainer {
   override getWireConnector(): Vector3 {
     return this.position.clone().addScaledVector(PoweredContainer.worldUp, 2.5);
   }
+
+  override serialize() {
+    const { recipe } = this;
+    return [
+      ...super.serialize(),
+      Recipes.indexOf(recipe),
+    ];
+  }
 };
 
 class Fabricators extends Instances<Fabricator> {
