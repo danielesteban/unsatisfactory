@@ -124,6 +124,7 @@ class SFX extends Group {
       sound.matrixAutoUpdate = false;
       sound.setBuffer(buffers![id]);
       sound.setLoop(loop);
+      sound.setRefDistance(0.5);
       this.add(sound);
       sound.position.copy(position);
       sound.updateMatrix();
@@ -174,6 +175,7 @@ class SFX extends Group {
       sound.userData.id = id;
       sound.matrixAutoUpdate = false;
       sound.setBuffer(buffers[id]);
+      sound.setRefDistance(0.5);
       pool.push(sound);
       this.add(sound);
     }
