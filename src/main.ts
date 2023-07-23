@@ -82,6 +82,12 @@ const quaternion = new Quaternion();
 const worldUp = new Vector3(0, 1, 0);
 const worldNorth = new Vector3(0, 0, -1);
 const create = (intersection: Intersection<Object3D<Event>>) => {
+  if (
+    intersection.object instanceof Belt
+    || intersection.object instanceof Wire
+  ) {
+    return 'nope';
+  }
   const direction = intersection.face!.normal;
   switch (brush) {
     case Brush.belt:
@@ -155,7 +161,6 @@ const create = (intersection: Intersection<Object3D<Event>>) => {
       wires.create(from.container as PoweredContainer, to.container as PoweredContainer);
       return 'wire';
   }
-  return 'nope';
 };
 
 const removeConnected = (container: Container) => {
