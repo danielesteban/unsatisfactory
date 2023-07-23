@@ -44,6 +44,6 @@
     backdrop-filter: blur(2rem);
     border-radius: 1rem;
     width: 600px;
-    height: 400px;
+    min-height: 400px;
   }
 </style>
