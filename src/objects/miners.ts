@@ -48,6 +48,14 @@ export class Miner extends PoweredContainer {
   override getWireConnector(): Vector3 {
     return this.position.clone().addScaledVector(PoweredContainer.worldUp, 2.5);
   }
+
+  override serialize() {
+    const { item } = this;
+    return [
+      ...super.serialize(),
+      item,
+    ];
+  }
 };
 
 class Miners extends Instances<Miner> {

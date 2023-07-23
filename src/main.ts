@@ -10,6 +10,7 @@ import {
 } from 'three';
 import Viewport from './core/viewport';
 import { Brush, brush, rotation, pick, snap } from './core/brush';
+import { serialize, deserialize } from './core/loader';
 import Belts, { Belt } from './objects/belts';
 import Buffers from './objects/buffers';
 import Container, { PoweredContainer, Connector } from './core/container';
@@ -22,7 +23,6 @@ import Terrain from './objects/terrain';
 import Walls from './objects/walls';
 import Wires, { Wire } from './objects/wires';
 import UI, { setTooltip } from './ui';
-import { serialize } from './core/loader';
 import Debug from './debug';
 
 const viewport = new Viewport();
@@ -270,10 +270,20 @@ viewport.setAnimationLoop((buttons, delta) => {
   }
 });
 
-Debug(belts, buffers, fabricators, foundations, generators, miners, wires, walls);
+let stored = localStorage.getItem('autosave');
+if (stored) {
+  stored = JSON.parse(stored);
+  deserialize(
+    stored as any,
+    belts, buffers, fabricators, foundations, generators, miners, walls, wires
+  );
+} else {
+  Debug(belts, buffers, fabricators, foundations, generators, miners, wires, walls);
+}
 
-// @dani @debug
-// Serialization test
-console.log(
-  serialize(belts, buffers, fabricators, foundations, generators, miners, wires, walls)
-);
+setInterval(() => {
+  localStorage.setItem(
+    'autosave',
+    JSON.stringify(serialize(belts, buffers, fabricators, foundations, generators, miners, walls, wires))
+  );
+}, 30000);

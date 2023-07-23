@@ -49,6 +49,14 @@ export class Buffer extends Container<BufferEvent> {
     this.sink = status;
     this.dispatchEvent({ type: 'sink', status });
   }
+
+  override serialize() {
+    const { sink } = this;
+    return [
+      ...super.serialize(),
+      sink ? 1 : 0,
+    ];
+  }
 };
 
 class Buffers extends Instances<Buffer> {

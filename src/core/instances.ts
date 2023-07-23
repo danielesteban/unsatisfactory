@@ -17,7 +17,7 @@ export class Instance<Event extends BaseEvent = BaseEvent> extends EventDispatch
   public readonly rotation: number;
   constructor(position: Vector3, rotation: number) {
     super();
-    this.position = position;
+    this.position = position.clone();
     this.rotation = rotation;
   }
 

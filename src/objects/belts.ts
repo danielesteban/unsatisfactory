@@ -83,8 +83,8 @@ export class Belt extends Mesh {
     this.castShadow = this.receiveShadow = true;
     this.updateMatrixWorld();
     this.matrixAutoUpdate = false;
-    this.from = from;
-    this.to = to;
+    this.from = { container: from.container, direction: from.direction.clone() };
+    this.to = { container: to.container, direction: to.direction.clone() };
     this.enabled = true;
     this.slots = Array.from({ length: Math.ceil(path.getLength() / 0.5) }, () => ({ item: Item.none, locked: false }));
     this.items = new Items(this.slots.length, path);

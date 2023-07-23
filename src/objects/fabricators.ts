@@ -21,10 +21,10 @@ export class Fabricator extends PoweredContainer {
   private recipe: Recipe;
   private tick: number;
 
-  constructor(position: Vector3, rotation: number) {
+  constructor(position: Vector3, rotation: number, recipe: Recipe) {
     super(position, rotation, 0, 10);
     this.outputItems = [];
-    this.recipe = Recipes[0];
+    this.recipe = recipe;
     this.tick = 0;
   }
 
@@ -148,8 +148,8 @@ class Fabricators extends Instances<Fabricator> {
     super(Fabricators.geometry!, Fabricators.material!, Fabricators.collider!);
   }
 
-  create(position: Vector3, rotation: number) {
-    return super.addInstance(new Fabricator(position, rotation));
+  create(position: Vector3, rotation: number, recipe: Recipe = Recipes[0]) {
+    return super.addInstance(new Fabricator(position, rotation, recipe));
   }
 }
 
