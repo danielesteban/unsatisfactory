@@ -1,16 +1,21 @@
 <script lang="ts">
-  export let action: 'build' | 'configure' | undefined;
+  export let action: 'belt' | 'build' | 'configure' | 'wire' | undefined;
   export let object: string | undefined;
+  export let from: string | undefined;
 </script>
 
 <div class="cursor">
   <div class="crosshair"></div>
   {#if action}
     <div class="tooltip">
-      {#if action === 'build'}
+      {#if action === 'belt'}
+        Belt from <span class="object">{from || object}</span>{#if from} to <span class="object">{object}</span>{/if}
+      {:else if action === 'build'}
         Press <span class="key">R</span> or <span class="key">T</span> to rotate
-      {:else}
+      {:else if action === 'configure'}
         Press <span class="key">E</span> to configure <span class="object">{object}</span>
+      {:else}
+        Wire from <span class="object">{from || object}</span>{#if from} to <span class="object">{object}</span>{/if}
       {/if}
     </div>
   {/if}

@@ -1,4 +1,5 @@
 import { SvelteComponent } from 'svelte';
+import { Instance } from '../core/instances';
 import { Buffer } from '../objects/buffers';
 import { Generator } from '../objects/generators';
 import { Fabricator } from '../objects/fabricators';
@@ -13,7 +14,7 @@ let current: SvelteComponent | undefined = undefined;
 const target = document.getElementById('ui')!;
 const viewport = document.getElementById('viewport')!;
 
-export default (instance: Buffer | Fabricator | Generator | Miner) => {
+export default (instance: Instance) => {
   document.exitPointerLock();
   if (current) {
     current.$destroy();
@@ -53,24 +54,27 @@ export default (instance: Buffer | Fabricator | Generator | Miner) => {
   current = dialog;
 };
 
+const getObject = (instance?: Instance) => {
+  if (instance instanceof Buffer) {
+    return 'Buffer';
+  }
+  if (instance instanceof Fabricator) {
+    return 'Fabricator';
+  }
+  if (instance instanceof Generator) {
+    return 'Generator';
+  }
+  if (instance instanceof Miner) {
+    return 'Miner';
+  }
+  return undefined;
+};
+
 const cursor = new Cursor({ target });
-export const setTooltip = (action?: 'build' | 'configure', instance?: Buffer | Fabricator | Generator | Miner) => {
+export const setTooltip = (action?: 'belt' | 'build' | 'configure' | 'wire', instance?: Instance, from?: Instance) => {
   if (!action) {
     cursor.$set({ action: undefined });
     return;
   }
-  let object;
-  if (instance instanceof Buffer) {
-    object = 'Buffer';
-  }
-  if (instance instanceof Fabricator) {
-    object = 'Fabricator';
-  }
-  if (instance instanceof Generator) {
-    object = 'Generator';
-  }
-  if (instance instanceof Miner) {
-    object = 'Miner';
-  }
-  cursor.$set({ action, object });
+  cursor.$set({ action, object: getObject(instance), from: getObject(from) });
 };

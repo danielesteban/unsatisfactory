@@ -87,6 +87,31 @@ const to: Omit<Connector, 'container'> & { container: Container | PoweredContain
   direction: new Vector3(),
 };
 
+const canBelt = (intersection: Intersection<Object3D<Event>>) => (
+  (
+    intersection.object instanceof Buffers
+    || intersection.object instanceof Fabricators
+    || intersection.object instanceof Generators
+    || intersection.object instanceof Miners
+  )
+  && Math.abs(intersection.face!.normal.dot(Object3D.DEFAULT_UP)) == 0
+  && !(
+    intersection.object instanceof Fabricators
+    && Math.abs(intersection.face!.normal.dot(worldNorth)) > 0
+  )
+  && (!from.container || from.container !== intersection.object.getInstance(intersection.instanceId!))
+);
+
+const canWire = (intersection: Intersection<Object3D<Event>>) => (
+  (
+    intersection.object instanceof Fabricators
+    || intersection.object instanceof Generators
+    || intersection.object instanceof Miners
+    || intersection.object instanceof Poles
+  )
+  && (!from.container || from.container !== intersection.object.getInstance(intersection.instanceId!))
+);
+
 const quaternion = new Quaternion();
 const worldNorth = new Vector3(0, 0, -1);
 const create = (intersection: Intersection<Object3D<Event>>) => {
@@ -97,34 +122,18 @@ const create = (intersection: Intersection<Object3D<Event>>) => {
   ) {
     return 'nope';
   }
-  const direction = intersection.face!.normal;
   switch (brush) {
     case Brush.belt:
-      if (
-        !(
-          intersection.object instanceof Buffers
-          || intersection.object instanceof Fabricators
-          || intersection.object instanceof Generators
-          || intersection.object instanceof Miners
-        )
-        || Math.abs(direction.dot(Object3D.DEFAULT_UP)) > 0
-        || (
-          intersection.object instanceof Fabricators
-          && Math.abs(direction.dot(worldNorth)) > 0
-        )
-      ) {
+      if (!canBelt(intersection)) {
         return 'nope';
       }
       if (!from.container) {
-        from.container = intersection.object.getInstance(intersection.instanceId!);
-        from.direction.copy(direction);
-        return;
+        from.container = (intersection.object as Buffers | Fabricators | Generators | Miners).getInstance(intersection.instanceId!);
+        from.direction.copy(intersection.face!.normal);
+        return 'tap';
       }
-      to.container = intersection.object.getInstance(intersection.instanceId!);
-      to.direction.copy(direction);
-      if (from.container === to.container && from.direction.equals(to.direction)) {
-        return 'nope';
-      }
+      to.container = (intersection.object as Buffers | Fabricators | Generators | Miners).getInstance(intersection.instanceId!);
+      to.direction.copy(intersection.face!.normal);
       quaternion.setFromAxisAngle(Object3D.DEFAULT_UP, from.container.rotation);
       from.direction.applyQuaternion(quaternion);
       quaternion.setFromAxisAngle(Object3D.DEFAULT_UP, to.container.rotation);
@@ -153,21 +162,14 @@ const create = (intersection: Intersection<Object3D<Event>>) => {
       walls.create(snap(intersection), rotation);
       return;
     case Brush.wire:
-      if (
-        !(
-          intersection.object instanceof Fabricators
-          || intersection.object instanceof Generators
-          || intersection.object instanceof Miners
-          || intersection.object instanceof Poles
-        )
-      ) {
+      if (!canWire(intersection)) {
         return 'nope';
       }
       if (!from.container) {
-        from.container = intersection.object.getInstance(intersection.instanceId!);
-        return;
+        from.container = (intersection.object as Fabricators | Generators | Miners | Poles).getInstance(intersection.instanceId!);
+        return 'tap';
       }
-      to.container = intersection.object.getInstance(intersection.instanceId!);
+      to.container = (intersection.object as Fabricators | Generators | Miners | Poles).getInstance(intersection.instanceId!);
       if (from.container === to.container) {
         return 'nope';
       }
@@ -311,8 +313,19 @@ const hover = (intersection: Intersection<Object3D<Event>>) => {
   ghost.visible = false;
 
   if (
+    intersection?.face
+    && (
+      (brush === Brush.belt && canBelt(intersection))
+      || (brush === Brush.wire && canWire(intersection))
+    )
+  ) {
+    const instance = (intersection.object as Buffers | Fabricators | Generators | Miners | Poles).getInstance(intersection.instanceId!);
+    setTooltip(brush === Brush.belt ? 'belt' : 'wire', instance, from.container);
+    return;
+  }
+
+  if (
     brush === Brush.none
-    && from.container === undefined
     && (
       intersection?.object instanceof Buffers
       || intersection?.object instanceof Fabricators
