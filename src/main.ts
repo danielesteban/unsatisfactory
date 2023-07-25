@@ -251,12 +251,9 @@ const handleInput = (
     const sound = create(intersection) || 'build';
     viewport.sfx.playAt(sound, intersection.point, 0, sound === 'nope' ? 0 : Math.random() * (sound === 'wire' ? 100 : 600));
   }
-  if (secondary) {
-    setBrush(Brush.none);
-    if (intersection.object) {
-      const sound = remove(intersection) || 'build';
-      viewport.sfx.playAt(sound, intersection.point, 0, sound === 'nope' ? 0 : Math.random() * -600);
-    }
+  if (secondary && intersection?.object) {
+    const sound = remove(intersection) || 'build';
+    viewport.sfx.playAt(sound, intersection.point, 0, sound === 'nope' ? 0 : Math.random() * -600);
   }
   if (tertiary && intersection?.object) {
     pick(intersection);
