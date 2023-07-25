@@ -16,51 +16,52 @@ export class Wall extends Instance {};
 
 class Walls extends Instances<Wall> {
   private static geometry: BoxGeometry | undefined;
-  static setupGeometry() {
-    Walls.geometry = new BoxGeometry(4, 4, 0.5);
-    Walls.geometry.computeBoundingSphere();
-    const uv = Walls.geometry.getAttribute('uv') as BufferAttribute;
-    const index = Walls.geometry.getIndex()!;
-    const aux = new Vector2();
-    const map = new Map();
-    Walls.geometry.groups.forEach(({ start, count }, group) => {
-      if ([0, 1, 2, 3].includes(group)) {
-        for (let i = start; i < start + count; i++) {
-          const v = index.getX(i);
-          if (!map.has(v)) {
-            map.set(v, true);
-            aux.fromBufferAttribute(uv, v);
-            if ([0, 1].includes(group)) {
-              uv.setXY(v, aux.x / 8, aux.y);
-            } else {
-              uv.setXY(v, aux.x, aux.y / 8);
+  static getGeometry() {
+    if (!Walls.geometry) {
+      const geometry = new BoxGeometry(4, 4, 0.5);
+      geometry.computeBoundingSphere();
+      const uv = geometry.getAttribute('uv') as BufferAttribute;
+      const index = geometry.getIndex()!;
+      const aux = new Vector2();
+      const map = new Map();
+      geometry.groups.forEach(({ start, count }, group) => {
+        if ([0, 1, 2, 3].includes(group)) {
+          for (let i = start; i < start + count; i++) {
+            const v = index.getX(i);
+            if (!map.has(v)) {
+              map.set(v, true);
+              aux.fromBufferAttribute(uv, v);
+              if ([0, 1].includes(group)) {
+                uv.setXY(v, aux.x / 8, aux.y);
+              } else {
+                uv.setXY(v, aux.x, aux.y / 8);
+              }
             }
           }
         }
-      }
-    });
+      });
+      Walls.geometry = geometry;
+    }
+    return Walls.geometry;
   }
 
   private static material: MeshStandardMaterial | undefined;
-  static setupMaterial() {
-    Walls.material = new MeshStandardMaterial({
-      map: loadTexture(DiffuseMap),
-      normalMap: loadTexture(NormalMap),
-      roughnessMap: loadTexture(RoughnessMap),
-    });
-    Walls.material.map!.anisotropy = 16;
-    Walls.material.map!.colorSpace = SRGBColorSpace;
+  static getMaterial() {
+    if (!Walls.material) {
+      const material = new MeshStandardMaterial({
+        map: loadTexture(DiffuseMap),
+        normalMap: loadTexture(NormalMap),
+        roughnessMap: loadTexture(RoughnessMap),
+      });
+      material.map!.anisotropy = 16;
+      material.map!.colorSpace = SRGBColorSpace;
+      Walls.material = material;
+    }
     return Walls.material;
   }
 
   constructor() {
-    if (!Walls.geometry) {
-      Walls.setupGeometry();
-    }
-    if (!Walls.material) {
-      Walls.setupMaterial();
-    }
-    super(Walls.geometry!, Walls.material!);
+    super(Walls.getGeometry(), Walls.getMaterial());
   }
 
   create(position: Vector3, rotation: number) {

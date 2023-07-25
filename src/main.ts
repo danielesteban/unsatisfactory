@@ -9,7 +9,7 @@ import {
   Vector3,
 } from 'three';
 import Viewport from './core/viewport';
-import { Brush, brush, rotation, pick, snap } from './core/brush';
+import { Brush, brush, pick, rotation, setBrush, snap } from './core/brush';
 import { download, load, serialize, deserialize } from './core/loader';
 import Belts, { Belt } from './objects/belts';
 import Buffers from './objects/buffers';
@@ -17,6 +17,7 @@ import Container, { PoweredContainer, Connector } from './core/container';
 import Fabricators from './objects/fabricators';
 import Foundations from './objects/foundations';
 import Generators from './objects/generators';
+import Ghost from './objects/ghost';
 import Items, { Item } from './objects/items';
 import Miners from './objects/miners';
 import Poles from './objects/poles';
@@ -30,17 +31,17 @@ import Debug from './debug';
 const viewport = new Viewport();
 
 [
-  Belts.setupMaterial(),
-  Buffers.setupMaterial(),
-  Fabricators.setupMaterial(),
-  Foundations.setupMaterial(),
-  Generators.setupMaterial(),
-  Items.setupMaterial(),
-  Miners.setupMaterial(),
-  Poles.setupMaterial(),
-  Terrain.setupMaterial(),
-  Walls.setupMaterial(),
-  Wires.setupMaterial(),
+  Belts.getMaterial(),
+  Buffers.getMaterial(),
+  Fabricators.getMaterial(),
+  Foundations.getMaterial(),
+  Generators.getMaterial(),
+  Items.getMaterial(),
+  Miners.getMaterial(),
+  Poles.getMaterial(),
+  Terrain.getMaterial(),
+  Walls.getMaterial(),
+  Wires.getMaterial(),
 ].forEach(viewport.setupMaterialCSM.bind(viewport));
 
 const terrain = new Terrain();
@@ -74,6 +75,9 @@ viewport.scene.add(walls);
 const wires = new Wires();
 viewport.scene.add(wires);
 
+const ghost = new Ghost();
+viewport.scene.add(ghost);
+
 const from: Omit<Connector, 'container'> & { container: Container | PoweredContainer | undefined; } = {
   container: undefined,
   direction: new Vector3(),
@@ -88,7 +92,8 @@ const worldUp = new Vector3(0, 1, 0);
 const worldNorth = new Vector3(0, 0, -1);
 const create = (intersection: Intersection<Object3D<Event>>) => {
   if (
-    intersection.object instanceof Belt
+    brush === Brush.none
+    || intersection.object instanceof Belt
     || intersection.object instanceof Wire
   ) {
     return 'nope';
@@ -226,7 +231,8 @@ const interactionLimit = 12;
 const hover = (intersection: Intersection<Object3D<Event>>) => {
   let tooltip;
   if (
-    from.container === undefined
+    brush === Brush.none
+    && from.container === undefined
     && (
       intersection?.object instanceof Buffers
       || intersection?.object instanceof Fabricators
@@ -236,9 +242,51 @@ const hover = (intersection: Intersection<Object3D<Event>>) => {
   ) {
     const instance = intersection.object.getInstance(intersection.instanceId!);
     if (instance.position.distanceTo(viewport.camera.position) <= interactionLimit) {
-      tooltip = instance;
+      tooltip = { action: 'configure', instance };
     }
   }
+
+  let build;
+  if (
+    brush !== Brush.none
+    && intersection?.object
+    && !(
+      intersection.object instanceof Belt
+      || intersection.object instanceof Wire
+    )
+  ) {
+    switch (brush) {
+      case Brush.buffer:
+        build = Buffers.getGeometry();
+        break;
+      case Brush.fabricator:
+        build = Fabricators.getGeometry();
+        break;
+      case Brush.foundation:
+        build = Foundations.getGeometry();
+        break;
+      case Brush.generator:
+        build = Generators.getGeometry();
+        break;
+      case Brush.miner:
+        build = Miners.getGeometry();
+        break;
+      case Brush.pole:
+        build = Poles.getGeometry();
+        break;
+      case Brush.wall:
+        build = Walls.getGeometry();
+        break;
+    }
+  }
+
+  if (build) {
+    ghost.update(build, snap(intersection), rotation);
+    tooltip = { action: 'build' };
+  } else {
+    ghost.visible = false;
+  }
+
   setTooltip(tooltip);
 };
 const interaction = (intersection: Intersection<Object3D<Event>>) => {
@@ -265,15 +313,21 @@ const handleInput = (
     const sound = create(intersection) || 'build';
     viewport.sfx.playAt(sound, intersection.point, 0, sound === 'nope' ? 0 : Math.random() * (sound === 'wire' ? 100 : 600));
   }
-  if (secondary && intersection?.object) {
-    const sound = remove(intersection) || 'build';
-    viewport.sfx.playAt(sound, intersection.point, 0, sound === 'nope' ? 0 : Math.random() * -600);
+  if (secondary) {
+    setBrush(Brush.none);
+    if (intersection.object) {
+      const sound = remove(intersection) || 'build';
+      viewport.sfx.playAt(sound, intersection.point, 0, sound === 'nope' ? 0 : Math.random() * -600);
+    }
   }
   if (tertiary && intersection?.object) {
     pick(intersection);
   }
-  if (interact && intersection?.object) {
-    interaction(intersection);
+  if (interact) {
+    setBrush(Brush.none);
+    if (intersection.object) {
+      interaction(intersection);
+    }
   }
   if (hasFrom) {
     from.container = undefined;

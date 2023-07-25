@@ -19,22 +19,25 @@ import RoughnessMap from '../textures/green_metal_rust_rough_1k.jpg';
 
 export class Belt extends Mesh {
   private static shape: Shape | undefined;
-  static setupShape() {
-    const width = 1;
-    const height = 0.25;
-    const inset = 0.125;
-    const hw = width * 0.5;
-    const hh = height * 0.5;
-    Belt.shape = new Shape()
-      .moveTo(-hh, -hw)
-      .lineTo(-hh, -hw + inset)
-      .lineTo(hh - inset, -hw + inset)
-      .lineTo(hh - inset, hw - inset)
-      .lineTo(-hh, hw - inset)
-      .lineTo(-hh, hw)
-      .lineTo(hh, hw)
-      .lineTo(hh, -hw)
-      .lineTo(-hh, -hw);
+  static getShape() {
+    if (!Belt.shape) {
+      const width = 1;
+      const height = 0.25;
+      const inset = 0.125;
+      const hw = width * 0.5;
+      const hh = height * 0.5;
+      Belt.shape = new Shape()
+        .moveTo(-hh, -hw)
+        .lineTo(-hh, -hw + inset)
+        .lineTo(hh - inset, -hw + inset)
+        .lineTo(hh - inset, hw - inset)
+        .lineTo(-hh, hw - inset)
+        .lineTo(-hh, hw)
+        .lineTo(hh, hw)
+        .lineTo(hh, -hw)
+        .lineTo(-hh, -hw);
+    }
+    return Belt.shape;
   }
 
   private static readonly offset: Vector3 = new Vector3(0, -0.5, 0);
@@ -46,9 +49,6 @@ export class Belt extends Mesh {
   private readonly slots: { item: Item; locked: boolean; }[];
 
   constructor(material: Material, from: Connector, to: Connector) {
-    if (!Belt.shape) {
-      Belt.setupShape();
-    }
     const fromConnector = from.container.getConnector(from.direction, Belt.offset);
     const toConnector = to.container.getConnector(to.direction, Belt.offset);
     const offset = fromConnector.distanceTo(toConnector) * 0.3;
@@ -78,7 +78,7 @@ export class Belt extends Mesh {
       }
     }
     const segments = Math.ceil(path.getLength() / 0.1);
-    const geometry = new ExtrudeGeometry(Belt.shape, { extrudePath: path, steps: segments });
+    const geometry = new ExtrudeGeometry(Belt.getShape(), { extrudePath: path, steps: segments });
     super(geometry, material);
     this.castShadow = this.receiveShadow = true;
     this.updateMatrixWorld();
@@ -139,27 +139,27 @@ export class Belt extends Mesh {
 
 class Belts extends Group {
   private static material: MeshStandardMaterial | undefined;
-  static setupMaterial() {
-    Belts.material = new MeshStandardMaterial({
-      map: loadTexture(DiffuseMap),
-      normalMap: loadTexture(NormalMap),
-      roughnessMap: loadTexture(RoughnessMap),
-      metalness: 0.3,
-    });
-    Belts.material.map!.anisotropy = 16;
-    Belts.material.map!.colorSpace = SRGBColorSpace;
-    [Belts.material.map!, Belts.material.normalMap!, Belts.material.roughnessMap!].forEach((map) => {
-      map.wrapS = map.wrapT = RepeatWrapping;
-    });
+  static getMaterial() {
+    if (!Belts.material) {
+      const material = new MeshStandardMaterial({
+        map: loadTexture(DiffuseMap),
+        normalMap: loadTexture(NormalMap),
+        roughnessMap: loadTexture(RoughnessMap),
+        metalness: 0.3,
+      });
+      material.map!.anisotropy = 16;
+      material.map!.colorSpace = SRGBColorSpace;
+      [material.map!, material.normalMap!, material.roughnessMap!].forEach((map) => {
+        map.wrapS = map.wrapT = RepeatWrapping;
+      });
+      Belts.material = material;
+    }
     return Belts.material;
   }
 
   private timer: number;
 
   constructor() {
-    if (!Belts.material) {
-      Belts.setupMaterial();
-    }
     super();
     this.matrixAutoUpdate = false;
     this.updateMatrixWorld();
@@ -167,7 +167,7 @@ class Belts extends Group {
   }
 
   create(from: Connector, to: Connector) {
-    const belt = new Belt(Belts.material!, from, to);
+    const belt = new Belt(Belts.getMaterial(), from, to);
     this.add(belt);
     return belt;
   }

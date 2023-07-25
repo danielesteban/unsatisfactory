@@ -131,17 +131,20 @@ export class Items extends Group {
   }
 
   private static material: MeshStandardMaterial | undefined;
-  static setupMaterial() {
-    Items.material = new MeshStandardMaterial({
-      map: loadTexture(DiffuseMap),
-      normalMap: loadTexture(NormalMap),
-      roughnessMap: loadTexture(RoughnessMap),
-    });
-    Items.material.map!.anisotropy = 16;
-    Items.material.map!.colorSpace = SRGBColorSpace;
-    [Items.material.map!, Items.material.normalMap!, Items.material.roughnessMap!].forEach((map) => {
-      map.wrapS = map.wrapT = RepeatWrapping;
-    });
+  static getMaterial() {
+    if (!Items.material) {
+      const material = new MeshStandardMaterial({
+        map: loadTexture(DiffuseMap),
+        normalMap: loadTexture(NormalMap),
+        roughnessMap: loadTexture(RoughnessMap),
+      });
+      material.map!.anisotropy = 16;
+      material.map!.colorSpace = SRGBColorSpace;
+      [material.map!, material.normalMap!, material.roughnessMap!].forEach((map) => {
+        map.wrapS = map.wrapT = RepeatWrapping;
+      });
+      Items.material = material;
+    }
     return Items.material;
   }
 
@@ -152,9 +155,6 @@ export class Items extends Group {
   constructor(count: number, path: Curve<Vector3>) {
     if (!Items.geometries) {
       Items.setupGeometries();
-    }
-    if (!Items.material) {
-      Items.setupMaterial();
     }
     super();
     this.updateMatrixWorld();
@@ -185,7 +185,7 @@ export class Items extends Group {
         return;
       }
       if (!instances[item]) {
-        instances[item] = new InstancedItems(Items.geometries![item], Items.material!, count);
+        instances[item] = new InstancedItems(Items.geometries![item], Items.getMaterial(), count);
         this.add(instances[item]!);
       }
       const alpha = locked ? 1 : step;

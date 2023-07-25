@@ -27,51 +27,51 @@ export class Pole extends PoweredContainer {
 
 class Poles extends Instances<Pole> {
   private static collider: BufferGeometry | undefined;
-  static setupCollider() {
-    Poles.collider = new BoxGeometry(0.5, 5.75, 0.5);
-    Poles.collider.translate(0, 0.375, 0);
-    Poles.collider.computeBoundingSphere();
+  static getCollider() {
+    if (!Poles.collider) {
+      Poles.collider = new BoxGeometry(0.5, 5.75, 0.5);
+      Poles.collider.translate(0, 0.375, 0);
+      Poles.collider.computeBoundingSphere();
+    }
+    return Poles.collider;
   }
 
   private static geometry: BufferGeometry | undefined;
-  static setupGeometry() {
-    const csgEvaluator = new Evaluator();
-    const base = new Brush(new BoxGeometry(0.5, 5, 0.5));
-    const pole = new Brush(new CylinderGeometry(0.125, 0.125, 0.25));
-    pole.position.set(0, 2.625, 0);
-    pole.updateMatrixWorld();
-    let brush = csgEvaluator.evaluate(base, pole, ADDITION);
-    const connector = new Brush(new CylinderGeometry(0.25, 0.25, 0.5));
-    connector.position.set(0, 3, 0);
-    connector.updateMatrixWorld();
-    brush = csgEvaluator.evaluate(brush, connector, ADDITION);
-    Poles.geometry = (brush! as Mesh).geometry;
-    Poles.geometry.computeBoundingSphere();
+  static getGeometry() {
+    if (!Poles.geometry) {
+      const csgEvaluator = new Evaluator();
+      const base = new Brush(new BoxGeometry(0.5, 5, 0.5));
+      const pole = new Brush(new CylinderGeometry(0.125, 0.125, 0.25));
+      pole.position.set(0, 2.625, 0);
+      pole.updateMatrixWorld();
+      let brush = csgEvaluator.evaluate(base, pole, ADDITION);
+      const connector = new Brush(new CylinderGeometry(0.25, 0.25, 0.5));
+      connector.position.set(0, 3, 0);
+      connector.updateMatrixWorld();
+      brush = csgEvaluator.evaluate(brush, connector, ADDITION);
+      Poles.geometry = (brush! as Mesh).geometry;
+      Poles.geometry.computeBoundingSphere();
+    }
+    return Poles.geometry;
   }
 
   private static material: MeshStandardMaterial | undefined;
-  static setupMaterial() {
-    Poles.material = new MeshStandardMaterial({
-      map: loadTexture(DiffuseMap),
-      normalMap: loadTexture(NormalMap),
-      roughnessMap: loadTexture(RoughnessMap),
-    });
-    Poles.material.map!.anisotropy = 16;
-    Poles.material.map!.colorSpace = SRGBColorSpace;
+  static getMaterial() {
+    if (!Poles.material) {
+      const material = new MeshStandardMaterial({
+        map: loadTexture(DiffuseMap),
+        normalMap: loadTexture(NormalMap),
+        roughnessMap: loadTexture(RoughnessMap),
+      });
+      material.map!.anisotropy = 16;
+      material.map!.colorSpace = SRGBColorSpace;
+      Poles.material = material;
+    }
     return Poles.material;
   }
 
   constructor() {
-    if (!Poles.collider) {
-      Poles.setupCollider();
-    }
-    if (!Poles.geometry) {
-      Poles.setupGeometry();
-    }
-    if (!Poles.material) {
-      Poles.setupMaterial();
-    }
-    super(Poles.geometry!, Poles.material!, Poles.collider!);
+    super(Poles.getGeometry(), Poles.getMaterial(), Poles.getCollider());
   }
 
   create(position: Vector3, rotation: number) {

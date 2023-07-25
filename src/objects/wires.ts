@@ -53,18 +53,17 @@ export class Wire extends Mesh {
 
 class Wires extends Group {
   private static material: MeshStandardMaterial | undefined;
-  static setupMaterial() {
-    Wires.material = new MeshStandardMaterial({
-      color: 0,
-      roughness: 0.3,
-    });
+  static getMaterial() {
+    if (!Wires.material) {
+      Wires.material = new MeshStandardMaterial({
+        color: 0,
+        roughness: 0.3,
+      });
+    }
     return Wires.material;
   }
 
   constructor() {
-    if (!Wires.material) {
-      Wires.setupMaterial();
-    }
     super();
     this.matrixAutoUpdate = false;
     this.updateMatrixWorld();
@@ -72,7 +71,7 @@ class Wires extends Group {
   }
 
   create(from: PoweredContainer, to: PoweredContainer) {
-    const wire = new Wire(Wires.material!, from, to);
+    const wire = new Wire(Wires.getMaterial(), from, to);
     this.add(wire);
     this.updatePowerGrid();
     return wire;

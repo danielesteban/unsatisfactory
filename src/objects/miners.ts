@@ -74,65 +74,65 @@ export class Miner extends PoweredContainer {
 
 class Miners extends Instances<Miner> {
   private static collider: BufferGeometry | undefined;
-  static setupCollider() {
-    Miners.collider = new BoxGeometry(2, 4, 2);
-    Miners.collider.computeBoundingSphere();
+  static getCollider() {
+    if (!Miners.collider) {
+      Miners.collider = new BoxGeometry(2, 4, 2);
+      Miners.collider.computeBoundingSphere();
+    }
+    return Miners.collider;
   }
 
   private static geometry: BufferGeometry | undefined;
-  static setupGeometry() {
-    const csgEvaluator = new Evaluator();
-    const base = new Brush(new BoxGeometry(2, 4, 2));
-    const opening = new Brush(new BoxGeometry(1.5, 1.5, 0.5));
-    let brush: Brush = base;
-    ([
-      [new Vector3(0, -1, 1), 0],
-      [new Vector3(0, -1, -1), 0],
-      [new Vector3(1, -1, 0), Math.PI * 0.5],
-      [new Vector3(-1, -1, 0), Math.PI * 0.5],
-    ] as [Vector3, number][]).forEach(([position, rotation]) => {
-      opening.position.copy(position);
-      opening.rotation.y = rotation;
-      opening.updateMatrixWorld();
-      brush = csgEvaluator.evaluate(brush, opening, SUBTRACTION);
-    });
-    const pole = new Brush(new CylinderGeometry(0.125, 0.125, 0.25));
-    pole.position.set(0, 2.125, 0);
-    pole.updateMatrixWorld();
-    brush = csgEvaluator.evaluate(brush, pole, ADDITION);
-    const connector = new Brush(new CylinderGeometry(0.25, 0.25, 0.5));
-    connector.position.set(0, 2.5, 0);
-    connector.updateMatrixWorld();
-    brush = csgEvaluator.evaluate(brush, connector, ADDITION);
-    Miners.geometry = (brush! as Mesh).geometry;
-    Miners.geometry.computeBoundingSphere();
+  static getGeometry() {
+    if (!Miners.geometry) {
+      const csgEvaluator = new Evaluator();
+      const base = new Brush(new BoxGeometry(2, 4, 2));
+      const opening = new Brush(new BoxGeometry(1.5, 1.5, 0.5));
+      let brush: Brush = base;
+      ([
+        [new Vector3(0, -1, 1), 0],
+        [new Vector3(0, -1, -1), 0],
+        [new Vector3(1, -1, 0), Math.PI * 0.5],
+        [new Vector3(-1, -1, 0), Math.PI * 0.5],
+      ] as [Vector3, number][]).forEach(([position, rotation]) => {
+        opening.position.copy(position);
+        opening.rotation.y = rotation;
+        opening.updateMatrixWorld();
+        brush = csgEvaluator.evaluate(brush, opening, SUBTRACTION);
+      });
+      const pole = new Brush(new CylinderGeometry(0.125, 0.125, 0.25));
+      pole.position.set(0, 2.125, 0);
+      pole.updateMatrixWorld();
+      brush = csgEvaluator.evaluate(brush, pole, ADDITION);
+      const connector = new Brush(new CylinderGeometry(0.25, 0.25, 0.5));
+      connector.position.set(0, 2.5, 0);
+      connector.updateMatrixWorld();
+      brush = csgEvaluator.evaluate(brush, connector, ADDITION);
+      Miners.geometry = (brush! as Mesh).geometry;
+      Miners.geometry.computeBoundingSphere();
+    }
+    return Miners.geometry;
   }
 
   private static material: MeshStandardMaterial | undefined;
-  static setupMaterial() {
-    Miners.material = new MeshStandardMaterial({
-      map: loadTexture(DiffuseMap),
-      normalMap: loadTexture(NormalMap),
-      roughnessMap: loadTexture(RoughnessMap),
-    });
-    Miners.material.map!.anisotropy = 16;
-    Miners.material.map!.colorSpace = SRGBColorSpace;
+  static getMaterial() {
+    if (!Miners.material) {
+      const material = new MeshStandardMaterial({
+        map: loadTexture(DiffuseMap),
+        normalMap: loadTexture(NormalMap),
+        roughnessMap: loadTexture(RoughnessMap),
+      });
+      material.map!.anisotropy = 16;
+      material.map!.colorSpace = SRGBColorSpace;
+      Miners.material = material;
+    }
     return Miners.material;
   }
 
   private readonly sfx: SFX;
 
   constructor(sfx: SFX) {
-    if (!Miners.collider) {
-      Miners.setupCollider();
-    }
-    if (!Miners.geometry) {
-      Miners.setupGeometry();
-    }
-    if (!Miners.material) {
-      Miners.setupMaterial();
-    }
-    super(Miners.geometry!, Miners.material!, Miners.collider!);
+    super(Miners.getGeometry(), Miners.getMaterial(), Miners.getCollider());
     this.sfx = sfx;
   }
 

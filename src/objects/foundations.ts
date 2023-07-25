@@ -16,47 +16,47 @@ export class Foundation extends Instance {};
 
 class Foundations extends Instances<Foundation> {
   private static geometry: BoxGeometry | undefined;
-  static setupGeometry() {
-    Foundations.geometry = new BoxGeometry(4, 1, 4);
-    Foundations.geometry.computeBoundingSphere();
-    const uv = Foundations.geometry.getAttribute('uv') as BufferAttribute;
-    const index = Foundations.geometry.getIndex()!;
-    const aux = new Vector2();
-    const map = new Map();
-    Foundations.geometry.groups.forEach(({ start, count }, group) => {
-      if ([0, 1, 4, 5].includes(group)) {
-        for (let i = start; i < start + count; i++) {
-          const v = index.getX(i);
-          if (!map.has(v)) {
-            map.set(v, true);
-            aux.fromBufferAttribute(uv, v);
-            uv.setXY(v, aux.x, aux.y / 4);
+  static getGeometry() {
+    if (!Foundations.geometry) {
+      Foundations.geometry = new BoxGeometry(4, 1, 4);
+      Foundations.geometry.computeBoundingSphere();
+      const uv = Foundations.geometry.getAttribute('uv') as BufferAttribute;
+      const index = Foundations.geometry.getIndex()!;
+      const aux = new Vector2();
+      const map = new Map();
+      Foundations.geometry.groups.forEach(({ start, count }, group) => {
+        if ([0, 1, 4, 5].includes(group)) {
+          for (let i = start; i < start + count; i++) {
+            const v = index.getX(i);
+            if (!map.has(v)) {
+              map.set(v, true);
+              aux.fromBufferAttribute(uv, v);
+              uv.setXY(v, aux.x, aux.y / 4);
+            }
           }
         }
-      }
-    });
+      });
+    }
+    return Foundations.geometry;
   }
 
   private static material: MeshStandardMaterial | undefined;
-  static setupMaterial() {
-    Foundations.material = new MeshStandardMaterial({
-      map: loadTexture(DiffuseMap),
-      normalMap: loadTexture(NormalMap),
-      roughnessMap: loadTexture(RoughnessMap),
-    });
-    Foundations.material.map!.anisotropy = 16;
-    Foundations.material.map!.colorSpace = SRGBColorSpace;
+  static getMaterial() {
+    if (!Foundations.material) {
+      const material = new MeshStandardMaterial({
+        map: loadTexture(DiffuseMap),
+        normalMap: loadTexture(NormalMap),
+        roughnessMap: loadTexture(RoughnessMap),
+      });
+      material.map!.anisotropy = 16;
+      material.map!.colorSpace = SRGBColorSpace;
+      Foundations.material = material;
+    }
     return Foundations.material;
   }
 
   constructor() {
-    if (!Foundations.geometry) {
-      Foundations.setupGeometry();
-    }
-    if (!Foundations.material) {
-      Foundations.setupMaterial();
-    }
-    super(Foundations.geometry!, Foundations.material!);
+    super(Foundations.getGeometry(), Foundations.getMaterial());
   }
   
   create(position: Vector3, rotation: number) {

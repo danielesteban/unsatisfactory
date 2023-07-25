@@ -105,63 +105,63 @@ export class Fabricator extends PoweredContainer {
 
 class Fabricators extends Instances<Fabricator> {
   private static collider: BufferGeometry | undefined;
-  static setupCollider() {
-    Fabricators.collider = new BoxGeometry(4, 4, 2);
-    Fabricators.collider.computeBoundingSphere();
+  static getCollider() {
+    if (!Fabricators.collider) {
+      Fabricators.collider = new BoxGeometry(4, 4, 2);
+      Fabricators.collider.computeBoundingSphere();
+    }
+    return Fabricators.collider;
   }
 
   private static geometry: BufferGeometry | undefined;
-  static setupGeometry() {
-    const csgEvaluator = new Evaluator();
-    const base = new Brush(new BoxGeometry(4, 4, 2));
-    const opening = new Brush(new BoxGeometry(1.5, 1.5, 0.5));
-    let brush: Brush = base;
-    ([
-      [new Vector3(2, -1, 0), Math.PI * 0.5],
-      [new Vector3(-2, -1, 0), Math.PI * 0.5],
-    ] as [Vector3, number][]).forEach(([position, rotation]) => {
-      opening.position.copy(position);
-      opening.rotation.y = rotation;
-      opening.updateMatrixWorld();
-      brush = csgEvaluator.evaluate(brush, opening, SUBTRACTION);
-    });
-    const pole = new Brush(new CylinderGeometry(0.125, 0.125, 0.25));
-    pole.position.set(0, 2.125, 0);
-    pole.updateMatrixWorld();
-    brush = csgEvaluator.evaluate(brush, pole, ADDITION);
-    const connector = new Brush(new CylinderGeometry(0.25, 0.25, 0.5));
-    connector.position.set(0, 2.5, 0);
-    connector.updateMatrixWorld();
-    brush = csgEvaluator.evaluate(brush, connector, ADDITION);
-    Fabricators.geometry = (brush! as Mesh).geometry;
-    Fabricators.geometry.computeBoundingSphere();
+  static getGeometry() {
+    if (!Fabricators.geometry) {
+      const csgEvaluator = new Evaluator();
+      const base = new Brush(new BoxGeometry(4, 4, 2));
+      const opening = new Brush(new BoxGeometry(1.5, 1.5, 0.5));
+      let brush: Brush = base;
+      ([
+        [new Vector3(2, -1, 0), Math.PI * 0.5],
+        [new Vector3(-2, -1, 0), Math.PI * 0.5],
+      ] as [Vector3, number][]).forEach(([position, rotation]) => {
+        opening.position.copy(position);
+        opening.rotation.y = rotation;
+        opening.updateMatrixWorld();
+        brush = csgEvaluator.evaluate(brush, opening, SUBTRACTION);
+      });
+      const pole = new Brush(new CylinderGeometry(0.125, 0.125, 0.25));
+      pole.position.set(0, 2.125, 0);
+      pole.updateMatrixWorld();
+      brush = csgEvaluator.evaluate(brush, pole, ADDITION);
+      const connector = new Brush(new CylinderGeometry(0.25, 0.25, 0.5));
+      connector.position.set(0, 2.5, 0);
+      connector.updateMatrixWorld();
+      brush = csgEvaluator.evaluate(brush, connector, ADDITION);
+      Fabricators.geometry = (brush! as Mesh).geometry;
+      Fabricators.geometry.computeBoundingSphere();
+    }
+    return Fabricators.geometry;
   }
 
   private static material: MeshStandardMaterial | undefined;
-  static setupMaterial() {
-    Fabricators.material = new MeshStandardMaterial({
-      map: loadTexture(DiffuseMap),
-      normalMap: loadTexture(NormalMap),
-      roughnessMap: loadTexture(RoughnessMap),
-    });
-    Fabricators.material.map!.anisotropy = 16;
-    Fabricators.material.map!.colorSpace = SRGBColorSpace;
+  static getMaterial() {
+    if (!Fabricators.material) {
+      const material = new MeshStandardMaterial({
+        map: loadTexture(DiffuseMap),
+        normalMap: loadTexture(NormalMap),
+        roughnessMap: loadTexture(RoughnessMap),
+      });
+      material.map!.anisotropy = 16;
+      material.map!.colorSpace = SRGBColorSpace;
+      Fabricators.material = material;
+    }
     return Fabricators.material;
   }
 
   private readonly sfx: SFX;
 
   constructor(sfx: SFX) {
-    if (!Fabricators.collider) {
-      Fabricators.setupCollider();
-    }
-    if (!Fabricators.geometry) {
-      Fabricators.setupGeometry();
-    }
-    if (!Fabricators.material) {
-      Fabricators.setupMaterial();
-    }
-    super(Fabricators.geometry!, Fabricators.material!, Fabricators.collider!);
+    super(Fabricators.getGeometry(), Fabricators.getMaterial(), Fabricators.getCollider());
     this.sfx = sfx;
   }
 

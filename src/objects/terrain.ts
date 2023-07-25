@@ -20,18 +20,19 @@ export class TerrainChunk extends Mesh {
   public static readonly size: number = 16;
 
   private static geometry: PlaneGeometry | undefined;
-  static setupGeometry() {
-    TerrainChunk.geometry = new PlaneGeometry(TerrainChunk.size, TerrainChunk.size, TerrainChunk.size, TerrainChunk.size);
-    TerrainChunk.geometry.rotateX(Math.PI * -0.5);
-    TerrainChunk.geometry.computeBoundingSphere();
+  static getGeometry() {
+    if (!TerrainChunk.geometry) {
+      const geometry = new PlaneGeometry(TerrainChunk.size, TerrainChunk.size, TerrainChunk.size, TerrainChunk.size);
+      geometry.rotateX(Math.PI * -0.5);
+      geometry.computeBoundingSphere();
+      TerrainChunk.geometry = geometry;
+    }
+    return TerrainChunk.geometry;
   }
 
   public readonly chunk: Vector3;
   constructor(material: Material) {
-    if (!TerrainChunk.geometry) {
-      TerrainChunk.setupGeometry();
-    }
-    super(TerrainChunk.geometry!.clone(), material);
+    super(TerrainChunk.getGeometry().clone(), material);
     this.castShadow = this.receiveShadow = true;
     this.matrixAutoUpdate = false;
     this.chunk = new Vector3();
@@ -60,105 +61,108 @@ export class TerrainChunk extends Mesh {
 
 class Terrain extends Group {
   private static material: MeshStandardMaterial | undefined;
-  static setupMaterial() {
-    Terrain.material = new MeshStandardMaterial({
-      map: loadTexture(DiffuseMap),
-      normalMap: loadTexture(NormalMap),
-      roughnessMap: loadTexture(RoughnessMap),
-    });
-    Terrain.material.map!.anisotropy = 16;
-    Terrain.material.map!.colorSpace = SRGBColorSpace;
-    [Terrain.material.map!, Terrain.material.normalMap!, Terrain.material.roughnessMap!].forEach((map) => {
-      map.repeat.set(4, 4);
-      map.wrapS = map.wrapT = RepeatWrapping;
-    });
-    Terrain.material.customProgramCacheKey = () => 'Terrain';
-    Terrain.material.onBeforeCompile = (shader: Shader) => {
-      shader.vertexShader = shader.vertexShader
-        .replace(
-          '#include <clipping_planes_pars_vertex>',
-          /* glsl */`
-          #include <clipping_planes_pars_vertex>
-          varying vec3 gridPosition;
-          `
-        )
-        .replace(
-          '#include <fog_vertex>',
-          /* glsl */`
-          #include <fog_vertex>
-          gridPosition = vec3(modelMatrix * vec4(position, 1.0));
-          `
-        );
-      shader.fragmentShader = shader.fragmentShader
-        .replace(
-          '#include <clipping_planes_pars_fragment>',
-          /* glsl */`
-          #include <clipping_planes_pars_fragment>
-          varying vec3 gridPosition;
-          float line(vec2 position) {
-            vec2 coord = abs(fract(position - 0.5) - 0.5) / fwidth(position);
-            return 1.0 - min(min(coord.x, coord.y), 1.0);
-          }
-          float directNoise(vec2 p) {
-            vec2 ip = floor(p);
-            vec2 u = fract(p);
-            u = u*u*(3.0-2.0*u);
-            float res = mix(
-              mix(rand(ip),rand(ip+vec2(1.0,0.0)),u.x),
-              mix(rand(ip+vec2(0.0,1.0)),rand(ip+vec2(1.0,1.0)),u.x),
-              u.y
-            );
-            return res*res;
-          }
-          float sum(vec4 v) { return v.x+v.y+v.z; }
-          vec4 textureNoTile(sampler2D mapper, in vec2 uv) {
-            // sample variation pattern
-            float k = directNoise(uv);
-            // compute index
-            float index = k*8.0;
-            float f = fract(index);
-            float ia = floor(index);
-            float ib = ia + 1.0;
+  static getMaterial() {
+    if (!Terrain.material) {
+      const material = new MeshStandardMaterial({
+        map: loadTexture(DiffuseMap),
+        normalMap: loadTexture(NormalMap),
+        roughnessMap: loadTexture(RoughnessMap),
+      });
+      material.map!.anisotropy = 16;
+      material.map!.colorSpace = SRGBColorSpace;
+      [material.map!, material.normalMap!, material.roughnessMap!].forEach((map) => {
+        map.repeat.set(4, 4);
+        map.wrapS = map.wrapT = RepeatWrapping;
+      });
+      material.customProgramCacheKey = () => 'Terrain';
+      material.onBeforeCompile = (shader: Shader) => {
+        shader.vertexShader = shader.vertexShader
+          .replace(
+            '#include <clipping_planes_pars_vertex>',
+            /* glsl */`
+            #include <clipping_planes_pars_vertex>
+            varying vec3 gridPosition;
+            `
+          )
+          .replace(
+            '#include <fog_vertex>',
+            /* glsl */`
+            #include <fog_vertex>
+            gridPosition = vec3(modelMatrix * vec4(position, 1.0));
+            `
+          );
+        shader.fragmentShader = shader.fragmentShader
+          .replace(
+            '#include <clipping_planes_pars_fragment>',
+            /* glsl */`
+            #include <clipping_planes_pars_fragment>
+            varying vec3 gridPosition;
+            float line(vec2 position) {
+              vec2 coord = abs(fract(position - 0.5) - 0.5) / fwidth(position);
+              return 1.0 - min(min(coord.x, coord.y), 1.0);
+            }
+            float directNoise(vec2 p) {
+              vec2 ip = floor(p);
+              vec2 u = fract(p);
+              u = u*u*(3.0-2.0*u);
+              float res = mix(
+                mix(rand(ip),rand(ip+vec2(1.0,0.0)),u.x),
+                mix(rand(ip+vec2(0.0,1.0)),rand(ip+vec2(1.0,1.0)),u.x),
+                u.y
+              );
+              return res*res;
+            }
+            float sum(vec4 v) { return v.x+v.y+v.z; }
+            vec4 textureNoTile(sampler2D mapper, in vec2 uv) {
+              // sample variation pattern
+              float k = directNoise(uv);
+              // compute index
+              float index = k*8.0;
+              float f = fract(index);
+              float ia = floor(index);
+              float ib = ia + 1.0;
 
-            // offsets for the different virtual patterns
-            vec2 offa = sin(vec2(3.0,7.0)*ia); // can replace with any other hash
-            vec2 offb = sin(vec2(3.0,7.0)*ib); // can replace with any other hash
+              // offsets for the different virtual patterns
+              vec2 offa = sin(vec2(3.0,7.0)*ia); // can replace with any other hash
+              vec2 offb = sin(vec2(3.0,7.0)*ib); // can replace with any other hash
 
-            // compute derivatives for mip-mapping
-            vec2 dx = dFdx(uv);
-            vec2 dy = dFdy(uv);
+              // compute derivatives for mip-mapping
+              vec2 dx = dFdx(uv);
+              vec2 dy = dFdy(uv);
 
-            // sample the two closest virtual patterns
-            vec4 cola = textureGrad(mapper, uv + offa, dx, dy);
-            vec4 colb = textureGrad(mapper, uv + offb, dx, dy);
+              // sample the two closest virtual patterns
+              vec4 cola = textureGrad(mapper, uv + offa, dx, dy);
+              vec4 colb = textureGrad(mapper, uv + offb, dx, dy);
 
-            // interpolate between the two virtual patterns
-            return mix(cola, colb, smoothstep(0.2,0.8,f-0.1*sum(cola-colb)));
-          }
-          `
-        )
-        .replace(
-          '#include <map_fragment>',
-          ShaderChunk.map_fragment.replace(/texture2D/g, 'textureNoTile')
-        )
-        .replace(
-          '#include <normal_fragment_maps>',
-          ShaderChunk.normal_fragment_maps.replace(/texture2D/g, 'textureNoTile')
-        )
-        .replace(
-          '#include <roughnessmap_fragment>',
-          ShaderChunk.roughnessmap_fragment.replace(/texture2D/g, 'textureNoTile')
-        )
-        .replace(
-          'vec4 diffuseColor = vec4( diffuse, opacity );',
-          /* glsl */`
-          float depth = distance(gridPosition, cameraPosition);
-          float decay = exp(-0.02 * 0.02 * depth * depth);
-          float grid = 1.0 - line(gridPosition.xz * 0.5) * 0.8 * decay;
-          vec4 diffuseColor = vec4(diffuse * grid, opacity);
-          `
-        );
-    };
+              // interpolate between the two virtual patterns
+              return mix(cola, colb, smoothstep(0.2,0.8,f-0.1*sum(cola-colb)));
+            }
+            `
+          )
+          .replace(
+            '#include <map_fragment>',
+            ShaderChunk.map_fragment.replace(/texture2D/g, 'textureNoTile')
+          )
+          .replace(
+            '#include <normal_fragment_maps>',
+            ShaderChunk.normal_fragment_maps.replace(/texture2D/g, 'textureNoTile')
+          )
+          .replace(
+            '#include <roughnessmap_fragment>',
+            ShaderChunk.roughnessmap_fragment.replace(/texture2D/g, 'textureNoTile')
+          )
+          .replace(
+            'vec4 diffuseColor = vec4( diffuse, opacity );',
+            /* glsl */`
+            float depth = distance(gridPosition, cameraPosition);
+            float decay = exp(-0.02 * 0.02 * depth * depth);
+            float grid = 1.0 - line(gridPosition.xz * 0.5) * 0.8 * decay;
+            vec4 diffuseColor = vec4(diffuse * grid, opacity);
+            `
+          );
+      };
+      Terrain.material = material;
+    }
     return Terrain.material;
   }
 
@@ -168,9 +172,6 @@ class Terrain extends Group {
   private readonly pool: TerrainChunk[];
 
   constructor() {
-    if (!Terrain.material) {
-      Terrain.setupMaterial();
-    }
     super();
     this.updateMatrixWorld();
     this.matrixAutoUpdate = false;
@@ -225,7 +226,7 @@ class Terrain extends Group {
         }
         const key = `${aux.x}:${aux.z}`;
         if (!map.has(key)) {
-          const chunk = pool.pop() || new TerrainChunk(Terrain.material!);
+          const chunk = pool.pop() || new TerrainChunk(Terrain.getMaterial());
           chunk.update(aux, this.getHeight);
           map.set(key, chunk);
           this.add(chunk);

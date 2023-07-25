@@ -5,6 +5,7 @@ import {
   Quaternion,
   Vector3,
 } from 'three';
+import Instances from '../core/instances';
 import { Belt } from '../objects/belts';
 import Buffers from '../objects/buffers';
 import Fabricators from '../objects/fabricators';
@@ -18,19 +19,24 @@ import { Wire } from '../objects/wires';
 import UI from '../ui/brush.svelte';
 
 export enum Brush {
-  foundation,
-  wall,
+  none,
   belt,
   buffer,
-  wire,
   fabricator,
-  miner,
+  foundation,
   generator,
+  miner,
   pole,
+  wall,
+  wire,
 };
 
-export let brush: Brush = Brush.foundation;
+export let brush: Brush = Brush.none;
 export let rotation: number = 0;
+export const setBrush = (type: Brush, toggle: boolean = false) => {
+  brush = toggle && type === brush ? Brush.none : type;
+  ui.$set({ brush });
+};
 
 const ui = new UI({
   props: {
@@ -50,50 +56,45 @@ const ui = new UI({
   target: document.getElementById('ui')!,
 });
 
-const setBrush = (type: Brush) => {
-  brush = type;
-  ui.$set({ brush });
-};
-
 document.addEventListener('keydown', (e) => {
   if (e.repeat || !document.body.classList.contains('pointerlock')) {
     return;
   }
   switch (e.code) {
     case 'Digit1':
-      setBrush(Brush.foundation);
+      setBrush(Brush.foundation, true);
       break;
     case 'Digit2':
-      setBrush(Brush.wall);
+      setBrush(Brush.wall, true);
       break;
     case 'Digit3':
-      setBrush(Brush.belt);
+      setBrush(Brush.belt, true);
       break;
     case 'Digit4':
-      setBrush(Brush.buffer);
+      setBrush(Brush.buffer, true);
       break;
     case 'Digit5':
-      setBrush(Brush.wire);
+      setBrush(Brush.wire, true);
       break;
     case 'Digit6':
-      setBrush(Brush.fabricator);
+      setBrush(Brush.fabricator, true);
       break;
     case 'Digit7':
-      setBrush(Brush.miner);
+      setBrush(Brush.miner, true);
       break;
     case 'Digit8':
-      setBrush(Brush.generator);
+      setBrush(Brush.generator, true);
       break;
     case 'Digit9':
-      setBrush(Brush.pole);
+      setBrush(Brush.pole, true);
       break;
     case 'KeyR': {
-      rotation += Math.PI * 0.25;
+      rotation += Math.PI * 0.125;
       while (rotation > Math.PI) rotation -= Math.PI * 2;
       break;
     }
     case 'KeyT': {
-      rotation -= Math.PI * 0.25;
+      rotation -= Math.PI * 0.125;
       while (rotation < -Math.PI) rotation += Math.PI * 2;
       break;
     }
@@ -101,43 +102,39 @@ document.addEventListener('keydown', (e) => {
 });
 
 export const pick = (intersection: Intersection<Object3D<Event>>) => {
+  if (intersection.object instanceof Instances) {
+    rotation = intersection.object.getInstance(intersection.instanceId!).rotation;
+  }
   if (intersection.object instanceof Belt) {
     setBrush(Brush.belt);
     return;
   }
   if (intersection.object instanceof Buffers) {
     setBrush(Brush.buffer);
-    rotation = intersection.object.getInstance(intersection.instanceId!).rotation;
     return;
   }
   if (intersection.object instanceof Fabricators) {
     setBrush(Brush.fabricator);
-    rotation = intersection.object.getInstance(intersection.instanceId!).rotation;
     return;
   }
   if (intersection.object instanceof Foundations) {
     setBrush(Brush.foundation);
-    rotation = intersection.object.getInstance(intersection.instanceId!).rotation;
     return;
   }
   if (intersection.object instanceof Generators) {
     setBrush(Brush.generator);
-    rotation = intersection.object.getInstance(intersection.instanceId!).rotation;
     return;
   }
   if (intersection.object instanceof Miners) {
     setBrush(Brush.miner);
-    rotation = intersection.object.getInstance(intersection.instanceId!).rotation;
     return;
   }
   if (intersection.object instanceof Poles) {
     setBrush(Brush.pole);
-    rotation = intersection.object.getInstance(intersection.instanceId!).rotation;
     return;
   }
   if (intersection.object instanceof Walls) {
     setBrush(Brush.wall);
-    rotation = intersection.object.getInstance(intersection.instanceId!).rotation;
     return;
   }
   if (intersection.object instanceof Wire) {
@@ -147,23 +144,21 @@ export const pick = (intersection: Intersection<Object3D<Event>>) => {
 };
 
 const offsets = {
-  buffer: new Vector3(1, 1, 1),
-  fabricator: new Vector3(2, 2, 1),
-  foundation: new Vector3(2, 0.5, 2),
-  generator: new Vector3(2, 1, 2),
-  miner: new Vector3(1, 2, 1),
-  pole: new Vector3(0.5, 2.5, 0.5),
-  wall: new Vector3(2, 2, 0.25),
+  [Brush.none]: new Vector3(),
+  [Brush.belt]: new Vector3(),
+  [Brush.buffer]: new Vector3(1, 1, 1),
+  [Brush.fabricator]: new Vector3(2, 2, 1),
+  [Brush.foundation]: new Vector3(2, 0.5, 2),
+  [Brush.generator]: new Vector3(2, 1, 2),
+  [Brush.miner]: new Vector3(1, 2, 1),
+  [Brush.pole]: new Vector3(0.5, 2.5, 0.5),
+  [Brush.wall]: new Vector3(2, 2, 0.25),
+  [Brush.wire]: new Vector3(),
 };
-const terrainOffsets = {
-  buffer: new Vector3(0, 1, 0),
-  fabricator: new Vector3(0, 2, 0),
-  foundation: new Vector3(0, 0.5, 0),
-  generator: new Vector3(0, 1, 0),
-  miner: new Vector3(0, 2, 0),
-  pole: new Vector3(0, 2.5, 0),
-  wall: new Vector3(0, 2, 0),
-};
+const terrainOffsets = (Object.keys(offsets) as any as Brush[]).reduce((terrainOffsets, key) => {
+  terrainOffsets[key] = new Vector3(0, offsets[key].y, 0);
+  return terrainOffsets;
+}, {} as Record<Brush, Vector3>);
 
 const quaternion = new Quaternion();
 const rotatedDirection = new Vector3();
@@ -172,87 +167,26 @@ const rotatedBrushOffset = new Vector3();
 const worldUp = new Vector3(0, 1, 0);
 export const snap = (intersection: Intersection<Object3D<Event>>) => {
   if (intersection.object instanceof TerrainChunk) {
-    let offset;
-    switch (brush) {
-      case Brush.buffer:
-        offset = terrainOffsets.buffer;
-        break;
-      case Brush.fabricator:
-        offset = terrainOffsets.fabricator;
-        break;
-      case Brush.foundation:
-        offset = terrainOffsets.foundation
-        break;
-      case Brush.generator:
-        offset = terrainOffsets.generator
-        break;
-      case Brush.miner:
-        offset = terrainOffsets.miner;
-        break;
-      case Brush.pole:
-        offset = terrainOffsets.pole;
-        break;
-      case Brush.wall:
-        offset = terrainOffsets.wall;
-        break;
-      default:
-        throw new Error();
-    }
-    return intersection.point.clone().add(offset);
+    return intersection.point.clone().add(terrainOffsets[brush]);
   }
-  if (
-    intersection.object instanceof Buffers
-    || intersection.object instanceof Fabricators
-    || intersection.object instanceof Foundations
-    || intersection.object instanceof Generators
-    || intersection.object instanceof Miners
-    || intersection.object instanceof Poles
-    || intersection.object instanceof Walls
-  ) {
+  if (intersection.object instanceof Instances) {
     const instance = intersection.object.getInstance(intersection.instanceId!);
-    let brushOffset;
-    switch (brush) {
-      case Brush.buffer:
-        brushOffset = offsets.buffer;
-        break;
-      case Brush.fabricator:
-        brushOffset = offsets.fabricator;
-        break;
-      case Brush.foundation:
-        brushOffset = offsets.foundation;
-        break;
-      case Brush.generator:
-        brushOffset = offsets.generator;
-        break;
-      case Brush.miner:
-        brushOffset = offsets.miner;
-        break;
-      case Brush.pole:
-        brushOffset = offsets.pole;
-        break;
-      case Brush.wall:
-        brushOffset = offsets.wall;
-        break;
-      default:
-        throw new Error();
-    }
-    let offset;
+    const brushOffset = offsets[brush];
+    let offset = offsets[Brush.none];
     if (intersection.object instanceof Buffers) {
-      offset = offsets.buffer;
+      offset = offsets[Brush.buffer];
     } else if (intersection.object instanceof Fabricators) {
-      offset = offsets.fabricator;
+      offset = offsets[Brush.fabricator];
     } else if (intersection.object instanceof Foundations) {
-      offset = offsets.foundation;
+      offset = offsets[Brush.foundation];
     } else if (intersection.object instanceof Generators) {
-      offset = offsets.generator;
+      offset = offsets[Brush.generator];
     } else if (intersection.object instanceof Miners) {
-      offset = offsets.miner;
+      offset = offsets[Brush.miner];
     } else if (intersection.object instanceof Poles) {
-      offset = offsets.pole;
+      offset = offsets[Brush.pole];
     } else if (intersection.object instanceof Walls) {
-      offset = offsets.wall;
-    } else {
-      throw new Error();
+      offset = offsets[Brush.wall];
     }
 
     const direction = intersection.face!.normal;
@@ -269,5 +203,5 @@ export const snap = (intersection: Intersection<Object3D<Event>>) => {
       .add(rotatedOffset)
       .add(rotatedBrushOffset);
   }
-  throw new Error();
+  return intersection.point;
 };

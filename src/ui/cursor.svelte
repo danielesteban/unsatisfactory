@@ -1,12 +1,16 @@
 <script lang="ts">
-  export let configure: string | undefined;
+  export let tooltip: { action: string; object?: string; } | undefined;
 </script>
 
 <div class="cursor">
   <div class="crosshair"></div>
-  {#if configure}
+  {#if tooltip}
     <div class="tooltip">
-      Press <span class="key">E</span> to configure <span class="object">{configure}</span>
+      {#if tooltip.action === 'build'}
+        Press <span class="key">R</span> or <span class="key">T</span> to rotate
+      {:else}
+        Press <span class="key">E</span> to configure <span class="object">{tooltip.object}</span>
+      {/if}
     </div>
   {/if}
 </div>
@@ -33,7 +37,7 @@
     white-space: nowrap;
     padding: 0.25rem 0.5rem;
     border-radius: 0.25rem;
-    background: rgba(0, 0, 0, .2);
+    background: rgba(0, 0, 0, .4);
     backdrop-filter: blur(0.5rem);
     display: flex;
     align-items: center;
