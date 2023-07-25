@@ -4,6 +4,7 @@ import { Buffer } from '../objects/buffers';
 import { Generator } from '../objects/generators';
 import { Fabricator } from '../objects/fabricators';
 import { Miner } from '../objects/miners';
+import { Pole } from '../objects/poles';
 import BufferUI from './buffer.svelte';
 import FabricatorUI from './fabricator.svelte';
 import GeneratorUI from './generator.svelte';
@@ -66,6 +67,9 @@ const getObject = (instance?: Instance) => {
   }
   if (instance instanceof Miner) {
     return 'Miner';
+  }
+  if (instance instanceof Pole) {
+    return 'Pole';
   }
   return undefined;
 };
