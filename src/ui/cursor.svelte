@@ -1,5 +1,5 @@
 <script lang="ts">
-  export let action: 'belt' | 'build' | 'configure' | 'wire' | undefined;
+  export let action: 'belt' | 'build' | 'configure' | 'dismantle' | 'wire' | undefined;
   export let object: string | undefined;
   export let from: string | undefined;
 </script>
@@ -14,6 +14,8 @@
         Press <span class="key">R</span> or <span class="key">T</span> to rotate
       {:else if action === 'configure'}
         Press <span class="key">E</span> to configure <span class="object">{object}</span>
+      {:else if action === 'dismantle'}
+        Dismantle <span class="object">{object}</span>
       {:else}
         Wire from <span class="object">{from || object}</span>{#if from} to <span class="object">{object}</span>{/if}
       {/if}

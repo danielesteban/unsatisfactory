@@ -22,6 +22,7 @@ export enum Brush {
   none,
   belt,
   buffer,
+  dismantle,
   fabricator,
   foundation,
   generator,
@@ -51,6 +52,7 @@ const ui = new UI({
       { id: Brush.miner, name: 'Miner' },
       { id: Brush.generator, name: 'Generator' },
       { id: Brush.pole, name: 'Pole' },
+      { id: Brush.dismantle, name: 'Dismantle', key: 'F' },
     ],
   },
   target: document.getElementById('ui')!,
@@ -87,6 +89,9 @@ document.addEventListener('keydown', (e) => {
       break;
     case 'Digit9':
       setBrush(Brush.pole, true);
+      break;
+    case 'KeyF':
+      setBrush(Brush.dismantle, true);
       break;
     case 'KeyR': {
       rotation += Math.PI * 0.125;
@@ -147,6 +152,7 @@ const offsets = {
   [Brush.none]: new Vector3(),
   [Brush.belt]: new Vector3(),
   [Brush.buffer]: new Vector3(1, 1, 1),
+  [Brush.dismantle]: new Vector3(),
   [Brush.fabricator]: new Vector3(2, 2, 1),
   [Brush.foundation]: new Vector3(2, 0.5, 2),
   [Brush.generator]: new Vector3(2, 1, 2),

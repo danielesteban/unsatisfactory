@@ -117,6 +117,7 @@ const worldNorth = new Vector3(0, 0, -1);
 const create = (intersection: Intersection<Object3D<Event>>) => {
   if (
     brush === Brush.none
+    || brush === Brush.dismantle
     || intersection.object instanceof Belt
     || intersection.object instanceof Wire
   ) {
@@ -249,18 +250,19 @@ const handleInput = (
   intersection: Intersection<Object3D<Event>>
 ) => {
   const hasFrom = from.container !== undefined;
-  if (primary && intersection?.face) {
-    const sound = create(intersection) || 'build';
-    viewport.sfx.playAt(sound, intersection.point, 0, sound === 'nope' ? 0 : Math.random() * (sound === 'wire' ? 100 : 600));
-  }
-  if (secondary && intersection?.object) {
-    const sound = remove(intersection) || 'build';
-    viewport.sfx.playAt(sound, intersection.point, 0, sound === 'nope' ? 0 : Math.random() * -600);
+  if (primary && intersection?.object && intersection?.face) {
+    if (brush === Brush.dismantle) {
+      const sound = remove(intersection) || 'build';
+      viewport.sfx.playAt(sound, intersection.point, 0, sound === 'nope' ? 0 : Math.random() * -600);
+    } else {
+      const sound = create(intersection) || 'build';
+      viewport.sfx.playAt(sound, intersection.point, 0, sound === 'nope' ? 0 : Math.random() * (sound === 'wire' ? 100 : 600));
+    }
   }
   if (tertiary && intersection?.object) {
     pick(intersection);
   }
-  if (interact) {
+  if (interact || secondary) {
     setBrush(Brush.none);
     if (intersection.object) {
       interaction(intersection);
@@ -273,14 +275,12 @@ const handleInput = (
 
 const hover = (intersection: Intersection<Object3D<Event>>) => {
   if (
-    brush !== Brush.none
-    && brush !== Brush.belt
-    && brush !== Brush.wire
-    && intersection?.object
+    intersection?.object
     && !(
       intersection.object instanceof Belt
       || intersection.object instanceof Wire
     )
+    && ![Brush.none, Brush.belt, Brush.dismantle, Brush.wire].includes(brush)
   ) {
     let geometry;
     switch (brush) {
@@ -311,6 +311,34 @@ const hover = (intersection: Intersection<Object3D<Event>>) => {
     return;
   }
   ghost.visible = false;
+
+  if (
+    intersection?.object
+    && brush === Brush.dismantle
+    && (
+      intersection.object instanceof Buffers
+      || intersection.object instanceof Belt
+      || intersection.object instanceof Fabricators
+      || intersection.object instanceof Foundations
+      || intersection.object instanceof Generators
+      || intersection.object instanceof Miners
+      || intersection.object instanceof Poles
+      || intersection.object instanceof Walls
+      || intersection.object instanceof Wire
+    )
+  ) {
+    let instance;
+    if (
+      intersection.object instanceof Belt
+      || intersection.object instanceof Wire
+    ) {
+      instance = intersection.object;
+    } else {
+      instance = (intersection.object as Buffers | Fabricators | Foundations | Generators | Miners | Poles | Walls).getInstance(intersection.instanceId!);
+    }
+    setTooltip('dismantle', instance);
+    return;
+  }
 
   if (
     intersection?.face

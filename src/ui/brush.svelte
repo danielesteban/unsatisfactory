@@ -2,13 +2,13 @@
   import { Brush } from '../core/brush';
 
   export let brush: Brush;
-  export let brushes: { id: Brush; name: string; }[];
+  export let brushes: { id: Brush; name: string; key?: string; }[];
 </script>
 
 <div class="brushes">
-  {#each brushes as { id, name }, key (id)}
+  {#each brushes as { id, name, key }, index (id)}
     <div class="brush" class:enabled={brush === id}>
-      <div class="key">{key + 1}</div>
+      <div class="key">{key || (index + 1)}</div>
       <div>{name}</div>
     </div>
   {/each}
