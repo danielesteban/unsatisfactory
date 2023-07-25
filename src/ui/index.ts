@@ -54,24 +54,23 @@ export default (instance: Buffer | Fabricator | Generator | Miner) => {
 };
 
 const cursor = new Cursor({ target });
-export const setTooltip = (tooltip?: { action: string; instance?: Buffer | Fabricator | Generator | Miner; }) => {
-  if (!tooltip) {
-    cursor.$set({ tooltip: undefined });
+export const setTooltip = (action?: 'build' | 'configure', instance?: Buffer | Fabricator | Generator | Miner) => {
+  if (!action) {
+    cursor.$set({ action: undefined });
     return;
   }
-  const { action } = tooltip;
   let object;
-  if (tooltip.instance instanceof Buffer) {
+  if (instance instanceof Buffer) {
     object = 'Buffer';
   }
-  if (tooltip.instance instanceof Fabricator) {
+  if (instance instanceof Fabricator) {
     object = 'Fabricator';
   }
-  if (tooltip.instance instanceof Generator) {
+  if (instance instanceof Generator) {
     object = 'Generator';
   }
-  if (tooltip.instance instanceof Miner) {
+  if (instance instanceof Miner) {
     object = 'Miner';
   }
-  cursor.$set({ tooltip: { action, object } });
+  cursor.$set({ action, object });
 };

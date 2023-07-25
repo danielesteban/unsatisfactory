@@ -1,15 +1,16 @@
 <script lang="ts">
-  export let tooltip: { action: string; object?: string; } | undefined;
+  export let action: 'build' | 'configure' | undefined;
+  export let object: string | undefined;
 </script>
 
 <div class="cursor">
   <div class="crosshair"></div>
-  {#if tooltip}
+  {#if action}
     <div class="tooltip">
-      {#if tooltip.action === 'build'}
+      {#if action === 'build'}
         Press <span class="key">R</span> or <span class="key">T</span> to rotate
       {:else}
-        Press <span class="key">E</span> to configure <span class="object">{tooltip.object}</span>
+        Press <span class="key">E</span> to configure <span class="object">{object}</span>
       {/if}
     </div>
   {/if}

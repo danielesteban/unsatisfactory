@@ -228,67 +228,6 @@ const remove = (intersection: Intersection<Object3D<Event>>) => {
 };
 
 const interactionLimit = 12;
-const hover = (intersection: Intersection<Object3D<Event>>) => {
-  let tooltip;
-  if (
-    brush === Brush.none
-    && from.container === undefined
-    && (
-      intersection?.object instanceof Buffers
-      || intersection?.object instanceof Fabricators
-      || intersection?.object instanceof Generators
-      || intersection?.object instanceof Miners
-    )
-  ) {
-    const instance = intersection.object.getInstance(intersection.instanceId!);
-    if (instance.position.distanceTo(viewport.camera.position) <= interactionLimit) {
-      tooltip = { action: 'configure', instance };
-    }
-  }
-
-  let build;
-  if (
-    brush !== Brush.none
-    && intersection?.object
-    && !(
-      intersection.object instanceof Belt
-      || intersection.object instanceof Wire
-    )
-  ) {
-    switch (brush) {
-      case Brush.buffer:
-        build = Buffers.getGeometry();
-        break;
-      case Brush.fabricator:
-        build = Fabricators.getGeometry();
-        break;
-      case Brush.foundation:
-        build = Foundations.getGeometry();
-        break;
-      case Brush.generator:
-        build = Generators.getGeometry();
-        break;
-      case Brush.miner:
-        build = Miners.getGeometry();
-        break;
-      case Brush.pole:
-        build = Poles.getGeometry();
-        break;
-      case Brush.wall:
-        build = Walls.getGeometry();
-        break;
-    }
-  }
-
-  if (build) {
-    ghost.update(build, snap(intersection), rotation);
-    tooltip = { action: 'build' };
-  } else {
-    ghost.visible = false;
-  }
-
-  setTooltip(tooltip);
-};
 const interaction = (intersection: Intersection<Object3D<Event>>) => {
   if (
     intersection.object instanceof Buffers
@@ -332,6 +271,66 @@ const handleInput = (
   if (hasFrom) {
     from.container = undefined;
   }
+};
+
+const hover = (intersection: Intersection<Object3D<Event>>) => {
+  if (
+    brush !== Brush.none
+    && brush !== Brush.belt
+    && brush !== Brush.wire
+    && intersection?.object
+    && !(
+      intersection.object instanceof Belt
+      || intersection.object instanceof Wire
+    )
+  ) {
+    let geometry;
+    switch (brush) {
+      case Brush.buffer:
+        geometry = Buffers.getGeometry();
+        break;
+      case Brush.fabricator:
+        geometry = Fabricators.getGeometry();
+        break;
+      case Brush.foundation:
+        geometry = Foundations.getGeometry();
+        break;
+      case Brush.generator:
+        geometry = Generators.getGeometry();
+        break;
+      case Brush.miner:
+        geometry = Miners.getGeometry();
+        break;
+      case Brush.pole:
+        geometry = Poles.getGeometry();
+        break;
+      case Brush.wall:
+        geometry = Walls.getGeometry();
+        break;
+    }
+    ghost.update(geometry!, snap(intersection), rotation);
+    setTooltip('build');
+    return;
+  }
+  ghost.visible = false;
+
+  if (
+    brush === Brush.none
+    && from.container === undefined
+    && (
+      intersection?.object instanceof Buffers
+      || intersection?.object instanceof Fabricators
+      || intersection?.object instanceof Generators
+      || intersection?.object instanceof Miners
+    )
+  ) {
+    const instance = intersection.object.getInstance(intersection.instanceId!);
+    if (instance.position.distanceTo(viewport.camera.position) <= interactionLimit) {
+      setTooltip('configure', instance);
+      return;
+    }
+  }
+  setTooltip(undefined);
 };
 
 const center = new Vector2();
