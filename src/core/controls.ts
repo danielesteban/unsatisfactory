@@ -1,5 +1,6 @@
 import {
   MathUtils,
+  Object3D,
   PerspectiveCamera,
   Vector3,
 } from 'three';
@@ -218,7 +219,6 @@ class Controls {
 
   private static readonly forward: Vector3 = new Vector3();
   private static readonly right: Vector3 = new Vector3();
-  private static readonly worldUp: Vector3 = new Vector3(0, 1, 0);
   private static readonly direction: Vector3 = new Vector3();
   update(delta: number) {
     const { camera, heightmap, movement, velocity } = this;
@@ -227,11 +227,11 @@ class Controls {
 
     if (movement.x !== 0 || movement.y !== 0 || movement.z !== 0) {
       camera.getWorldDirection(Controls.forward);
-      Controls.right.crossVectors(Controls.forward, Controls.worldUp).normalize();
+      Controls.right.crossVectors(Controls.forward, Object3D.DEFAULT_UP).normalize();
       Controls.direction
         .set(0, 0, 0)
         .addScaledVector(Controls.right, movement.x)
-        .addScaledVector(Controls.worldUp, movement.y)
+        .addScaledVector(Object3D.DEFAULT_UP, movement.y)
         .addScaledVector(Controls.forward, movement.z)
         .normalize();
       camera.userData.targetPosition.addScaledVector(Controls.direction, velocity * delta);

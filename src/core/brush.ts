@@ -164,7 +164,6 @@ const quaternion = new Quaternion();
 const rotatedDirection = new Vector3();
 const rotatedOffset = new Vector3();
 const rotatedBrushOffset = new Vector3();
-const worldUp = new Vector3(0, 1, 0);
 export const snap = (intersection: Intersection<Object3D<Event>>) => {
   if (intersection.object instanceof TerrainChunk) {
     return intersection.point.clone().add(terrainOffsets[brush]);
@@ -190,11 +189,11 @@ export const snap = (intersection: Intersection<Object3D<Event>>) => {
     }
 
     const direction = intersection.face!.normal;
-    quaternion.setFromAxisAngle(worldUp, instance.rotation);
+    quaternion.setFromAxisAngle(Object3D.DEFAULT_UP, instance.rotation);
     rotatedOffset.copy(offset).multiply(direction).applyQuaternion(quaternion);
 
     rotatedDirection.copy(direction).applyQuaternion(quaternion);
-    quaternion.setFromAxisAngle(worldUp, -rotation);
+    quaternion.setFromAxisAngle(Object3D.DEFAULT_UP, -rotation);
     rotatedDirection.applyQuaternion(quaternion);
     quaternion.invert();
     rotatedBrushOffset.copy(brushOffset).multiply(rotatedDirection).applyQuaternion(quaternion);

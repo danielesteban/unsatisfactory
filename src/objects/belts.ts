@@ -5,6 +5,7 @@ import {
   Material,
   Mesh,
   MeshStandardMaterial,
+  Object3D,
   RepeatWrapping,
   Shape,
   SRGBColorSpace,
@@ -18,29 +19,6 @@ import NormalMap from '../textures/green_metal_rust_nor_gl_1k.jpg';
 import RoughnessMap from '../textures/green_metal_rust_rough_1k.jpg';
 
 export class Belt extends Mesh {
-  private static shape: Shape | undefined;
-  static getShape() {
-    if (!Belt.shape) {
-      const width = 1;
-      const height = 0.25;
-      const inset = 0.125;
-      const hw = width * 0.5;
-      const hh = height * 0.5;
-      Belt.shape = new Shape()
-        .moveTo(-hh, -hw)
-        .lineTo(-hh, -hw + inset)
-        .lineTo(hh - inset, -hw + inset)
-        .lineTo(hh - inset, hw - inset)
-        .lineTo(-hh, hw - inset)
-        .lineTo(-hh, hw)
-        .lineTo(hh, hw)
-        .lineTo(hh, -hw)
-        .lineTo(-hh, -hw);
-    }
-    return Belt.shape;
-  }
-
-  private static readonly offset: Vector3 = new Vector3(0, -0.5, 0);
   public readonly from: Connector;
   public readonly to: Connector;
 
@@ -48,7 +26,8 @@ export class Belt extends Mesh {
   private readonly items: Items;
   private readonly slots: { item: Item; locked: boolean; }[];
 
-  constructor(material: Material, from: Connector, to: Connector) {
+  private static readonly offset: Vector3 = new Vector3(0, -0.5, 0);
+  constructor(material: Material, shape: Shape, from: Connector, to: Connector) {
     const fromConnector = from.container.getConnector(from.direction, Belt.offset);
     const toConnector = to.container.getConnector(to.direction, Belt.offset);
     const offset = fromConnector.distanceTo(toConnector) * 0.3;
@@ -61,10 +40,9 @@ export class Belt extends Mesh {
     {
       // @dani @hack
       // this is prolly wrong but it seems to work at preventing weird horizontal extrusions
-      const worldUp = new Vector3(0, 1, 0);
       const { normals, binormals } = path.computeFrenetFrames(1, false);
-      if (Math.abs(normals[0].dot(worldUp)) < Math.abs(binormals[0].dot(worldUp))) {
-        const flipBinormals = binormals[0].dot(worldUp) > 0;
+      if (Math.abs(normals[0].dot(Object3D.DEFAULT_UP)) < Math.abs(binormals[0].dot(Object3D.DEFAULT_UP))) {
+        const flipBinormals = binormals[0].dot(Object3D.DEFAULT_UP) > 0;
         const compute = path.computeFrenetFrames.bind(path);
         path.computeFrenetFrames = (steps: number, closed: boolean) => {
           const { normals, binormals, tangents } = compute(steps, closed);
@@ -78,7 +56,7 @@ export class Belt extends Mesh {
       }
     }
     const segments = Math.ceil(path.getLength() / 0.1);
-    const geometry = new ExtrudeGeometry(Belt.getShape(), { extrudePath: path, steps: segments });
+    const geometry = new ExtrudeGeometry(shape, { extrudePath: path, steps: segments });
     super(geometry, material);
     this.castShadow = this.receiveShadow = true;
     this.updateMatrixWorld();
@@ -157,6 +135,28 @@ class Belts extends Group {
     return Belts.material;
   }
 
+  private static shape: Shape | undefined;
+  static getShape() {
+    if (!Belts.shape) {
+      const width = 1;
+      const height = 0.25;
+      const inset = 0.125;
+      const hw = width * 0.5;
+      const hh = height * 0.5;
+      Belts.shape = new Shape()
+        .moveTo(-hh, -hw)
+        .lineTo(-hh, -hw + inset)
+        .lineTo(hh - inset, -hw + inset)
+        .lineTo(hh - inset, hw - inset)
+        .lineTo(-hh, hw - inset)
+        .lineTo(-hh, hw)
+        .lineTo(hh, hw)
+        .lineTo(hh, -hw)
+        .lineTo(-hh, -hw);
+    }
+    return Belts.shape;
+  }
+
   private timer: number;
 
   constructor() {
@@ -167,7 +167,7 @@ class Belts extends Group {
   }
 
   create(from: Connector, to: Connector) {
-    const belt = new Belt(Belts.getMaterial(), from, to);
+    const belt = new Belt(Belts.getMaterial(), Belts.getShape(), from, to);
     this.add(belt);
     return belt;
   }

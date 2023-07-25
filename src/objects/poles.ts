@@ -4,6 +4,7 @@ import {
   CylinderGeometry,
   Mesh,
   MeshStandardMaterial,
+  Object3D,
   SRGBColorSpace,
   Vector3,
 } from 'three';
@@ -21,7 +22,7 @@ export class Pole extends PoweredContainer {
   }
 
   override getWireConnector(): Vector3 {
-    return this.position.clone().addScaledVector(PoweredContainer.worldUp, 3);
+    return this.position.clone().addScaledVector(Object3D.DEFAULT_UP, 3);
   }
 };
 

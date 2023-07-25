@@ -7,6 +7,7 @@ import {
   Intersection,
   Matrix4,
   Material,
+  Object3D,
   Quaternion,
   Raycaster,
   Vector3,
@@ -42,7 +43,6 @@ class Instances<InstanceType extends Instance> extends InstancedMesh {
   private static rotation: Quaternion = new Quaternion();
   private static scale: Vector3 = new Vector3(1, 1, 1);
   private static transform: Matrix4 = new Matrix4();
-  private static worldUp: Vector3 = new Vector3(0, 1, 0);
 
   constructor(geometry: BufferGeometry, material: Material, collider?: BufferGeometry) {
     super(geometry, material, 16);
@@ -72,7 +72,7 @@ class Instances<InstanceType extends Instance> extends InstancedMesh {
       this.count++;
       Instances.transform.compose(
         instance.position,
-        Instances.rotation.setFromAxisAngle(Instances.worldUp, instance.rotation),
+        Instances.rotation.setFromAxisAngle(Object3D.DEFAULT_UP, instance.rotation),
         Instances.scale
       );
       this.setMatrixAt(this.count - 1, Instances.transform);
@@ -102,7 +102,7 @@ class Instances<InstanceType extends Instance> extends InstancedMesh {
       Instances.transform.setPosition(position);
       Instances.transform.compose(
         position,
-        Instances.rotation.setFromAxisAngle(Instances.worldUp, rotation),
+        Instances.rotation.setFromAxisAngle(Object3D.DEFAULT_UP, rotation),
         Instances.scale
       );
       this.setMatrixAt(i, Instances.transform);

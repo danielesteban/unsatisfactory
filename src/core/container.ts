@@ -1,5 +1,6 @@
 import {
   BaseEvent,
+  Object3D,
   Vector3,
 } from 'three';
 import { Instance } from './instances';
@@ -64,9 +65,8 @@ export class PoweredContainer extends Container<PoweredContainerEvent> {
     return this.enabled && super.canInput(item);
   }
 
-  protected static worldUp: Vector3 = new Vector3(0, 1, 0);
   getWireConnector(): Vector3 {
-    return this.position.clone().addScaledVector(PoweredContainer.worldUp, 1.5);
+    return this.position.clone().addScaledVector(Object3D.DEFAULT_UP, 1.5);
   }
 
   getConsumption() {

@@ -4,6 +4,7 @@ import {
   CylinderGeometry,
   Mesh,
   MeshStandardMaterial,
+  Object3D,
   PositionalAudio,
   SRGBColorSpace,
   Vector3,
@@ -91,7 +92,7 @@ export class Fabricator extends PoweredContainer {
   }
 
   override getWireConnector(): Vector3 {
-    return this.position.clone().addScaledVector(PoweredContainer.worldUp, 2.5);
+    return this.position.clone().addScaledVector(Object3D.DEFAULT_UP, 2.5);
   }
 
   override serialize() {

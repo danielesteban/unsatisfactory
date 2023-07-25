@@ -88,7 +88,6 @@ const to: Omit<Connector, 'container'> & { container: Container | PoweredContain
 };
 
 const quaternion = new Quaternion();
-const worldUp = new Vector3(0, 1, 0);
 const worldNorth = new Vector3(0, 0, -1);
 const create = (intersection: Intersection<Object3D<Event>>) => {
   if (
@@ -108,7 +107,7 @@ const create = (intersection: Intersection<Object3D<Event>>) => {
           || intersection.object instanceof Generators
           || intersection.object instanceof Miners
         )
-        || Math.abs(direction.dot(worldUp)) > 0
+        || Math.abs(direction.dot(Object3D.DEFAULT_UP)) > 0
         || (
           intersection.object instanceof Fabricators
           && Math.abs(direction.dot(worldNorth)) > 0
@@ -126,9 +125,9 @@ const create = (intersection: Intersection<Object3D<Event>>) => {
       if (from.container === to.container && from.direction.equals(to.direction)) {
         return 'nope';
       }
-      quaternion.setFromAxisAngle(worldUp, from.container.rotation);
+      quaternion.setFromAxisAngle(Object3D.DEFAULT_UP, from.container.rotation);
       from.direction.applyQuaternion(quaternion);
-      quaternion.setFromAxisAngle(worldUp, to.container.rotation);
+      quaternion.setFromAxisAngle(Object3D.DEFAULT_UP, to.container.rotation);
       to.direction.applyQuaternion(quaternion);
       belts.create(from as Connector, to as Connector);
       return;
