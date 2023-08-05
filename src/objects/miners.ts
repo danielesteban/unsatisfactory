@@ -13,7 +13,7 @@ import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 import Instances from '../core/instances';
 import { PoweredContainer } from '../core/container';
 import SFX from '../core/sfx';
-import { Item } from './items';
+import { Item, Mining } from './items';
 import { loadTexture } from '../textures';
 import DiffuseMap from '../textures/rust_coarse_01_diff_1k.jpg';
 import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.jpg';
@@ -27,11 +27,20 @@ export class Miner extends PoweredContainer {
   private tick: number;
 
   constructor(position: Vector3, rotation: number, item: Item, sfx: SFX) {
-    super(position, rotation, 0, 10);
+    const { consumption, rate } = Mining[item] || { consumption: 0, rate: 0 };
+    super(position, rotation, 0, consumption);
     this.item = item;
-    this.rate = 3;
+    this.rate = rate;
     this.sfx = sfx;
     this.tick = 0;
+  }
+
+  getItem() {
+    return this.item;
+  }
+
+  getRate() {
+    return this.rate;
   }
 
   override dispose() {

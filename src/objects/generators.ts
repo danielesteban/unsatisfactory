@@ -18,7 +18,7 @@ import RoughnessMap from '../textures/rust_coarse_01_rough_1k.jpg';
 export class Generator extends PoweredContainer {
   private readonly power: number;
   constructor(position: Vector3, rotation: number, power: number) {
-    super(position, rotation, 0, 0);
+    super(position, rotation, 0, 0, 4);
     this.power = power;
   }
 

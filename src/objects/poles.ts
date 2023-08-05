@@ -18,7 +18,7 @@ import RoughnessMap from '../textures/rust_coarse_01_rough_1k.jpg';
 
 export class Pole extends PoweredContainer {
   constructor(position: Vector3, rotation: number) {
-    super(position, rotation, 0, 0);
+    super(position, rotation, 0, 0, 4);
   }
 
   override getWireConnector(): Vector3 {

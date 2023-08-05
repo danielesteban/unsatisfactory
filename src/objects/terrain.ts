@@ -11,6 +11,7 @@ import {
   Vector3,
 } from 'three';
 import { ImprovedNoise } from 'three/examples/jsm/math/ImprovedNoise.js';
+import Grass from './grass';
 import { loadTexture } from '../textures';
 import DiffuseMap from '../textures/coast_sand_rocks_02_diff_1k.jpg';
 import NormalMap from '../textures/coast_sand_rocks_02_nor_gl_1k.jpg';
@@ -31,17 +32,20 @@ export class TerrainChunk extends Mesh {
   }
 
   public readonly chunk: Vector3;
+  public readonly grass: Grass;
   constructor(material: Material) {
     super(TerrainChunk.getGeometry().clone(), material);
     this.castShadow = this.receiveShadow = true;
     this.matrixAutoUpdate = false;
     this.chunk = new Vector3();
+    this.grass = new Grass(this.geometry.boundingSphere!);
+    this.add(this.grass);
   }
 
-  private static aux: Vector3 = new Vector3();
-  private static center: Vector3 = new Vector3();
+  private static readonly aux: Vector3 = new Vector3();
+  private static readonly center: Vector3 = new Vector3();
   update(chunk: Vector3, getHeight: (position: Vector3) => number) {
-    const { geometry, position: origin } = this;
+    const { geometry, grass, position: origin } = this;
     const { aux, center } = TerrainChunk;
     this.chunk.copy(chunk);
     origin.copy(chunk).multiplyScalar(TerrainChunk.size);
@@ -53,9 +57,15 @@ export class TerrainChunk extends Mesh {
     }
     geometry.boundingSphere!.radius = Math.sqrt(maxRadiusSq);
     position.needsUpdate = true;
-    this.position.copy(origin);
     this.updateMatrix();
     this.updateMatrixWorld();
+    grass.visible = false;
+  }
+
+  updateGrass(getGrass: (position: Vector3) => number, getHeight: (position: Vector3) => number) {
+    const { grass, position } = this;
+    grass.update(position, getGrass, getHeight);
+    grass.updateMatrixWorld();
   }
 }
 
@@ -76,31 +86,11 @@ class Terrain extends Group {
       });
       material.customProgramCacheKey = () => 'Terrain';
       material.onBeforeCompile = (shader: Shader) => {
-        shader.vertexShader = shader.vertexShader
-          .replace(
-            '#include <clipping_planes_pars_vertex>',
-            /* glsl */`
-            #include <clipping_planes_pars_vertex>
-            varying vec3 gridPosition;
-            `
-          )
-          .replace(
-            '#include <fog_vertex>',
-            /* glsl */`
-            #include <fog_vertex>
-            gridPosition = vec3(modelMatrix * vec4(position, 1.0));
-            `
-          );
         shader.fragmentShader = shader.fragmentShader
           .replace(
             '#include <clipping_planes_pars_fragment>',
             /* glsl */`
             #include <clipping_planes_pars_fragment>
-            varying vec3 gridPosition;
-            float line(vec2 position) {
-              vec2 coord = abs(fract(position - 0.5) - 0.5) / fwidth(position);
-              return 1.0 - min(min(coord.x, coord.y), 1.0);
-            }
             float directNoise(vec2 p) {
               vec2 ip = floor(p);
               vec2 u = fract(p);
@@ -123,8 +113,8 @@ class Terrain extends Group {
               float ib = ia + 1.0;
 
               // offsets for the different virtual patterns
-              vec2 offa = sin(vec2(3.0,7.0)*ia); // can replace with any other hash
-              vec2 offb = sin(vec2(3.0,7.0)*ib); // can replace with any other hash
+              vec2 offa = sin(vec2(3.0,7.0)*ia);
+              vec2 offb = sin(vec2(3.0,7.0)*ib);
 
               // compute derivatives for mip-mapping
               vec2 dx = dFdx(uv);
@@ -150,15 +140,6 @@ class Terrain extends Group {
           .replace(
             '#include <roughnessmap_fragment>',
             ShaderChunk.roughnessmap_fragment.replace(/texture2D/g, 'textureNoTile')
-          )
-          .replace(
-            'vec4 diffuseColor = vec4( diffuse, opacity );',
-            /* glsl */`
-            float depth = distance(gridPosition, cameraPosition);
-            float decay = exp(-0.02 * 0.02 * depth * depth);
-            float grid = 1.0 - line(gridPosition.xz * 0.5) * 0.8 * decay;
-            vec4 diffuseColor = vec4(diffuse * grid, opacity);
-            `
           );
       };
       Terrain.material = material;
@@ -170,16 +151,32 @@ class Terrain extends Group {
   private readonly map: Map<string, TerrainChunk>;
   private readonly noise: ImprovedNoise;
   private readonly pool: TerrainChunk[];
+  private readonly queue: TerrainChunk[];
 
   constructor() {
     super();
     this.updateMatrixWorld();
     this.matrixAutoUpdate = false;
+    this.getGrass = this.getGrass.bind(this);
     this.getHeight = this.getHeight.bind(this);
     this.anchor = new Vector3(Infinity, Infinity, Infinity);
     this.map = new Map();
     this.noise = new ImprovedNoise();
     this.pool = [];
+    this.queue = [];
+  }
+
+  getGrass(position: Vector3) {
+    const { noise } = this;
+    let v = 0;
+    let f = 0.15;
+    let a = 0.5;
+    for (let j = 0; j < 3; j++) {
+      v += noise.noise(position.x * f, position.z * f, -1337) * a;
+      f *= 2;
+      a *= 0.5;
+    }
+    return v;
   }
 
   getHeight(position: Vector3) {
@@ -195,14 +192,17 @@ class Terrain extends Group {
     return v * 16;
   }
 
-  private static aux: Vector3 = new Vector3();
-  private static center: Vector3 = new Vector3(TerrainChunk.size * 0.5, 0, TerrainChunk.size * 0.5);
+  private static readonly aux: Vector3 = new Vector3();
+  private static readonly center: Vector3 = new Vector3(TerrainChunk.size * 0.5, 0, TerrainChunk.size * 0.5);
   update(position: Vector3, radius: number) {
-    const { anchor, children, map, pool } = this;
+    const { anchor, children, map, pool, queue } = this;
     const { aux, center } = Terrain;
     aux.copy(position).add(center).divideScalar(TerrainChunk.size).floor();
     aux.y = 0;
     if (anchor.equals(aux)) {
+      for (let i = 0, l = Math.min(queue.length, 4); i < l; i++) {
+        queue.shift()!.updateGrass(this.getGrass, this.getHeight);
+      }
       return;
     }
     anchor.copy(aux);
@@ -213,26 +213,49 @@ class Terrain extends Group {
         map.delete(`${child.chunk.x}:${child.chunk.z}`);
         pool.push(child);
         this.remove(child);
+        const queued = queue.indexOf(child);
+        if (queued !== -1) {
+          queue.splice(queued, 1);
+        }
         i--;
         l--;
       }
     }
 
-    for (let z = -radius + 1; z < radius; z++) {
-      for (let x = -radius + 1; x < radius; x++) {
-        aux.set(x, 0, z).add(anchor);
-        if (aux.distanceTo(anchor) >= radius) {
-          continue;
-        }
-        const key = `${aux.x}:${aux.z}`;
-        if (!map.has(key)) {
-          const chunk = pool.pop() || new TerrainChunk(Terrain.getMaterial());
-          chunk.update(aux, this.getHeight);
-          map.set(key, chunk);
-          this.add(chunk);
+    Terrain.getRenderGrid(radius).forEach((offset) => {
+      aux.copy(offset).add(anchor);
+      const key = `${aux.x}:${aux.z}`;
+      if (!map.has(key)) {
+        const chunk = pool.pop() || new TerrainChunk(Terrain.getMaterial());
+        chunk.update(aux, this.getHeight);
+        map.set(key, chunk);
+        queue.push(chunk);
+        this.add(chunk);
+      }
+    });
+  }
+
+  private static readonly renderGrids: Map<number, Vector3[]> = new Map();
+  private static getRenderGrid(radius: number) {
+    const { aux, renderGrids } = Terrain;
+    let grid = renderGrids.get(radius);
+    if (!grid) {
+      const chunks = [];
+      for (let z = -radius + 1; z < radius; z++) {
+        for (let x = -radius + 1; x < radius; x++) {
+          aux.set(x, 0, z);
+          const dist = aux.length();
+          if (dist >= radius) {
+            continue;
+          }
+          chunks.push({ offset: aux.clone(), dist });
         }
       }
+      chunks.sort(({ dist: a }, { dist: b }) => a - b);
+      grid = chunks.map(({ offset }) => offset);
+      renderGrids.set(radius, grid);
     }
+    return grid;
   }
 }
 

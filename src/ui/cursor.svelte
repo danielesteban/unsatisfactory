@@ -1,13 +1,29 @@
 <script lang="ts">
+  import { derived } from 'svelte/store';
+  import { Brush, names, subscribe } from '../core/brush';
+
   export let action: 'belt' | 'build' | 'configure' | 'dismantle' | 'wire' | undefined;
-  export let object: string | undefined;
-  export let from: string | undefined;
+  export let objectBrush: Brush = Brush.none;
+  export let fromBrush: Brush = Brush.none;
+
+  $: object = objectBrush === Brush.none ? undefined : names[objectBrush];
+  $: from = fromBrush === Brush.none ? undefined : names[fromBrush];
+
+  const brush = derived([{ subscribe }], ([$brush]) => {
+    if ($brush === Brush.none) {
+      return undefined;
+    }
+    if ($brush === Brush.dismantle) {
+      return 'Dismantling';
+    }
+    return `Building ${names[$brush]}`;
+  });
 </script>
 
 <div class="cursor">
   <div class="crosshair"></div>
   {#if action}
-    <div class="tooltip">
+    <div class="action">
       {#if action === 'belt'}
         Belt from <span class="object">{from || object}</span>{#if from} to <span class="object">{object}</span>{/if}
       {:else if action === 'build'}
@@ -19,6 +35,11 @@
       {:else}
         Wire from <span class="object">{from || object}</span>{#if from} to <span class="object">{object}</span>{/if}
       {/if}
+    </div>
+  {/if}
+  {#if $brush}
+    <div class="brush">
+      {$brush}
     </div>
   {/if}
 </div>
@@ -38,10 +59,16 @@
     display: flex;
   }
 
-  .tooltip {
+  .crosshair {
+    width: 0.5rem;
+    height: 0.5rem;
+    border: 0.25rem solid rgb(238, 238, 238, 0.3);
+    border-radius: 0.5rem;
+    box-shadow: 0 0 0.25rem rgba(0, 0, 0, 0.3);
+  }
+
+  .action, .brush {
     position: absolute;
-    top: 100%;
-    margin-top: 0.75rem;
     white-space: nowrap;
     padding: 0.25rem 0.5rem;
     border-radius: 0.25rem;
@@ -50,7 +77,18 @@
     display: flex;
     align-items: center;
     gap: 0.25rem;
+  }
+
+  .action {
+    top: 100%;
+    margin-top: 0.75rem;
     color: #aaa;
+  }
+
+  .brush {
+    font-size: 1rem;
+    bottom: 100%;
+    margin-bottom: 0.75rem;
   }
 
   .key {
@@ -65,13 +103,5 @@
 
   .key, .object {
     color: #eee;
-  }
-
-  .crosshair {
-    width: 0.5rem;
-    height: 0.5rem;
-    border: 0.25rem solid rgb(238, 238, 238, 0.3);
-    border-radius: 0.5rem;
-    box-shadow: 0 0 0.25rem rgba(0, 0, 0, 0.3);
   }
 </style>

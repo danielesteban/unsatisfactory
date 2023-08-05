@@ -29,10 +29,28 @@ export enum Item {
   ore,
 }
 
+export const ItemName = {
+  [Item.none]: 'None',
+  [Item.box]: 'Box',
+  [Item.capsule]: 'Capsule',
+  [Item.cylinder]: 'Cylinder',
+  [Item.ore]: 'Ore',
+};
+
+export const Mining: Partial<Record<Item, { consumption: number; rate: number; }>> = {
+  [Item.ore]: { consumption: 10, rate: 3 },
+};
+
+export enum Transformer {
+  fabricator,
+  smelter,
+}
+
 export type Recipe = {
   input: { item: Item; count: number; };
   output: { item: Item; count: number; };
   rate: number;
+  transformer: Transformer;
 };
 
 export const Recipes: Recipe[] = [
@@ -46,6 +64,7 @@ export const Recipes: Recipe[] = [
       count: 1,
     },
     rate: 1,
+    transformer: Transformer.smelter,
   },
   {
     input: {
@@ -57,6 +76,7 @@ export const Recipes: Recipe[] = [
       count: 1,
     },
     rate: 2,
+    transformer: Transformer.fabricator,
   },
   {
     input: {
@@ -68,6 +88,7 @@ export const Recipes: Recipe[] = [
       count: 1,
     },
     rate: 2,
+    transformer: Transformer.fabricator,
   }
 ];
 
@@ -105,9 +126,9 @@ class InstancedItems extends InstancedMesh {
   }
 }
 
-export class Items extends Group {
+class Items extends Group {
   private static geometries: Record<Exclude<Item, Item.none>, BufferGeometry> | undefined;
-  static setupGeometries() {
+  private static setupGeometries() {
     const box = new BoxGeometry(0.25, 0.25, 0.25);
     box.translate(0, 0.125, 0);
     box.computeBoundingSphere();
@@ -130,22 +151,45 @@ export class Items extends Group {
     };
   }
 
-  private static material: MeshStandardMaterial | undefined;
-  static getMaterial() {
-    if (!Items.material) {
-      const material = new MeshStandardMaterial({
+  private static materials: Record<Exclude<Item, Item.none>, MeshStandardMaterial> | undefined;
+  private static setupMaterials() {
+    if (!Items.materials) {
+      const raw = new MeshStandardMaterial({
         map: loadTexture(DiffuseMap),
         normalMap: loadTexture(NormalMap),
         roughnessMap: loadTexture(RoughnessMap),
       });
-      material.map!.anisotropy = 16;
-      material.map!.colorSpace = SRGBColorSpace;
-      [material.map!, material.normalMap!, material.roughnessMap!].forEach((map) => {
+      raw.map!.anisotropy = 16;
+      raw.map!.colorSpace = SRGBColorSpace;
+      [raw.map!, raw.normalMap!, raw.roughnessMap!].forEach((map) => {
         map.wrapS = map.wrapT = RepeatWrapping;
       });
-      Items.material = material;
+      const processed = new MeshStandardMaterial({
+        color: 0x332211,
+        roughness: 0.15,
+      });
+      Items.materials = {
+        [Item.box]: processed,
+        [Item.capsule]: raw,
+        [Item.cylinder]: processed,
+        [Item.ore]: raw,
+      };
     }
-    return Items.material;
+    return Items.materials;
+  }
+
+  static getMaterials() {
+    if (!Items.materials) {
+      Items.setupMaterials();
+    }
+    const materials: MeshStandardMaterial[] = [];
+    for (let key in Items.materials) {
+      const material = Items.materials[key as any as Exclude<Item, Item.none>];
+      if (!materials.includes(material)) {
+        materials.push(material);
+      }
+    }
+    return materials;
   }
 
   private readonly instances: Record<Exclude<Item, Item.none>, InstancedItems | undefined>;
@@ -155,6 +199,9 @@ export class Items extends Group {
   constructor(count: number, path: Curve<Vector3>) {
     if (!Items.geometries) {
       Items.setupGeometries();
+    }
+    if (!Items.materials) {
+      Items.setupMaterials();
     }
     super();
     this.updateMatrixWorld();
@@ -185,7 +232,7 @@ export class Items extends Group {
         return;
       }
       if (!instances[item]) {
-        instances[item] = new InstancedItems(Items.geometries![item], Items.getMaterial(), count);
+        instances[item] = new InstancedItems(Items.geometries![item], Items.materials![item], count);
         this.add(instances[item]!);
       }
       const alpha = locked ? 1 : step;

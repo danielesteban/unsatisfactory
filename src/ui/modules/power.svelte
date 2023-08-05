@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
   import Module from '../components/module.svelte';
-  import { PoweredContainer, PoweredContainerEvent } from '../../core/container';
+  import { PoweredContainer } from '../../core/container';
 
   export let instance: PoweredContainer;
 
@@ -9,17 +9,17 @@
 
   let enabled = instance.isEnabled();
   let powered = instance.isPowered();
-  const onEnabled = ({ status }: PoweredContainerEvent) => {
+  const onEnabled = ({ status }: { status: boolean }) => {
     enabled = status;
   };
-  const onPowered = ({ status }: PoweredContainerEvent) => {
+  const onPowered = ({ status }: { status: boolean }) => {
     powered = status;
   };
-  instance.addEventListener('enabled', onEnabled);
-  instance.addEventListener('powered', onPowered);
+  instance.addEventListener('enabled', onEnabled as any);
+  instance.addEventListener('powered', onPowered as any);
   onDestroy(() => {
-    instance.addEventListener('enabled', onEnabled);
-    instance.removeEventListener('powered', onPowered);
+    instance.addEventListener('enabled', onEnabled as any);
+    instance.removeEventListener('powered', onPowered as any);
   });
 
   let status: string;

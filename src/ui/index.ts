@@ -1,25 +1,27 @@
 import { SvelteComponent } from 'svelte';
+import { getFromObject } from '../core/brush';
 import { Instance } from '../core/instances';
 import { Buffer } from '../objects/buffers';
 import { Belt } from '../objects/belts';
-import { Generator } from '../objects/generators';
 import { Fabricator } from '../objects/fabricators';
-import { Foundation } from '../objects/foundations';
+import { Generator } from '../objects/generators';
+import { Transformer as ItemTransformer } from '../objects/items';
 import { Miner } from '../objects/miners';
-import { Pole } from '../objects/poles';
-import { Wall } from '../objects/walls';
+import { Smelter } from '../objects/smelters';
 import { Wire } from '../objects/wires';
 import BufferUI from './buffer.svelte';
-import FabricatorUI from './fabricator.svelte';
+import BuildUI from './build.svelte';
+import CursorUI from './cursor.svelte';
+import HotbarUI from './hotbar.svelte';
 import GeneratorUI from './generator.svelte';
 import MinerUI from './miner.svelte';
-import Cursor from './cursor.svelte';
+import TransformerUI from './transformer.svelte';
 
 let current: SvelteComponent | undefined = undefined;
 const target = document.getElementById('ui')!;
 const viewport = document.getElementById('viewport')!;
 
-export default (instance: Instance) => {
+export default (type: 'build' | 'container', instance?: Instance) => {
   document.exitPointerLock();
   if (current) {
     current.$destroy();
@@ -32,69 +34,65 @@ export default (instance: Instance) => {
     dialog!.$destroy();
     viewport.requestPointerLock();
   };
-  if (instance instanceof Buffer) {
-    dialog = new BufferUI({
-      props: { close, instance },
-      target,
-    });
-  }
-  if (instance instanceof Fabricator) {
-    dialog = new FabricatorUI({
-      props: { close, instance },
-      target,
-    });
-  }
-  if (instance instanceof Generator) {
-    dialog = new GeneratorUI({
-      props: { close, instance },
-      target,
-    });
-  }
-  if (instance instanceof Miner) {
-    dialog = new MinerUI({
-      props: { close, instance },
-      target,
-    });
+  switch (type) {
+    case 'build':
+      dialog = new BuildUI({
+        props: { close },
+        target,
+      });
+      break;
+    case 'container': {
+      if (instance instanceof Buffer) {
+        dialog = new BufferUI({
+          props: { close, instance },
+          target,
+        });
+      }
+      if (instance instanceof Fabricator) {
+        dialog = new TransformerUI({
+          props: { close, instance, transformer: ItemTransformer.fabricator },
+          target,
+        });
+      }
+      if (instance instanceof Generator) {
+        dialog = new GeneratorUI({
+          props: { close, instance },
+          target,
+        });
+      }
+      if (instance instanceof Miner) {
+        dialog = new MinerUI({
+          props: { close, instance },
+          target,
+        });
+      }
+      if (instance instanceof Smelter) {
+        dialog = new TransformerUI({
+          props: { close, instance, transformer: ItemTransformer.smelter },
+          target,
+        });
+      }
+      break;
+    }
   }
   current = dialog;
 };
 
-const getObject = (instance?: Instance | Belt | Wire) => {
-  if (instance instanceof Belt) {
-    return 'Belt';
-  }
-  if (instance instanceof Buffer) {
-    return 'Buffer';
-  }
-  if (instance instanceof Fabricator) {
-    return 'Fabricator';
-  }
-  if (instance instanceof Foundation) {
-    return 'Foundation';
-  }
-  if (instance instanceof Generator) {
-    return 'Generator';
-  }
-  if (instance instanceof Miner) {
-    return 'Miner';
-  }
-  if (instance instanceof Pole) {
-    return 'Pole';
-  }
-  if (instance instanceof Wall) {
-    return 'Wall';
-  }
-  if (instance instanceof Wire) {
-    return 'Wire';
-  }
-  return undefined;
-};
+const cursor = new CursorUI({ target });
 
-const cursor = new Cursor({ target });
-export const setTooltip = (action?: 'belt' | 'build' | 'configure' | 'dismantle' | 'wire', instance?: Instance | Belt | Wire, from?: Instance) => {
+export const setTooltip = (
+  action?: 'belt' | 'build' | 'configure' | 'dismantle' | 'wire',
+  instance?: Instance | Belt | Wire, from?: Instance
+) => {
   if (!action) {
     cursor.$set({ action: undefined });
     return;
   }
-  cursor.$set({ action, object: getObject(instance), from: getObject(from) });
+  cursor.$set({
+    action,
+    objectBrush: getFromObject(instance),
+    fromBrush: getFromObject(from),
+  });
 };
+
+new HotbarUI({ target });

@@ -47,6 +47,19 @@ button {
   cursor: pointer;
 }
 
+select {
+  margin: 0;
+  padding: 0.5rem 0.25rem;
+  border: 0;
+  outline: none;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+  background: rgba(0, 0, 0, .5);
+  border-radius: 0.75rem;
+  cursor: pointer;
+}
+
 canvas {
   vertical-align: middle;
 }
@@ -62,4 +75,24 @@ canvas {
 
 body.loading #viewport {
   filter: blur(0.75rem);
+}
+
+::-webkit-scrollbar {
+  background-color: rgba(0, 0, 0, 0);
+}
+
+::-webkit-scrollbar:hover {
+  background-color: rgba(0, 0, 0, 0);
+}
+
+::-webkit-scrollbar:vertical {
+  width: 0.5rem;
+}
+
+::-webkit-scrollbar-thumb:vertical {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+::-webkit-scrollbar-thumb:vertical:active {
+  background: rgba(0, 0, 0, 0.3);
 }

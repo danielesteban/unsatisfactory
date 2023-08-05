@@ -6,7 +6,7 @@ import {
 import { Instance } from './instances';
 import { Item } from '../objects/items';
 
-class Container<Event extends BaseEvent = BaseEvent> extends Instance<Event> {
+class Container<Events extends BaseEvent = BaseEvent> extends Instance<Events> {
   protected readonly capacity: number;
   protected readonly items: Item[];
 
@@ -38,27 +38,49 @@ class Container<Event extends BaseEvent = BaseEvent> extends Instance<Event> {
   }
 };
 
-export type PoweredContainerEvent = BaseEvent & (
+export class PoweredContainer<Events extends BaseEvent = BaseEvent> extends Container<
   {
-    type: 'enabled';
+    type: "enabled";
     status: boolean;
   }
   | {
-    type: 'powered';
+    type: "powered";
     status: boolean;
   }
-);
-
-export class PoweredContainer extends Container<PoweredContainerEvent> {
+  | Events
+> {
+  protected connections: PoweredContainer[];
   protected readonly consumption: number;
+  protected readonly maxConnections: number;
   protected enabled: boolean;
   protected powered: boolean;
 
-  constructor(position: Vector3, rotation: number, capacity: number, consumption: number, items: Item[] = []) {
+  constructor(position: Vector3, rotation: number, capacity: number, consumption: number, maxConnections: number = 1, items: Item[] = []) {
     super(position, rotation, capacity, items);
+    this.connections = [];
     this.consumption = consumption;
+    this.maxConnections = maxConnections;
     this.enabled = true;
     this.powered = false;
+  }
+
+  canWire() {
+    return this.connections.length < this.maxConnections;
+  }
+
+  addConnection(container: PoweredContainer) {
+    this.connections.push(container);
+  }
+
+  removeConnection(container: PoweredContainer) {
+    const index = this.connections.indexOf(container);
+    if (index !== -1) {
+      this.connections.splice(index, 1);
+    }
+  }
+
+  getConnections() {
+    return this.connections;
   }
 
   override canInput(item: Item) {

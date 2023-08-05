@@ -31,6 +31,7 @@ class Viewport extends EventDispatcher {
   public readonly renderer: WebGLRenderer;
   public readonly scene: Scene;
   public readonly sfx: SFX;
+  private readonly time: { value: number; };
 
   constructor() {
     super();
@@ -58,6 +59,7 @@ class Viewport extends EventDispatcher {
     });
     this.sfx = new SFX();
     this.scene.add(this.sfx);
+    this.time = { value: this.clock.oldTime / 1000 };
     this.csm = new CSM({
       camera: this.camera,
       cascades: 4,
@@ -103,19 +105,25 @@ class Viewport extends EventDispatcher {
     };
   }
 
+  setupMaterialTime(material: Material) {
+    const { time } = this;
+    const obc = material.onBeforeCompile.bind(material);
+    material.onBeforeCompile = (shader: Shader, renderer: WebGLRenderer) => {
+      shader.uniforms.time = time;
+      obc(shader, renderer);
+    };
+  }
+
   private render() {
-    const { camera, clock, composer, controls, csm, sfx } = this;
+    const { camera, clock, composer, controls, csm, sfx, time } = this;
     if (!this.animate) {
       return;
     }
     const delta = Math.min(clock.getDelta(), 0.2);
-    const time = clock.oldTime / 1000;
+    time.value = clock.oldTime / 1000;
     controls.update(delta);
-    this.animate(controls.buttons, delta, time);
-    controls.buttons.primary = false;
-    controls.buttons.secondary = false;
-    controls.buttons.tertiary = false;
-    controls.buttons.interact = false;
+    this.animate(controls.buttons, delta, time.value);
+    controls.clearButtons();
     sfx.updateListener(camera);
     csm.update();
     composer.render();

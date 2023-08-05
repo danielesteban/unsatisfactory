@@ -4,9 +4,9 @@
 
 <style>
   .heading {
-    font-size: 1.25rem;
+    font-size: 1.375rem;
     line-height: 1em;
     padding: 1rem;
-    text-align: center;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.05);
   }
 </style>

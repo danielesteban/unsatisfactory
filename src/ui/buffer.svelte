@@ -17,7 +17,7 @@
 
   const toggle = () => {
     instance.setSink(!instance.isSink());
-    sfx.paused && sfx.play();
+    !localStorage.getItem('sfx:muted') && sfx.paused && sfx.play();
   };
 
   let sink = instance.isSink();

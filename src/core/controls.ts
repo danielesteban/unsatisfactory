@@ -13,6 +13,8 @@ export type Buttons = {
   primary: boolean;
   secondary: boolean;
   tertiary: boolean;
+  build: boolean;
+  dismantle: boolean;
   interact: boolean;
 };
 
@@ -39,6 +41,8 @@ class Controls {
       primary: false,
       secondary: false,
       tertiary: false,
+      build: false,
+      dismantle: false,
       interact: false,
     };
     this.camera = camera;
@@ -56,7 +60,17 @@ class Controls {
     document.addEventListener('keyup', this.onKeyUp.bind(this));
     document.addEventListener('wheel', this.onWheel.bind(this));
   }
-      
+
+  clearButtons() {
+    const { buttons } = this;
+    buttons.primary = false;
+    buttons.secondary = false;
+    buttons.tertiary = false;
+    buttons.build = false;
+    buttons.dismantle = false;
+    buttons.interact = false;
+  }
+
   lock() {
     const { isLocked, target } = this;
     if (!isLocked) {
@@ -72,14 +86,11 @@ class Controls {
   }
 
   onLock() {
-    const { buttons, movement } = this;
+    const { movement } = this;
     this.isLocked = !!document.pointerLockElement;
     document.body.classList[this.isLocked ? 'add' : 'remove']('pointerlock');
     if (!this.isLocked) {
-      buttons.primary = false;
-      buttons.secondary = false;
-      buttons.tertiary = false;
-      buttons.interact = false;
+      this.clearButtons();
       movement.set(0, 0, 0);
     }
   }
@@ -160,6 +171,12 @@ class Controls {
       case 'ShiftRight':
         movement.y = -1;
         break;
+      case 'KeyQ':
+        buttons.build = true;
+        break;
+      case 'KeyF':
+        buttons.dismantle = true;
+        break;
       case 'KeyE':
         buttons.interact = true;
         break;
@@ -190,6 +207,12 @@ class Controls {
       case 'ShiftLeft':
       case 'ShiftRight':
         if (movement.y < 0) movement.y = 0;
+        break;
+      case 'KeyQ':
+        buttons.build = false;
+        break;
+      case 'KeyF':
+        buttons.dismantle = false;
         break;
       case 'KeyE':
         buttons.interact = false;

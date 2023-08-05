@@ -9,18 +9,21 @@ import {
   Vector3,
 } from 'three';
 import Viewport from './core/viewport';
-import { Brush, brush, pick, rotation, setBrush, snap } from './core/brush';
-import { download, load, serialize, deserialize } from './core/loader';
+import { Brush, brush, pick, rotation, set as setBrush, snap } from './core/brush';
+import { download, load, serialize, deserialize, version } from './core/loader';
 import Belts, { Belt } from './objects/belts';
 import Buffers from './objects/buffers';
 import Container, { PoweredContainer, Connector } from './core/container';
+import Instances, { Instance } from './core/instances';
 import Fabricators from './objects/fabricators';
 import Foundations from './objects/foundations';
 import Generators from './objects/generators';
 import Ghost from './objects/ghost';
+import Grass from './objects/grass';
 import Items, { Item } from './objects/items';
 import Miners from './objects/miners';
 import Poles from './objects/poles';
+import Smelters from './objects/smelters';
 import Terrain from './objects/terrain';
 import Walls from './objects/walls';
 import Wires, { Wire } from './objects/wires';
@@ -36,13 +39,19 @@ const viewport = new Viewport();
   Fabricators.getMaterial(),
   Foundations.getMaterial(),
   Generators.getMaterial(),
-  Items.getMaterial(),
+  ...Items.getMaterials(),
   Miners.getMaterial(),
   Poles.getMaterial(),
+  Smelters.getMaterial(),
   Terrain.getMaterial(),
   Walls.getMaterial(),
   Wires.getMaterial(),
 ].forEach(viewport.setupMaterialCSM.bind(viewport));
+
+[
+  Ghost.getMaterial(),
+  Grass.getMaterial(),
+].forEach(viewport.setupMaterialTime.bind(viewport));
 
 const terrain = new Terrain();
 viewport.controls.setHeightmap(terrain);
@@ -69,6 +78,9 @@ viewport.scene.add(miners);
 const poles = new Poles();
 viewport.scene.add(poles);
 
+const smelters = new Smelters(viewport.sfx);
+viewport.scene.add(smelters);
+
 const walls = new Walls();
 viewport.scene.add(walls);
 
@@ -93,24 +105,31 @@ const canBelt = (intersection: Intersection<Object3D<Event>>) => (
     || intersection.object instanceof Fabricators
     || intersection.object instanceof Generators
     || intersection.object instanceof Miners
+    || intersection.object instanceof Smelters
   )
   && Math.abs(intersection.face!.normal.dot(Object3D.DEFAULT_UP)) == 0
   && !(
-    intersection.object instanceof Fabricators
+    (intersection.object instanceof Fabricators || intersection.object instanceof Smelters)
     && Math.abs(intersection.face!.normal.dot(worldNorth)) > 0
   )
   && (!from.container || from.container !== intersection.object.getInstance(intersection.instanceId!))
 );
 
-const canWire = (intersection: Intersection<Object3D<Event>>) => (
-  (
-    intersection.object instanceof Fabricators
-    || intersection.object instanceof Generators
-    || intersection.object instanceof Miners
-    || intersection.object instanceof Poles
-  )
-  && (!from.container || from.container !== intersection.object.getInstance(intersection.instanceId!))
-);
+const canWire = (intersection: Intersection<Object3D<Event>>) => {
+  if (
+    !(
+      intersection.object instanceof Fabricators
+      || intersection.object instanceof Generators
+      || intersection.object instanceof Miners
+      || intersection.object instanceof Poles
+      || intersection.object instanceof Smelters
+    )
+  ) {
+    return false;
+  }
+  const instance = intersection.object.getInstance(intersection.instanceId!);
+  return instance.canWire() && (!from.container || from.container !== instance);
+};
 
 const quaternion = new Quaternion();
 const worldNorth = new Vector3(0, 0, -1);
@@ -129,11 +148,11 @@ const create = (intersection: Intersection<Object3D<Event>>) => {
         return 'nope';
       }
       if (!from.container) {
-        from.container = (intersection.object as Buffers | Fabricators | Generators | Miners).getInstance(intersection.instanceId!);
+        from.container = (intersection.object as Buffers | Fabricators | Generators | Miners | Smelters).getInstance(intersection.instanceId!);
         from.direction.copy(intersection.face!.normal);
         return 'tap';
       }
-      to.container = (intersection.object as Buffers | Fabricators | Generators | Miners).getInstance(intersection.instanceId!);
+      to.container = (intersection.object as Buffers | Fabricators | Generators | Miners | Smelters).getInstance(intersection.instanceId!);
       to.direction.copy(intersection.face!.normal);
       quaternion.setFromAxisAngle(Object3D.DEFAULT_UP, from.container.rotation);
       from.direction.applyQuaternion(quaternion);
@@ -159,6 +178,9 @@ const create = (intersection: Intersection<Object3D<Event>>) => {
     case Brush.pole:
       poles.create(snap(intersection), rotation);
       return;
+    case Brush.smelter:
+      smelters.create(snap(intersection), rotation);
+      return;
     case Brush.wall:
       walls.create(snap(intersection), rotation);
       return;
@@ -167,55 +189,46 @@ const create = (intersection: Intersection<Object3D<Event>>) => {
         return 'nope';
       }
       if (!from.container) {
-        from.container = (intersection.object as Fabricators | Generators | Miners | Poles).getInstance(intersection.instanceId!);
+        from.container = (intersection.object as Fabricators | Generators | Miners | Poles | Smelters).getInstance(intersection.instanceId!);
         return 'tap';
       }
-      to.container = (intersection.object as Fabricators | Generators | Miners | Poles).getInstance(intersection.instanceId!);
-      if (from.container === to.container) {
-        return 'nope';
-      }
+      to.container = (intersection.object as Fabricators | Generators | Miners | Poles | Smelters).getInstance(intersection.instanceId!);
       wires.create(from.container as PoweredContainer, to.container as PoweredContainer);
       return 'wire';
   }
 };
 
-const removeConnected = (container: Container) => {
-  (belts.children as Belt[])
-    .reduce((connected, belt) => {
-      if (belt.from.container === container || belt.to.container === container) {
-        connected.push(belt);
-      }
-      return connected;
-    }, [] as Belt[])
-    .forEach((belt) => belts.remove(belt));
-  (wires.children as Wire[])
-    .reduce((connected, wire) => {
-      if (wire.from === container || wire.to === container) {
-        connected.push(wire);
-      }
-      return connected;
-    }, [] as Wire[])
-    .forEach((wire) => wires.remove(wire));
-};
-
 const remove = (intersection: Intersection<Object3D<Event>>) => {
-  if (
-    intersection.object instanceof Foundations
-    || intersection.object instanceof Walls
-  ) {
-    intersection.object.removeInstance(intersection.object.getInstance(intersection.instanceId!));
-    return;
-  }
-  if (
-    intersection.object instanceof Buffers
-    || intersection.object instanceof Fabricators
-    || intersection.object instanceof Generators
-    || intersection.object instanceof Miners
-    || intersection.object instanceof Poles
-  ) {
-    const container = intersection.object.getInstance(intersection.instanceId!);
-    intersection.object.removeInstance(container as any);
-    removeConnected(container);
+  if (intersection.object instanceof Instances) {
+    const instance = intersection.object.getInstance(intersection.instanceId!);
+
+    if (instance instanceof PoweredContainer) {
+      // @dani incomplete
+      // Here it could prolly use the instance.getConnections()
+      // But since there's not a similar method yet for getting
+      // the connected belts in Container, and for consistency,
+      // I rather keep both removals the same until then.
+      (wires.children as Wire[])
+        .reduce((connected, wire) => {
+          if (wire.from === instance || wire.to === instance) {
+            connected.push(wire);
+          }
+          return connected;
+        }, [] as Wire[])
+        .forEach((wire) => wires.remove(wire));
+    }
+    if (instance instanceof Container) {
+      (belts.children as Belt[])
+        .reduce((connected, belt) => {
+          if (belt.from.container === instance || belt.to.container === instance) {
+            connected.push(belt);
+          }
+          return connected;
+        }, [] as Belt[])
+        .forEach((belt) => belts.remove(belt));
+    }
+
+    intersection.object.removeInstance(instance);
     return;
   }
   if (intersection.object instanceof Belt) {
@@ -236,21 +249,22 @@ const interaction = (intersection: Intersection<Object3D<Event>>) => {
     || intersection.object instanceof Fabricators
     || intersection.object instanceof Generators
     || intersection.object instanceof Miners
+    || intersection.object instanceof Smelters
   ) {
     const instance = intersection.object.getInstance(intersection.instanceId!);
     if (instance.position.distanceTo(viewport.camera.position) <= interactionLimit) {
-      UI(instance);
+      UI('container', instance);
       return;
     }
   }
 };
 
 const handleInput = (
-  { primary, secondary, tertiary, interact }: { primary: boolean; secondary: boolean; tertiary: boolean; interact: boolean; },
+  { primary, secondary, tertiary, build, dismantle, interact }: { primary: boolean; secondary: boolean; tertiary: boolean; build: boolean; dismantle: boolean; interact: boolean; },
   intersection: Intersection<Object3D<Event>>
 ) => {
   const hasFrom = from.container !== undefined;
-  if (primary && intersection?.object && intersection?.face) {
+  if (primary && brush !== Brush.none && intersection?.object && intersection?.face) {
     if (brush === Brush.dismantle) {
       const sound = remove(intersection) || 'build';
       viewport.sfx.playAt(sound, intersection.point, 0, sound === 'nope' ? 0 : Math.random() * -600);
@@ -261,6 +275,13 @@ const handleInput = (
   }
   if (tertiary && intersection?.object) {
     pick(intersection);
+  }
+  if (build) {
+    setBrush(Brush.none);
+    UI('build');
+  }
+  if (dismantle) {
+    setBrush(brush === Brush.dismantle ? Brush.none : Brush.dismantle);
   }
   if (interact || secondary) {
     setBrush(Brush.none);
@@ -302,6 +323,9 @@ const hover = (intersection: Intersection<Object3D<Event>>) => {
       case Brush.pole:
         geometry = Poles.getGeometry();
         break;
+      case Brush.smelter:
+        geometry = Smelters.getGeometry();
+        break;
       case Brush.wall:
         geometry = Walls.getGeometry();
         break;
@@ -316,14 +340,8 @@ const hover = (intersection: Intersection<Object3D<Event>>) => {
     intersection?.object
     && brush === Brush.dismantle
     && (
-      intersection.object instanceof Buffers
+      intersection.object instanceof Instances
       || intersection.object instanceof Belt
-      || intersection.object instanceof Fabricators
-      || intersection.object instanceof Foundations
-      || intersection.object instanceof Generators
-      || intersection.object instanceof Miners
-      || intersection.object instanceof Poles
-      || intersection.object instanceof Walls
       || intersection.object instanceof Wire
     )
   ) {
@@ -334,7 +352,7 @@ const hover = (intersection: Intersection<Object3D<Event>>) => {
     ) {
       instance = intersection.object;
     } else {
-      instance = (intersection.object as Buffers | Fabricators | Foundations | Generators | Miners | Poles | Walls).getInstance(intersection.instanceId!);
+      instance = (intersection.object as Instances<Instance>).getInstance(intersection.instanceId!);
     }
     setTooltip('dismantle', instance);
     return;
@@ -347,7 +365,7 @@ const hover = (intersection: Intersection<Object3D<Event>>) => {
       || (brush === Brush.wire && canWire(intersection))
     )
   ) {
-    const instance = (intersection.object as Buffers | Fabricators | Generators | Miners | Poles).getInstance(intersection.instanceId!);
+    const instance = (intersection.object as Buffers | Fabricators | Generators | Miners | Poles | Smelters).getInstance(intersection.instanceId!);
     setTooltip(brush === Brush.belt ? 'belt' : 'wire', instance, from.container);
     return;
   }
@@ -359,6 +377,7 @@ const hover = (intersection: Intersection<Object3D<Event>>) => {
       || intersection?.object instanceof Fabricators
       || intersection?.object instanceof Generators
       || intersection?.object instanceof Miners
+      || intersection?.object instanceof Smelters
     )
   ) {
     const instance = intersection.object.getInstance(intersection.instanceId!);
@@ -378,15 +397,37 @@ viewport.setAnimationLoop((buttons, delta) => {
   raycaster.setFromCamera(center, viewport.camera);
   const intersection = raycaster.intersectObjects(viewport.scene.children)[0];
   hover(intersection);
-  if (buttons.primary || buttons.secondary || buttons.tertiary || buttons.interact) {
+  if (buttons.primary || buttons.secondary || buttons.tertiary || buttons.build || buttons.dismantle || buttons.interact) {
     handleInput(buttons, intersection);
   }
 });
 
+const restore = () => {
+  const stored = localStorage.getItem('autosave');
+  if (stored) {
+    let serialized;
+    try {
+      serialized = JSON.parse(stored);
+    } catch (e) {
+      return false;
+    }
+    if (serialized.version !== version) {
+      return false;
+    }
+    deserialize(
+      serialized,
+      belts, buffers, fabricators, foundations, generators, miners, poles, smelters, walls, wires,
+      viewport.camera
+    );
+    return true;
+  }
+  return false;
+};
+
 const save = () => {
   localStorage.setItem(
     'autosave',
-    JSON.stringify(serialize(belts, buffers, fabricators, foundations, generators, miners, poles, walls, wires, viewport.camera))
+    JSON.stringify(serialize(belts, buffers, fabricators, foundations, generators, miners, poles, smelters, walls, wires, viewport.camera))
   );
   settings.$set({ lastSave: new Date() });
 };
@@ -395,10 +436,15 @@ const settings = new Settings({
   props: {
     lastSave: new Date(),
     download: () => (
-      download(serialize(belts, buffers, fabricators, foundations, generators, miners, poles, walls, wires, viewport.camera))
+      download(serialize(belts, buffers, fabricators, foundations, generators, miners, poles, smelters, walls, wires, viewport.camera))
     ),
     load: async () => {
-      const serialized = await load();
+      let serialized;
+      try {
+        serialized = await load();
+      } catch (e) {
+        return;
+      }
       localStorage.setItem('autosave', JSON.stringify(serialized));
       location.reload();
     },
@@ -407,20 +453,16 @@ const settings = new Settings({
       location.reload();
     },
     save,
+    sfx: viewport.sfx,
   },
   target: document.getElementById('ui')!,
 });
 
-let stored = localStorage.getItem('autosave');
-if (stored) {
-  stored = JSON.parse(stored)!;
-  deserialize(
-    stored as any,
-    belts, buffers, fabricators, foundations, generators, miners, poles, walls, wires,
-    viewport.camera,
+if (!restore()) {
+  Debug(
+    belts, buffers, fabricators, foundations, generators, miners, poles, smelters, walls, wires,
+    viewport.camera
   );
-} else {
-  Debug(belts, buffers, fabricators, foundations, generators, miners, poles, walls, wires);
 }
 
 setInterval(save, 60000);

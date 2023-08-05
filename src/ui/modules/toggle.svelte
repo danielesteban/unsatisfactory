@@ -7,22 +7,22 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
   import Module from '../components/module.svelte';
-  import { PoweredContainer, PoweredContainerEvent } from '../../core/container';
+  import { PoweredContainer } from '../../core/container';
 
   export let instance: PoweredContainer;
 
   const toggle = () => {
     instance.setEnabled(!instance.isEnabled());
-    sfx.paused && sfx.play();
+    !localStorage.getItem('sfx:muted') && sfx.paused && sfx.play();
   };
 
   let enabled = instance.isEnabled();
-  const onEnabled = ({ status }: PoweredContainerEvent) => {
+  const onEnabled = ({ status }: { status: boolean }) => {
     enabled = status;
   };
-  instance.addEventListener('enabled', onEnabled);
+  instance.addEventListener('enabled', onEnabled as any);
   onDestroy(() => (
-    instance.removeEventListener('enabled', onEnabled)
+    instance.removeEventListener('enabled', onEnabled as any)
   ));
 </script>
 

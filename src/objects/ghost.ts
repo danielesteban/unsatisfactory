@@ -15,9 +15,7 @@ export class Ghost extends Mesh {
         transparent: true,
       });
       material.customProgramCacheKey = () => 'Ghost';
-      material.userData.time = { value: 0 };
       material.onBeforeCompile = (shader: Shader) => {
-        shader.uniforms.time = material.userData.time;
         shader.fragmentShader = shader.fragmentShader
           .replace(
             '#include <clipping_planes_pars_fragment>',
@@ -29,7 +27,7 @@ export class Ghost extends Mesh {
           .replace(
             'vec4 diffuseColor = vec4( diffuse, opacity );',
             /* glsl */`
-            float line = smoothstep(1.0, 3.0, mod(float(gl_FragCoord.y) - time, 5.0));
+            float line = smoothstep(1.0, 3.0, mod(float(gl_FragCoord.y) - time * 0.05, 5.0));
             vec4 diffuseColor = vec4(diffuse, opacity * line);
             `
           );
@@ -55,7 +53,6 @@ export class Ghost extends Mesh {
     this.rotation.y = rotation;
     this.updateMatrix();
     this.visible = true;
-    Ghost.material!.userData.time.value = performance.now() * 0.05;
   }
 };
 

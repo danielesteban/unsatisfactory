@@ -8,7 +8,6 @@ import {
   Vector3,
 } from 'three';
 import * as Sounds from '../sounds';
-import UI from '../ui/sfx.svelte';
 
 class SFX extends Group {
   private readonly ambient: {
@@ -33,11 +32,6 @@ class SFX extends Group {
   }
 
   private async init() {
-    new UI({
-      props: { sfx: this },
-      target: document.getElementById('ui')!,
-    });
-
     await new Promise<void>((resolve) => {
       const onFirstInteraction = () => {
         window.removeEventListener('keydown', onFirstInteraction);
