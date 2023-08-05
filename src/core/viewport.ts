@@ -67,7 +67,7 @@ class Viewport extends EventDispatcher {
       maxFar: 1000,
       mode: 'practical' as any,
       parent: this.scene,
-      shadowMapSize: 2048,
+      shadowMapSize: 1024,
     });
     this.csm.fade = true;
     this.composer = new EffectComposer(this.renderer);
