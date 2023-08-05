@@ -7,6 +7,11 @@
 
   export let close: () => void;
 
+  const set = (brush: Brush) => () => {
+    setBrush(brush);
+    close();
+  };
+
   const brushes = [
     [
       Brush.foundation,
@@ -45,10 +50,17 @@
   let search = '';
   $: filteredBrushes = filter(search);
 
-  const set = (brush: Brush) => () => {
-    setBrush(brush);
-    close();
-  };
+  $: result = (() => {
+    let result = undefined;
+    if (search.trim() && !/[a-z]/i.test(search)) {
+      try {
+        result = (new Function(`return parseFloat(${search});`))();
+      } catch (e) {
+        result = undefined;
+      }
+    }
+    return result;
+  })();
 
   let hover: Brush | undefined;
   const setHover = (brush: Brush | undefined) => () => {
@@ -70,12 +82,19 @@
 <svelte:document on:keydown={keydown} />
 
 <Dialog close={close}>
-  <input
-    type="text"
-    class="search"
-    placeholder="Search..."
-    bind:value={search}
-  />
+  <div class="search">
+    <input
+      type="text"
+      class="input"
+      placeholder="Search..."
+      bind:value={search}
+    />
+    {#if result}
+      <div class="result">
+        {result}
+      </div>
+    {/if}
+  </div>
   <div class="wrapper">
     <div class="grid">
       {#each filteredBrushes as group}
@@ -104,6 +123,11 @@
 
 <style>
   .search {
+    position: relative;
+    font-size: 1.375rem;
+    line-height: 1em;
+  }
+  .search .input {
     box-sizing: border-box;
     border: 0;
     margin: 0;
@@ -111,13 +135,20 @@
     outline: 0;
     color: inherit;
     font-family: inherit;
-    font-size: 1.375rem;
-    line-height: 1em;
+    font-size: inherit;
+    line-height: inherit;
     background: transparent;
     width: 100%;
     border-bottom: 2px solid rgba(255, 255, 255, 0.05);
   }
-  .search::placeholder {
+  .search .input::placeholder {
+    color: #aaa;
+  }
+  .result {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translate(0, -50%);
     color: #aaa;
   }
   .wrapper {
