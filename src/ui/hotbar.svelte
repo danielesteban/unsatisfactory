@@ -63,7 +63,7 @@
     color: #999;
   }
   .slot.enabled {
-    border-color: rgb(85, 85, 153);
+    border-color: rgba(90, 255, 90, .5);
   }
   .slot > div {
     display: flex;
@@ -71,12 +71,12 @@
     justify-content: center;
   }
   .key {
-    border-radius: 0.25rem 0.25rem 0 0;
+    border-radius: 0.1875rem 0.1875rem 0 0;
     background: rgba(0, 0, 0, .2);
   }
   .slot.enabled .key {
     color: #eee;
-    background: rgba(85, 85, 153, .4);
+    background: rgba(90, 255, 90, .5);
   }
   .brush {
     height: 2.5rem;
