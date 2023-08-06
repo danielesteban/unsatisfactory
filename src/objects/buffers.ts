@@ -32,7 +32,7 @@ export class Buffer extends Container<BufferEvent> {
   }
 
   override canInput(item: Item) {
-    return this.sink ? true : super.canInput(item);
+    return this.sink || super.canInput(item);
   }
 
   override input(item: Item) {

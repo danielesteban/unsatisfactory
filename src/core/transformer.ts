@@ -13,28 +13,18 @@ class Transformer extends PoweredContainer<
     data: Recipe;
   }
 > {
-  private readonly outputItems: Item[];
+  private readonly counts: { input: 0, output: 0 };
   private recipe: Recipe;
   private readonly sfx: SFX;
   private sound?: PositionalAudio;
   private tick: number;
 
   constructor(position: Vector3, rotation: number, recipe: Recipe, sfx: SFX) {
-    super(position, rotation, 0, 10);
-    this.outputItems = [];
+    super(position, rotation, 10, 10);
+    this.counts = { input: 0, output: 0 };
     this.recipe = recipe;
     this.sfx = sfx;
     this.tick = 0;
-  }
-
-  getRecipe() {
-    return this.recipe;
-  }
-
-  setRecipe(recipe: Recipe) {
-    this.items.length = 0;
-    this.recipe = recipe;
-    this.dispatchEvent({ type: 'recipe', data: recipe });
   }
 
   override dispose() {
@@ -44,43 +34,57 @@ class Transformer extends PoweredContainer<
   }
 
   override canInput(item: Item) {
-    const { enabled, items, recipe } = this;
-    return !!(
-      enabled
-      && recipe.input.item === item
-      && items.length < recipe.input.count
-    );
+    const { capacity, counts, enabled, recipe } = this;
+    return enabled && counts.input < capacity && recipe.input.item === item;
+  }
+
+  override input() {
+    const { counts } = this;
+    counts.input++;
   }
 
   override getOutput() {
-    const { items, recipe, outputItems, position, tick, sfx } = this;
-    if (outputItems.length) {
-      return outputItems.pop()!;
+    const { counts, recipe } = this;
+    if (counts.output > 0) {
+      counts.output--;
+      return recipe.output.item;
     }
-    if (tick < recipe.rate) {
-      return Item.none;
+    return Item.none;
+  }
+
+  override output(belt: Belt) {
+    this.process();
+    return super.output(belt);
+  }
+
+  private process() {
+    const { counts, enabled, position, powered, recipe, sfx } = this;
+    if (
+      !enabled
+      || !powered
+      || counts.input < recipe.input.count
+      || ++this.tick < recipe.rate
+    ) {
+      return;
     }
     this.tick = 0;
     if (!this.sound?.isPlaying) {
       this.sound = sfx.playAt('machine', position, Math.random() * 0.1, (Math.random() - 0.5) * 1200);
     }
-    items.length = 0;
-    for (let i = 0; i < recipe.output.count; i++) {
-      outputItems.unshift(recipe.output.item);
-    }
-    return outputItems.pop()!;
+    counts.input -= recipe.input.count;
+    counts.output += recipe.output.count;
   }
 
-  override output(belt: Belt) {
-    const { enabled, items, powered, recipe } = this;
-    if (
-      enabled
-      && powered
-      && items.length >= recipe.input.count
-    ) {
-      this.tick++;
-    }
-    return super.output(belt);
+  getRecipe() {
+    return this.recipe;
+  }
+
+  setRecipe(recipe: Recipe) {
+    this.counts.input = 0;
+    this.counts.output = 0;
+    this.recipe = recipe;
+    this.tick = 0;
+    this.dispatchEvent({ type: 'recipe', data: recipe });
   }
 
   override serialize() {

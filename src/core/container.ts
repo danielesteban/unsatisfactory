@@ -32,9 +32,7 @@ class Container<Events extends BaseEvent = BaseEvent> extends Instance<Events> {
 
   input(item: Item) {
     const { items } = this;
-    if (item !== Item.none) {
-      items.unshift(item);
-    }
+    items.unshift(item);
   }
 
   protected getOutput() {
