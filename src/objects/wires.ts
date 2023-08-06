@@ -43,15 +43,15 @@ export class Wire extends Mesh {
     this.matrixAutoUpdate = false;
     this.from = from;
     this.to = to;
-    from.addConnection(to);
-    to.addConnection(from);
+    from.addWire(this);
+    to.addWire(this);
   }
 
   dispose() {
     const { geometry, from, to } = this;
     geometry.dispose();
-    from.removeConnection(to);
-    to.removeConnection(from);
+    from.removeWire(this);
+    to.removeWire(this);
   }
 }
 

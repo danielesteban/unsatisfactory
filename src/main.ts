@@ -201,33 +201,13 @@ const create = (intersection: Intersection<Object3D<Event>>) => {
 const remove = (intersection: Intersection<Object3D<Event>>) => {
   if (intersection.object instanceof Instances) {
     const instance = intersection.object.getInstance(intersection.instanceId!);
-
-    if (instance instanceof PoweredContainer) {
-      // @dani incomplete
-      // Here it could prolly use the instance.getConnections()
-      // But since there's not a similar method yet for getting
-      // the connected belts in Container, and for consistency,
-      // I rather keep both removals the same until then.
-      (wires.children as Wire[])
-        .reduce((connected, wire) => {
-          if (wire.from === instance || wire.to === instance) {
-            connected.push(wire);
-          }
-          return connected;
-        }, [] as Wire[])
-        .forEach((wire) => wires.remove(wire));
-    }
     if (instance instanceof Container) {
-      (belts.children as Belt[])
-        .reduce((connected, belt) => {
-          if (belt.from.container === instance || belt.to.container === instance) {
-            connected.push(belt);
-          }
-          return connected;
-        }, [] as Belt[])
-        .forEach((belt) => belts.remove(belt));
+      const { input, output } = instance.getBelts();
+      [...input, ...output].forEach((belt) => belts.remove(belt));
     }
-
+    if (instance instanceof PoweredContainer) {
+      [...instance.getWires()].forEach((wire) => wires.remove(wire));
+    }
     intersection.object.removeInstance(instance);
     return;
   }

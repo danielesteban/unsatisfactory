@@ -6,6 +6,7 @@ import {
 import { Instance } from './instances';
 import { Belt } from '../objects/belts';
 import { Item } from '../objects/items';
+import { Wire } from '../objects/wires';
 
 class Container<Events extends BaseEvent = BaseEvent> extends Instance<Events> {
   protected readonly belts: {
@@ -22,19 +23,6 @@ class Container<Events extends BaseEvent = BaseEvent> extends Instance<Events> {
     this.capacity = capacity;
     this.items = items;
     this.outputBelt = 0;
-  }
-
-  addBelt(belt: Belt, type: 'input' | 'output') {
-    const { belts } = this;
-    belts[type].push(belt);
-  }
-
-  removeBelt(belt: Belt, type: 'input' | 'output') {
-    const { belts } = this;
-    const index = belts[type].indexOf(belt);
-    if (index !== -1) {
-      belts[type].splice(index, 1);
-    }
   }
 
   canInput(_item: Item) {
@@ -73,6 +61,24 @@ class Container<Events extends BaseEvent = BaseEvent> extends Instance<Events> {
   getConnector(direction: Vector3, offset: Vector3) {
     return this.position.clone().addScaledVector(direction, 0.75).add(offset);
   }
+
+  getBelts() {
+    const { belts } = this;
+    return belts;
+  }
+
+  addBelt(belt: Belt, type: 'input' | 'output') {
+    const { belts } = this;
+    belts[type].push(belt);
+  }
+
+  removeBelt(belt: Belt, type: 'input' | 'output') {
+    const { belts } = this;
+    const index = belts[type].indexOf(belt);
+    if (index !== -1) {
+      belts[type].splice(index, 1);
+    }
+  }
 };
 
 export class PoweredContainer<Events extends BaseEvent = BaseEvent> extends Container<
@@ -88,36 +94,19 @@ export class PoweredContainer<Events extends BaseEvent = BaseEvent> extends Cont
 > {
   protected connections: PoweredContainer[];
   protected readonly consumption: number;
-  protected readonly maxConnections: number;
   protected enabled: boolean;
+  protected readonly maxConnections: number;
   protected powered: boolean;
+  protected wires: Wire[];
 
   constructor(position: Vector3, rotation: number, capacity: number, consumption: number, maxConnections: number = 1, items: Item[] = []) {
     super(position, rotation, capacity, items);
     this.connections = [];
     this.consumption = consumption;
-    this.maxConnections = maxConnections;
     this.enabled = true;
+    this.maxConnections = maxConnections;
     this.powered = false;
-  }
-
-  canWire() {
-    return this.connections.length < this.maxConnections;
-  }
-
-  addConnection(container: PoweredContainer) {
-    this.connections.push(container);
-  }
-
-  removeConnection(container: PoweredContainer) {
-    const index = this.connections.indexOf(container);
-    if (index !== -1) {
-      this.connections.splice(index, 1);
-    }
-  }
-
-  getConnections() {
-    return this.connections;
+    this.wires = [];
   }
 
   override canInput(item: Item) {
@@ -148,6 +137,36 @@ export class PoweredContainer<Events extends BaseEvent = BaseEvent> extends Cont
   setPowered(status: boolean) {
     this.powered = status;
     this.dispatchEvent({ type: 'powered', status });
+  }
+
+  getConnections() {
+    return this.connections;
+  }
+
+  getWires() {
+    return this.wires;
+  }
+
+  canWire() {
+    return this.connections.length < this.maxConnections;
+  }
+
+  addWire(wire: Wire) {
+    const { connections, wires } = this;
+    wires.push(wire);
+    connections.push(wire.from === this ? wire.to : wire.from);
+  }
+
+  removeWire(wire: Wire) {
+    const { connections, wires } = this;
+    let index = wires.indexOf(wire);
+    if (index !== -1) {
+      wires.splice(index, 1);
+      index = connections.indexOf(wire.from === this ? wire.to : wire.from);
+      if (index !== -1) {
+        connections.splice(index, 1);
+      }
+    }
   }
 
   override serialize() {

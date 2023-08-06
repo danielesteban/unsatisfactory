@@ -20,7 +20,7 @@ class Transformer extends PoweredContainer<
   private tick: number;
 
   constructor(position: Vector3, rotation: number, recipe: Recipe, sfx: SFX) {
-    super(position, rotation, 0, 0);
+    super(position, rotation, 0, 10);
     this.outputItems = [];
     this.recipe = recipe;
     this.sfx = sfx;
