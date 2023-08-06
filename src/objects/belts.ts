@@ -67,12 +67,16 @@ export class Belt extends Mesh {
     this.slots = Array.from({ length: Math.ceil(path.getLength() / 0.5) }, () => ({ item: Item.none, locked: false }));
     this.items = new Items(this.slots.length, path);
     this.add(this.items);
+    from.container.addBelt(this, 'output');
+    to.container.addBelt(this, 'input');
   }
 
   dispose() {
-    const { geometry, items } = this;
+    const { geometry, items, from, to } = this;
     geometry.dispose();
     items.dispose();
+    from.container.removeBelt(this, 'output');
+    to.container.removeBelt(this, 'input');
   }
 
   animate(step: number) {
@@ -80,6 +84,10 @@ export class Belt extends Mesh {
     if (enabled) {
       items.animate(slots, step);
     }
+  }
+
+  isEnabled() {
+    return this.enabled;
   }
 
   step() {
@@ -104,7 +112,7 @@ export class Belt extends Mesh {
         }
       }
       if (slots[0].item === Item.none) {
-        slots[0].item = from.container.output();
+        slots[0].item = from.container.output(this);
         slots[0].locked = false;
         isSaturated = false;
       }

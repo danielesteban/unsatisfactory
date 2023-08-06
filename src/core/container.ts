@@ -4,16 +4,37 @@ import {
   Vector3,
 } from 'three';
 import { Instance } from './instances';
+import { Belt } from '../objects/belts';
 import { Item } from '../objects/items';
 
 class Container<Events extends BaseEvent = BaseEvent> extends Instance<Events> {
+  protected readonly belts: {
+    input: Belt[];
+    output: Belt[];
+  };
   protected readonly capacity: number;
   protected readonly items: Item[];
+  protected outputBelt: number;
 
   constructor(position: Vector3, rotation: number, capacity: number, items: Item[] = []) {
     super(position, rotation);
+    this.belts = { input: [], output: [] };
     this.capacity = capacity;
     this.items = items;
+    this.outputBelt = 0;
+  }
+
+  addBelt(belt: Belt, type: 'input' | 'output') {
+    const { belts } = this;
+    belts[type].push(belt);
+  }
+
+  removeBelt(belt: Belt, type: 'input' | 'output') {
+    const { belts } = this;
+    const index = belts[type].indexOf(belt);
+    if (index !== -1) {
+      belts[type].splice(index, 1);
+    }
   }
 
   canInput(_item: Item) {
@@ -28,9 +49,25 @@ class Container<Events extends BaseEvent = BaseEvent> extends Instance<Events> {
     }
   }
 
-  output() {
+  protected getOutput() {
     const { items } = this;
     return items.pop() || Item.none;
+  }
+
+  output(belt: Belt) {
+    const { belts: { output: belts }, outputBelt } = this;
+    if (belts.length <= 1) {
+      return this.getOutput();
+    }
+    const output = (
+      outputBelt < belts.length
+      && belts[outputBelt] !== belt
+      && belts[outputBelt].isEnabled()
+    ) ? Item.none : this.getOutput();
+    if (output !== Item.none) {
+      this.outputBelt = (belts.indexOf(belt) + 1) % belts.length;
+    }
+    return output;
   }
 
   getConnector(direction: Vector3, offset: Vector3) {

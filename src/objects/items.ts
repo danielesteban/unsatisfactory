@@ -73,7 +73,7 @@ export const Recipes: Recipe[] = [
     },
     output: {
       item: Item.cylinder,
-      count: 1,
+      count: 2,
     },
     rate: 2,
     transformer: Transformer.fabricator,
@@ -85,7 +85,7 @@ export const Recipes: Recipe[] = [
     },
     output: {
       item: Item.box,
-      count: 1,
+      count: 2,
     },
     rate: 2,
     transformer: Transformer.fabricator,

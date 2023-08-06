@@ -4,6 +4,7 @@ import {
 } from 'three';
 import { PoweredContainer } from './container';
 import SFX from './sfx';
+import { Belt } from '../objects/belts';
 import { Item, Recipe, Recipes } from '../objects/items';
 
 class Transformer extends PoweredContainer<
@@ -19,7 +20,7 @@ class Transformer extends PoweredContainer<
   private tick: number;
 
   constructor(position: Vector3, rotation: number, recipe: Recipe, sfx: SFX) {
-    super(position, rotation, 0, 10);
+    super(position, rotation, 0, 0);
     this.outputItems = [];
     this.recipe = recipe;
     this.sfx = sfx;
@@ -51,17 +52,12 @@ class Transformer extends PoweredContainer<
     );
   }
 
-  override output() {
-    const { enabled, items, powered, recipe, outputItems, position, sfx } = this;
+  override getOutput() {
+    const { items, recipe, outputItems, position, tick, sfx } = this;
     if (outputItems.length) {
       return outputItems.pop()!;
     }
-    if (
-      !enabled
-      || !powered
-      || items.length < recipe.input.count
-      || ++this.tick < recipe.rate
-    ) {
+    if (tick < recipe.rate) {
       return Item.none;
     }
     this.tick = 0;
@@ -73,6 +69,18 @@ class Transformer extends PoweredContainer<
       outputItems.unshift(recipe.output.item);
     }
     return outputItems.pop()!;
+  }
+
+  override output(belt: Belt) {
+    const { enabled, items, powered, recipe } = this;
+    if (
+      enabled
+      && powered
+      && items.length >= recipe.input.count
+    ) {
+      this.tick++;
+    }
+    return super.output(belt);
   }
 
   override serialize() {
