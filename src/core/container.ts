@@ -55,15 +55,16 @@ class Container<Events extends BaseEvent = BaseEvent> extends Instance<Events> {
   }
 
   output(belt: Belt) {
-    const { belts: { output: belts }, outputBelt } = this;
+    const { belts: { output: outputBelts }, outputBelt } = this;
+    const belts = outputBelts.filter((belt) => belt.isEnabled());
     if (belts.length <= 1) {
       return this.getOutput();
     }
-    const output = (
-      outputBelt < belts.length
-      && belts[outputBelt] !== belt
-      && belts[outputBelt].isEnabled()
-    ) ? Item.none : this.getOutput();
+    const output = belts[outputBelt % belts.length] !== belt ? (
+      Item.none
+    ) : (
+      this.getOutput()
+    );
     if (output !== Item.none) {
       this.outputBelt = (belts.indexOf(belt) + 1) % belts.length;
     }
