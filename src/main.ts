@@ -128,7 +128,7 @@ const canWire = (intersection: Intersection<Object3D<Event>>) => {
     return false;
   }
   const instance = intersection.object.getInstance(intersection.instanceId!);
-  return instance.canWire() && (!from.container || from.container !== instance);
+  return instance.canWire(from.container as PoweredContainer);
 };
 
 const quaternion = new Quaternion();

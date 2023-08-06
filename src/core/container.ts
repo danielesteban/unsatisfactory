@@ -63,8 +63,7 @@ class Container<Events extends BaseEvent = BaseEvent> extends Instance<Events> {
   }
 
   getBelts() {
-    const { belts } = this;
-    return belts;
+    return this.belts;
   }
 
   addBelt(belt: Belt, type: 'input' | 'output') {
@@ -147,8 +146,15 @@ export class PoweredContainer<Events extends BaseEvent = BaseEvent> extends Cont
     return this.wires;
   }
 
-  canWire() {
-    return this.connections.length < this.maxConnections;
+  canWire(container?: PoweredContainer) {
+    const { connections, maxConnections } = this;
+    return (
+      connections.length < maxConnections
+      && (
+        !container
+        || (container !== this && !connections.includes(container))
+      )
+    );
   }
 
   addWire(wire: Wire) {
