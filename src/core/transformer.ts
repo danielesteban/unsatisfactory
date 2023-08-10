@@ -20,7 +20,7 @@ class Transformer extends PoweredContainer<
   private tick: number;
 
   constructor(position: Vector3, rotation: number, recipe: Recipe, sfx: SFX) {
-    super(position, rotation, 10, 10);
+    super(position, rotation, 0, 10);
     this.counts = { input: 0, output: 0 };
     this.recipe = recipe;
     this.sfx = sfx;
@@ -34,8 +34,8 @@ class Transformer extends PoweredContainer<
   }
 
   override canInput(item: Item) {
-    const { capacity, counts, enabled, recipe } = this;
-    return enabled && counts.input < capacity && recipe.input.item === item;
+    const { counts, enabled, recipe } = this;
+    return enabled && item === recipe.input.item && counts.input < recipe.input.count;
   }
 
   override input() {

@@ -2,14 +2,13 @@ import {
   BoxGeometry,
   BufferGeometry,
   CylinderGeometry,
-  Mesh,
   MeshStandardMaterial,
   Object3D,
   Quaternion,
   SRGBColorSpace,
   Vector3,
 } from 'three';
-import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { mergeGeometries, mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 import Instances from '../core/instances';
 import SFX from '../core/sfx';
@@ -98,7 +97,7 @@ class Smelters extends Instances<Smelter> {
       connector.position.copy(pole.position).add(new Vector3(0, 0.375, 0));
       connector.updateMatrixWorld();
       brush = csgEvaluator.evaluate(brush, connector, ADDITION);
-      Smelters.geometry = (brush! as Mesh).geometry;
+      Smelters.geometry = mergeVertices(brush.geometry);
       Smelters.geometry.computeBoundingSphere();
     }
     return Smelters.geometry;

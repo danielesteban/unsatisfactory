@@ -44,9 +44,10 @@ class Instances<InstanceType extends Instance> extends InstancedMesh {
   private static scale: Vector3 = new Vector3(1, 1, 1);
   private static transform: Matrix4 = new Matrix4();
 
-  constructor(geometry: BufferGeometry, material: Material, collider?: BufferGeometry) {
+  constructor(geometry: BufferGeometry, material: Material, collider?: BufferGeometry, depthMaterial?: Material) {
     super(geometry, material, 16);
     this.castShadow = this.receiveShadow = true;
+    this.customDepthMaterial = depthMaterial;
     this.updateMatrixWorld();
     this.matrixAutoUpdate = false;
     this.visible = false;

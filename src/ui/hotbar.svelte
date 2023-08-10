@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { derived } from 'svelte/store';
   import { Brush, set, subscribe } from '../core/brush';
   import slots from './stores/hotbar';
   import Capture from './capture';
@@ -14,11 +15,13 @@
     const brush = slot >= $slots.length ? Brush.none : $slots[slot];
     set($current === brush ? Brush.none : brush);
   };
+
+  const isEmpty = derived([slots], ([$slots]) => $slots.findIndex((brush) => brush !== Brush.none) === -1);
 </script>
 
 <svelte:document on:keydown={keydown} />
 
-<div class="hotbar">
+<div class="hotbar" class:empty={$isEmpty}>
   {#each $slots as id, index}
     <div class="slot" class:enabled={id !== Brush.none && $current === id}>
       <div class="key">{index + 1}</div>
@@ -48,7 +51,13 @@
     z-index: 2;
     display: none;
   }
-  :global(body.hotbar) .hotbar, :global(body.pointerlock) .hotbar {
+  :global(body.pointerlock) .hotbar {
+    display: flex;
+  }
+  :global(body.pointerlock) .hotbar.empty {
+    display: none;
+  }
+  :global(body.hotbar) .hotbar {
     display: flex;
   }
 

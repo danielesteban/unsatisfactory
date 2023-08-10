@@ -5,19 +5,39 @@ import Buffers, { Buffer } from '../objects/buffers';
 import Fabricators, { Fabricator } from '../objects/fabricators';
 import Foundations from '../objects/foundations';
 import Generators, { Generator }  from '../objects/generators';
-import { Recipes }  from '../objects/items';
+import { Item, Recipes }  from '../objects/items';
 import Miners, { Miner } from '../objects/miners';
 import Poles, { Pole } from '../objects/poles';
 import Smelters, { Smelter } from '../objects/smelters';
 import Walls from '../objects/walls';
 import Wires, { Wire } from '../objects/wires';
 
-export const version = 2;
+const version = 3;
+
+type SerializedConnection = [number, number];
+type SerializedDirection = [number, number, number];
+type SerializedEnabled = 0 | 1;
+type SerializedPosition = [number, number, number];
+
+type Serialized = {
+  belts: [SerializedConnection, SerializedDirection, SerializedConnection, SerializedDirection][];
+  buffers: [SerializedPosition, number, SerializedEnabled][];
+  fabricators: [SerializedPosition, number, SerializedEnabled, number][];
+  foundations: [SerializedPosition, number][];
+  generators: [SerializedPosition, number, SerializedEnabled][];
+  miners: [SerializedPosition, number, SerializedEnabled, Item][];
+  poles: [SerializedPosition, number][];
+  smelters: [SerializedPosition, number, SerializedEnabled, number][];
+  walls: [SerializedPosition, number][];
+  wires: [SerializedConnection, SerializedConnection][];
+  camera: [SerializedPosition, [number, number, number]];
+  version: number;
+};
 
 export const serialize = (
   belts: Belts, buffers: Buffers, fabricators: Fabricators, foundations: Foundations, generators: Generators, miners: Miners, poles: Poles, smelters: Smelters, walls: Walls, wires: Wires,
   camera: Camera
-) => {
+): Serialized => {
   const containers = new WeakMap<Container, number>();
   const serializeInstances = (instances: Buffers | Fabricators | Foundations | Generators | Miners | Poles | Smelters | Walls) => (
     Array.from({ length: instances.count }, (_v, i) => {
@@ -51,69 +71,73 @@ export const serialize = (
     return [key, containers.get(instance)];
   };
   return {
-    buffers: serializeInstances(buffers),
-    fabricators: serializeInstances(fabricators),
-    foundations: serializeInstances(foundations),
-    generators: serializeInstances(generators),
-    miners: serializeInstances(miners),
-    poles: serializeInstances(poles),
-    smelters: serializeInstances(smelters),
-    walls: serializeInstances(walls),
+    buffers: serializeInstances(buffers) as Serialized['buffers'],
+    fabricators: serializeInstances(fabricators) as Serialized['fabricators'],
+    foundations: serializeInstances(foundations) as Serialized['foundations'],
+    generators: serializeInstances(generators) as Serialized['generators'],
+    miners: serializeInstances(miners) as Serialized['miners'],
+    poles: serializeInstances(poles) as Serialized['poles'],
+    smelters: serializeInstances(smelters) as Serialized['smelters'],
+    walls: serializeInstances(walls) as Serialized['walls'],
     belts: (belts.children as Belt[]).map((belt) => [
       serializeContainer(belt.from.container),
       belt.from.direction.toArray(),
       serializeContainer(belt.to.container),
       belt.to.direction.toArray(),
-    ]),
+    ]) as Serialized['belts'],
     wires: (wires.children as Wire[]).map((wire) => [
       serializeContainer(wire.from),
       serializeContainer(wire.to),
-    ]),
-    camera: [camera.position.toArray(), camera.rotation.toArray().slice(0, 3)],
+    ]) as Serialized['wires'],
+    camera: [camera.position.toArray(), camera.rotation.toArray().slice(0, 3)] as Serialized['camera'],
     version,
   };
 };
 
 export const deserialize = (
-  serialized: ReturnType<typeof serialize>,
+  serialized: Serialized,
   belts: Belts, buffers: Buffers, fabricators: Fabricators, foundations: Foundations, generators: Generators, miners: Miners, poles: Poles, smelters: Smelters, walls: Walls, wires: Wires,
   camera: Camera
 ) => {
+  serialized = migrate(serialized);
+  if (serialized.version !== version) {
+    return false;
+  }
   const aux = new Vector3();
   const auxB = new Vector3();
   const containers = [
-    (serialized.buffers as [number[], number, number][]).map(([position, rotation, sink]) => {
+    serialized.buffers.map(([position, rotation, sink]) => {
       const buffer = buffers.create(aux.fromArray(position), rotation);
       if (sink) {
         buffer.setSink(true);
       }
       return buffer;
     }),
-    (serialized.fabricators as [number[], number, number, number][]).map(([position, rotation, enabled, recipe]) => {
+    serialized.fabricators.map(([position, rotation, enabled, recipe]) => {
       const fabricator = fabricators.create(aux.fromArray(position), rotation, Recipes[recipe]);
       if (!enabled) {
         fabricator.setEnabled(false);
       }
       return fabricator;
     }),
-    (serialized.generators as [number[], number, number][]).map(([position, rotation, enabled]) => {
+    serialized.generators.map(([position, rotation, enabled]) => {
       const generator = generators.create(aux.fromArray(position), rotation)
       if (!enabled) {
         generator.setEnabled(false);
       }
       return generator;
     }),
-    (serialized.miners as [number[], number, number, number][]).map(([position, rotation, enabled, item]) => {
+    serialized.miners.map(([position, rotation, enabled, item]) => {
       const miner = miners.create(aux.fromArray(position), rotation, item);
       if (!enabled) {
         miner.setEnabled(false);
       }
       return miner;
     }),
-    (serialized.poles as [number[], number][]).map(([position, rotation]) => (
+    serialized.poles.map(([position, rotation]) => (
       poles.create(aux.fromArray(position), rotation)
     )),
-    (serialized.smelters as [number[], number, number, number][]).map(([position, rotation, enabled, recipe]) => {
+    serialized.smelters.map(([position, rotation, enabled, recipe]) => {
       const smelter = smelters.create(aux.fromArray(position), rotation, Recipes[recipe]);
       if (!enabled) {
         smelter.setEnabled(false);
@@ -121,31 +145,32 @@ export const deserialize = (
       return smelter;
     }),
   ];
-  (serialized.foundations as [number[], number][]).forEach(([position, rotation]) => (
+  serialized.foundations.forEach(([position, rotation]) => (
     foundations.create(aux.fromArray(position), rotation)
   ));
-  (serialized.walls as [number[], number][]).forEach(([position, rotation]) => (
+  serialized.walls.forEach(([position, rotation]) => (
     walls.create(aux.fromArray(position), rotation)
   ));
-  (serialized.belts as [number[], number[], number[], number[]][]).forEach(([from, fromDirection, to, toDirection]) => (
+  serialized.belts.forEach(([from, fromDirection, to, toDirection]) => (
     belts.create(
       { container: containers[from[0]][from[1]], direction: aux.fromArray(fromDirection) },
       { container: containers[to[0]][to[1]], direction: auxB.fromArray(toDirection) },
     )
   ));
-  (serialized.wires as [number[], number[]][]).forEach(([from, to]) => (
+  serialized.wires.forEach(([from, to]) => (
     wires.create(
       containers[from[0]][from[1]] as PoweredContainer,
       containers[to[0]][to[1]] as PoweredContainer,
     )
   ));
-  camera.position.fromArray(serialized.camera[0] as number[]);
+  camera.position.fromArray(serialized.camera[0]);
   camera.userData.targetPosition.copy(camera.position);
-  camera.rotation.fromArray(serialized.camera[1] as [number, number, number]);
+  camera.rotation.fromArray(serialized.camera[1]);
   camera.userData.targetRotation.copy(camera.rotation);
+  return true;
 };
 
-export const load = () => new Promise((resolve, reject) => {
+export const load = () => new Promise<Serialized>((resolve, reject) => {
   const loader = document.createElement('input');
   loader.type = 'file';
   loader.accept = '.json';
@@ -154,25 +179,56 @@ export const load = () => new Promise((resolve, reject) => {
       return;
     }
     const url = URL.createObjectURL(file);
-    fetch(url).then((r) => r.json()).then((serialized) => {
-      if (serialized.version !== version) {
-        throw new Error();
-      }
-      return serialized;
-    })
-    .then(resolve)
-    .catch(reject)
-    .finally(() => URL.revokeObjectURL(url));
+    fetch(url)
+      .then((r) => r.json())
+      .then((serialized: Serialized) => {
+        serialized = migrate(serialized);
+        if (serialized.version !== version) {
+          throw new Error();
+        }
+        return serialized;
+      })
+      .then(resolve)
+      .catch(reject)
+      .finally(() => URL.revokeObjectURL(url));
   });
   loader.click();
 });
 
 export const download = (
-  serialized: ReturnType<typeof serialize>
+  serialized: Serialized
 ) => {
   const downloader = document.createElement('a');
   const blob = new Blob([JSON.stringify(serialized)], { type: 'application/json' });
   downloader.href = URL.createObjectURL(blob);
   downloader.download = 'unsatisfactory.json';
   downloader.click();
+};
+
+const migrate = (
+  serialized: Serialized
+) => {
+  let migration;
+  while (migration = migrations[serialized.version]) {
+    serialized = migration(serialized);
+  }
+  return serialized;
+};
+
+const migrations: Record<number, (serialized: Serialized) => Serialized> = {
+  [2]: (serialized: Serialized) => {
+    return {
+      ...serialized,
+      generators: serialized.generators.map(([position, rotation, enabled]) => ([
+        [position[0], position[1] + 5, position[2]],
+        rotation,
+        enabled,
+      ])),
+      poles: serialized.poles.map(([position, rotation]) => ([
+        [position[0], position[1] + 0.5, position[2]],
+        rotation,
+      ])),
+      version: 3,
+    };
+  },
 };

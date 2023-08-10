@@ -1,7 +1,6 @@
 import {
   BoxGeometry,
   BufferGeometry,
-  CapsuleGeometry,
   Curve,
   CylinderGeometry,
   DynamicDrawUsage,
@@ -24,16 +23,16 @@ import RoughnessMap from '../textures/rust_coarse_01_rough_1k.jpg';
 export enum Item {
   none,
   box,
-  capsule,
   cylinder,
+  ingot,
   ore,
 }
 
 export const ItemName = {
   [Item.none]: 'None',
   [Item.box]: 'Box',
-  [Item.capsule]: 'Capsule',
   [Item.cylinder]: 'Cylinder',
+  [Item.ingot]: 'Ingot',
   [Item.ore]: 'Ore',
 };
 
@@ -60,34 +59,34 @@ export const Recipes: Recipe[] = [
       count: 1,
     },
     output: {
-      item: Item.capsule,
+      item: Item.ingot,
       count: 1,
     },
-    rate: 1,
+    rate: 10,
     transformer: Transformer.smelter,
   },
   {
     input: {
-      item: Item.capsule,
+      item: Item.ingot,
       count: 1,
     },
     output: {
       item: Item.cylinder,
-      count: 2,
+      count: 1,
     },
-    rate: 2,
+    rate: 10,
     transformer: Transformer.fabricator,
   },
   {
     input: {
-      item: Item.capsule,
+      item: Item.ingot,
       count: 1,
     },
     output: {
       item: Item.box,
       count: 2,
     },
-    rate: 2,
+    rate: 10,
     transformer: Transformer.fabricator,
   }
 ];
@@ -132,21 +131,20 @@ class Items extends Group {
     const box = new BoxGeometry(0.25, 0.25, 0.25);
     box.translate(0, 0.125, 0);
     box.computeBoundingSphere();
-    const capsule = new CapsuleGeometry(0.125, 0.125);
-    capsule.rotateZ(Math.PI * 0.5);
-    capsule.translate(0, 0.125, 0);
-    capsule.computeBoundingSphere();
     const cylinder = new CylinderGeometry(0.125, 0.125, 0.25);
     cylinder.translate(0, 0.125, 0);
     cylinder.computeBoundingSphere();
+    const ingot = new BoxGeometry(0.5, 0.125, 0.25);
+    ingot.translate(0, 0.0625, 0);
+    ingot.computeBoundingSphere();
     const ore = new TetrahedronGeometry(0.2, 2);
     ore.scale(1.5, 1, 1);
     ore.translate(0, 0.2, 0);
     ore.computeBoundingSphere();
     Items.geometries = {
       [Item.box]: box,
-      [Item.capsule]: capsule,
       [Item.cylinder]: cylinder,
+      [Item.ingot]: ingot,
       [Item.ore]: ore,
     };
   }
@@ -170,8 +168,8 @@ class Items extends Group {
       });
       Items.materials = {
         [Item.box]: processed,
-        [Item.capsule]: raw,
         [Item.cylinder]: processed,
+        [Item.ingot]: raw,
         [Item.ore]: raw,
       };
     }
@@ -208,8 +206,8 @@ class Items extends Group {
     this.matrixAutoUpdate = false;
     this.instances = {
       [Item.box]: undefined,
-      [Item.capsule]: undefined,
       [Item.cylinder]: undefined,
+      [Item.ingot]: undefined,
       [Item.ore]: undefined,
     };
     this.path = path;

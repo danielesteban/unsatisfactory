@@ -2,13 +2,12 @@ import {
   BoxGeometry,
   BufferGeometry,
   CylinderGeometry,
-  Mesh,
   MeshStandardMaterial,
-  Object3D,
   PositionalAudio,
   SRGBColorSpace,
   Vector3,
 } from 'three';
+import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 import Instances from '../core/instances';
 import { PoweredContainer } from '../core/container';
@@ -69,10 +68,6 @@ export class Miner extends PoweredContainer {
       .add(offset);
   }
 
-  override getWireConnector(): Vector3 {
-    return this.position.clone().addScaledVector(Object3D.DEFAULT_UP, 2.5);
-  }
-
   override serialize() {
     const { item } = this;
     return [
@@ -118,7 +113,7 @@ class Miners extends Instances<Miner> {
       connector.position.set(0, 2.5, 0);
       connector.updateMatrixWorld();
       brush = csgEvaluator.evaluate(brush, connector, ADDITION);
-      Miners.geometry = (brush! as Mesh).geometry;
+      Miners.geometry = mergeVertices(brush.geometry);
       Miners.geometry.computeBoundingSphere();
     }
     return Miners.geometry;

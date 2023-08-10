@@ -20,13 +20,11 @@ class Grass extends Mesh {
   static getGeometry() {
     if (!Grass.geometry) {
       const quad = new PlaneGeometry(0.05, 0.05, 1, 1);
-      const blade = Array.from({ length: 8 }, () => {
+      Grass.geometry = mergeGeometries(Array.from({ length: 8 }, () => {
         const q = quad.clone();
         quad.translate(0, 0.05, 0);
         return q;
-      });
-      const geometry = mergeGeometries(blade);
-      Grass.geometry = geometry;
+      }));
     }
     return Grass.geometry;
   }
@@ -39,9 +37,9 @@ class Grass extends Mesh {
       material.onBeforeCompile = (shader: Shader) => {
         shader.vertexShader = shader.vertexShader
           .replace(
-            '#include <clipping_planes_pars_vertex>',
+            '#include <common>',
             /* glsl */`
-            #include <clipping_planes_pars_vertex>
+            #include <common>
             attribute vec4 instance;
             varying vec3 tint;
             uniform float time;

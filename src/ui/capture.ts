@@ -152,11 +152,15 @@ const process = () => {
     if (brush === Brush.belt || brush === Brush.buffer) {
       zoom -= 1.5;
     }
+    if (brush === Brush.generator) {
+      zoom *= 3.0;
+    }
     if (brush === Brush.pole) {
       zoom += 0.5;
     }
+    mesh.rotation.y = brush === Brush.generator ? Math.PI * 0.5 : 0;
     camera.position.set(0, 0.5, 1).multiplyScalar(zoom);
-    camera.lookAt(0, brush === Brush.pole ? 0.5 : 0, 0);
+    camera.lookAt(0, 0, 0);
     composer.render();
     return renderer.domElement.toDataURL('jpg');
   });

@@ -2,12 +2,11 @@ import {
   BoxGeometry,
   BufferGeometry,
   CylinderGeometry,
-  Mesh,
   MeshStandardMaterial,
-  Object3D,
   SRGBColorSpace,
   Vector3,
 } from 'three';
+import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 import Instances from '../core/instances';
 import SFX from '../core/sfx';
@@ -25,10 +24,6 @@ export class Fabricator extends Transformer {
       .add(Fabricator.connectorOffset)
       .addScaledVector(direction, 1.75)
       .add(offset);
-  }
-
-  override getWireConnector(): Vector3 {
-    return this.position.clone().addScaledVector(Object3D.DEFAULT_UP, 2.5);
   }
 };
 
@@ -75,10 +70,10 @@ class Fabricators extends Instances<Fabricator> {
       pole.updateMatrixWorld();
       brush = csgEvaluator.evaluate(brush, pole, ADDITION);
       const connector = new Brush(new CylinderGeometry(0.25, 0.25, 0.5));
-      connector.position.set(0, 2.5, 0);
+      connector.position.copy(pole.position).add(new Vector3(0, 0.375, 0));
       connector.updateMatrixWorld();
       brush = csgEvaluator.evaluate(brush, connector, ADDITION);
-      Fabricators.geometry = (brush! as Mesh).geometry;
+      Fabricators.geometry = mergeVertices(brush.geometry);
       Fabricators.geometry.computeBoundingSphere();
     }
     return Fabricators.geometry;

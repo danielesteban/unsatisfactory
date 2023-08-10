@@ -2,11 +2,11 @@ import {
   BaseEvent,
   BoxGeometry,
   BufferGeometry,
-  Mesh,
   MeshStandardMaterial,
   SRGBColorSpace,
   Vector3,
 } from 'three';
+import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 import Instances from '../core/instances';
 import Container from '../core/container';
@@ -27,7 +27,7 @@ export class Buffer extends Container<BufferEvent> {
   private sink: boolean;
 
   constructor(position: Vector3, rotation: number) {
-    super(position, rotation, 3);
+    super(position, rotation, 10);
     this.sink = false;
   }
 
@@ -87,7 +87,7 @@ class Buffers extends Instances<Buffer> {
         opening.updateMatrixWorld();
         brush = csgEvaluator.evaluate(brush, opening, SUBTRACTION);
       });
-      Buffers.geometry = (brush! as Mesh).geometry;
+      Buffers.geometry = mergeVertices(brush.geometry);
       Buffers.geometry.computeBoundingSphere();
     }
     return Buffers.geometry;

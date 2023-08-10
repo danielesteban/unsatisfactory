@@ -10,7 +10,7 @@ import {
 } from 'three';
 import Viewport from './core/viewport';
 import { Brush, brush, pick, rotation, set as setBrush, snap } from './core/brush';
-import { download, load, serialize, deserialize, version } from './core/loader';
+import { download, load, serialize, deserialize } from './core/loader';
 import Belts, { Belt } from './objects/belts';
 import Buffers from './objects/buffers';
 import Container, { PoweredContainer, Connector } from './core/container';
@@ -50,6 +50,8 @@ const viewport = new Viewport();
 
 [
   Ghost.getMaterial(),
+  Generators.getMaterial(),
+  Generators.getDepthMaterial(),
   Grass.getMaterial(),
 ].forEach(viewport.setupMaterialTime.bind(viewport));
 
@@ -103,7 +105,6 @@ const canBelt = (intersection: Intersection<Object3D<Event>>) => (
   (
     intersection.object instanceof Buffers
     || intersection.object instanceof Fabricators
-    || intersection.object instanceof Generators
     || intersection.object instanceof Miners
     || intersection.object instanceof Smelters
   )
@@ -148,11 +149,11 @@ const create = (intersection: Intersection<Object3D<Event>>) => {
         return 'nope';
       }
       if (!from.container) {
-        from.container = (intersection.object as Buffers | Fabricators | Generators | Miners | Smelters).getInstance(intersection.instanceId!);
+        from.container = (intersection.object as Buffers | Fabricators | Miners | Smelters).getInstance(intersection.instanceId!);
         from.direction.copy(intersection.face!.normal);
         return 'tap';
       }
-      to.container = (intersection.object as Buffers | Fabricators | Generators | Miners | Smelters).getInstance(intersection.instanceId!);
+      to.container = (intersection.object as Buffers | Fabricators | Miners | Smelters).getInstance(intersection.instanceId!);
       to.direction.copy(intersection.face!.normal);
       quaternion.setFromAxisAngle(Object3D.DEFAULT_UP, from.container.rotation);
       from.direction.applyQuaternion(quaternion);
@@ -265,7 +266,7 @@ const handleInput = (
   }
   if (interact || secondary) {
     setBrush(Brush.none);
-    if (intersection.object) {
+    if (intersection?.object) {
       interaction(intersection);
     }
   }
@@ -345,7 +346,7 @@ const hover = (intersection: Intersection<Object3D<Event>>) => {
       || (brush === Brush.wire && canWire(intersection))
     )
   ) {
-    const instance = (intersection.object as Buffers | Fabricators | Generators | Miners | Poles | Smelters).getInstance(intersection.instanceId!);
+    const instance = (intersection.object as Instances<Instance>).getInstance(intersection.instanceId!);
     setTooltip(brush === Brush.belt ? 'belt' : 'wire', instance, from.container);
     return;
   }
@@ -391,15 +392,11 @@ const restore = () => {
     } catch (e) {
       return false;
     }
-    if (serialized.version !== version) {
-      return false;
-    }
-    deserialize(
+    return deserialize(
       serialized,
       belts, buffers, fabricators, foundations, generators, miners, poles, smelters, walls, wires,
       viewport.camera
     );
-    return true;
   }
   return false;
 };

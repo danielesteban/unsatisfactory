@@ -18,7 +18,7 @@
     "@rollup/plugin-url": "^8.0.1",
     "@types/three": "^0.155.0",
     "postcss": "^8.4.27",
-    "rollup": "^3.27.2",
+    "rollup": "^3.28.0",
     "rollup-plugin-livereload": "^2.0.5",
     "rollup-plugin-postcss": "^4.0.2",
     "rollup-plugin-serve": "^2.0.2",
