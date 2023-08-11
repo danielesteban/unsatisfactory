@@ -51,14 +51,14 @@ class Controls {
     this.target = target;
     this.velocity = 8;
     document.addEventListener('contextmenu', (e) => e.preventDefault());
-    target.addEventListener('touchstart', (e) => e.preventDefault());
+    target.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
     target.addEventListener('pointerdown', this.onPointerDown.bind(this));
     document.addEventListener('pointerlockchange', this.onLock.bind(this));
     document.addEventListener('pointermove', this.onPointerMove.bind(this));
     document.addEventListener('pointerup', this.onPointerUp.bind(this));
     document.addEventListener('keydown', this.onKeyDown.bind(this));
     document.addEventListener('keyup', this.onKeyUp.bind(this));
-    document.addEventListener('wheel', this.onWheel.bind(this));
+    document.addEventListener('wheel', this.onWheel.bind(this), { passive: false });
   }
 
   clearButtons() {
@@ -222,6 +222,9 @@ class Controls {
 
   onWheel(e: WheelEvent) {
     const { velocity, isLocked } = this;
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+    }
     if (!isLocked) {
       return;
     }
