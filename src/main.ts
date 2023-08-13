@@ -116,6 +116,23 @@ const canBelt = (intersection: Intersection<Object3D<Event>>) => (
   && (!from.container || from.container !== intersection.object.getInstance(intersection.instanceId!))
 );
 
+const interactionLimit = 12 ** 2;
+const canInteract = (intersection: Intersection<Object3D<Event>>) => {
+  if (
+    !(
+      intersection.object instanceof Buffers
+      || intersection.object instanceof Fabricators
+      || intersection.object instanceof Generators
+      || intersection.object instanceof Miners
+      || intersection.object instanceof Smelters
+    )
+  ) {
+    return false;
+  }
+  const instance = intersection.object.getInstance(intersection.instanceId!);
+  return instance.position.distanceToSquared(viewport.camera.position) <= interactionLimit;
+};
+
 const canWire = (intersection: Intersection<Object3D<Event>>) => {
   if (
     !(
@@ -223,23 +240,6 @@ const remove = (intersection: Intersection<Object3D<Event>>) => {
   return 'nope';
 };
 
-const interactionLimit = 12;
-const interaction = (intersection: Intersection<Object3D<Event>>) => {
-  if (
-    intersection.object instanceof Buffers
-    || intersection.object instanceof Fabricators
-    || intersection.object instanceof Generators
-    || intersection.object instanceof Miners
-    || intersection.object instanceof Smelters
-  ) {
-    const instance = intersection.object.getInstance(intersection.instanceId!);
-    if (instance.position.distanceTo(viewport.camera.position) <= interactionLimit) {
-      UI('container', instance);
-      return;
-    }
-  }
-};
-
 const handleInput = (
   { primary, secondary, tertiary, build, dismantle, interact }: { primary: boolean; secondary: boolean; tertiary: boolean; build: boolean; dismantle: boolean; interact: boolean; },
   intersection: Intersection<Object3D<Event>>
@@ -266,8 +266,8 @@ const handleInput = (
   }
   if (interact || secondary) {
     setBrush(Brush.none);
-    if (intersection?.object) {
-      interaction(intersection);
+    if (intersection?.object && canInteract(intersection)) {
+      UI('container', (intersection.object as Instances<Instance>).getInstance(intersection.instanceId!));
     }
   }
   if (hasFrom) {
@@ -341,6 +341,7 @@ const hover = (intersection: Intersection<Object3D<Event>>) => {
 
   if (
     intersection?.face
+    && intersection?.object
     && (
       (brush === Brush.belt && canBelt(intersection))
       || (brush === Brush.wire && canWire(intersection))
@@ -353,19 +354,11 @@ const hover = (intersection: Intersection<Object3D<Event>>) => {
 
   if (
     brush === Brush.none
-    && (
-      intersection?.object instanceof Buffers
-      || intersection?.object instanceof Fabricators
-      || intersection?.object instanceof Generators
-      || intersection?.object instanceof Miners
-      || intersection?.object instanceof Smelters
-    )
+    && intersection?.object
+    && canInteract(intersection)
   ) {
-    const instance = intersection.object.getInstance(intersection.instanceId!);
-    if (instance.position.distanceTo(viewport.camera.position) <= interactionLimit) {
-      setTooltip('configure', instance);
-      return;
-    }
+    setTooltip('configure', (intersection.object as Instances<Instance>).getInstance(intersection.instanceId!));
+    return;
   }
   setTooltip(undefined);
 };

@@ -207,9 +207,10 @@ class Terrain extends Group {
     }
     anchor.copy(aux);
 
+    const radiusSQ = radius ** 2;
     for (let i = 0, l = children.length; i < l; i++) {
       const child = children[i] as TerrainChunk;
-      if (child.chunk.distanceTo(anchor) >= radius) {
+      if (child.chunk.distanceToSquared(anchor) >= radiusSQ) {
         map.delete(`${child.chunk.x}:${child.chunk.z}`);
         pool.push(child);
         this.remove(child);

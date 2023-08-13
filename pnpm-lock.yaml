@@ -12,8 +12,8 @@ dependencies:
     specifier: ^0.155.0
     version: 0.155.0
   three-bvh-csg:
-    specifier: ^0.0.8
-    version: 0.0.8(three-mesh-bvh@0.6.3)(three@0.155.0)
+    specifier: ^0.0.9
+    version: 0.0.9(three-mesh-bvh@0.6.3)(three@0.155.0)
 
 devDependencies:
   '@rollup/plugin-html':
@@ -51,13 +51,13 @@ devDependencies:
     version: 2.0.2
   rollup-plugin-svelte:
     specifier: ^7.1.6
-    version: 7.1.6(rollup@3.28.0)(svelte@4.1.2)
+    version: 7.1.6(rollup@3.28.0)(svelte@4.2.0)
   svelte:
-    specifier: ^4.1.2
-    version: 4.1.2
+    specifier: ^4.2.0
+    version: 4.2.0
   svelte-preprocess:
     specifier: ^5.0.4
-    version: 5.0.4(postcss@8.4.27)(svelte@4.1.2)(typescript@5.1.6)
+    version: 5.0.4(postcss@8.4.27)(svelte@4.2.0)(typescript@5.1.6)
   tslib:
     specifier: ^2.6.1
     version: 2.6.1
@@ -1442,7 +1442,7 @@ packages:
       opener: 1.5.2
     dev: true
 
-  /rollup-plugin-svelte@7.1.6(rollup@3.28.0)(svelte@4.1.2):
+  /rollup-plugin-svelte@7.1.6(rollup@3.28.0)(svelte@4.2.0):
     resolution: {integrity: sha512-nVFRBpGWI2qUY1OcSiEEA/kjCY2+vAjO9BI8SzA7NRrh2GTunLd6w2EYmnMt/atgdg8GvcNjLsmZmbQs/u4SQA==}
     engines: {node: '>=10'}
     peerDependencies:
@@ -1452,7 +1452,7 @@ packages:
       '@rollup/pluginutils': 4.2.1
       resolve.exports: 2.0.2
       rollup: 3.28.0
-      svelte: 4.1.2
+      svelte: 4.2.0
     dev: true
 
   /rollup-pluginutils@2.8.2:
@@ -1571,7 +1571,7 @@ packages:
     engines: {node: '>= 0.4'}
     dev: true
 
-  /svelte-preprocess@5.0.4(postcss@8.4.27)(svelte@4.1.2)(typescript@5.1.6):
+  /svelte-preprocess@5.0.4(postcss@8.4.27)(svelte@4.2.0)(typescript@5.1.6):
     resolution: {integrity: sha512-ABia2QegosxOGsVlsSBJvoWeXy1wUKSfF7SWJdTjLAbx/Y3SrVevvvbFNQqrSJw89+lNSsM58SipmZJ5SRi5iw==}
     engines: {node: '>= 14.10.0'}
     requiresBuild: true
@@ -1615,12 +1615,12 @@ packages:
       postcss: 8.4.27
       sorcery: 0.11.0
       strip-indent: 3.0.0
-      svelte: 4.1.2
+      svelte: 4.2.0
       typescript: 5.1.6
     dev: true
 
-  /svelte@4.1.2:
-    resolution: {integrity: sha512-/evA8U6CgOHe5ZD1C1W3va9iJG7mWflcCdghBORJaAhD2JzrVERJty/2gl0pIPrJYBGZwZycH6onYf+64XXF9g==}
+  /svelte@4.2.0:
+    resolution: {integrity: sha512-kVsdPjDbLrv74SmLSUzAsBGquMs4MPgWGkGLpH+PjOYnFOziAvENVzgJmyOCV2gntxE32aNm8/sqNKD6LbIpeQ==}
     engines: {node: '>=16'}
     dependencies:
       '@ampproject/remapping': 2.2.1
@@ -1663,8 +1663,8 @@ packages:
       source-map-support: 0.5.21
     dev: true
 
-  /three-bvh-csg@0.0.8(three-mesh-bvh@0.6.3)(three@0.155.0):
-    resolution: {integrity: sha512-c09fHCTSOn82n1Q2Q9rdWL7lVvs6yaMV+APFhSRXTjtNxAjhtyng+pLoLobIPfcTOjGUQyfkqksW5Vd+sa8yRw==}
+  /three-bvh-csg@0.0.9(three-mesh-bvh@0.6.3)(three@0.155.0):
+    resolution: {integrity: sha512-HwuYa2ElQkO+AgOMXO2bsMaqXm5E6AsfIyc0XMyQ6REK2e7WEp27zZmnZJyDqwC5aLZ0djkY7SKo8ILLFXPbYg==}
     peerDependencies:
       three: '>=0.144.0'
       three-mesh-bvh: ^0.6.0
