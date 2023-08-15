@@ -9,6 +9,7 @@ import { Item, Transformer as ItemTransformer } from '../objects/items';
 import { Miner } from '../objects/miners';
 import { Smelter } from '../objects/smelters';
 import { Wire } from '../objects/wires';
+import AchievementsUI from './achievements.svelte';
 import BufferUI from './buffer.svelte';
 import BuildUI from './build.svelte';
 import CursorUI from './cursor.svelte';
@@ -100,4 +101,5 @@ export const setTooltip = (
   });
 };
 
+new AchievementsUI({ target });
 new HotbarUI({ target });

@@ -57,7 +57,7 @@ class Transformer extends PoweredContainer<
     return super.output(belt);
   }
 
-  private process() {
+  protected process() {
     const { counts, enabled, position, powered, recipe, sfx } = this;
     if (
       !enabled
@@ -65,7 +65,7 @@ class Transformer extends PoweredContainer<
       || counts.input < recipe.input.count
       || ++this.tick < recipe.rate
     ) {
-      return;
+      return false;
     }
     this.tick = 0;
     if (!this.sound?.isPlaying) {
@@ -73,6 +73,7 @@ class Transformer extends PoweredContainer<
     }
     counts.input -= recipe.input.count;
     counts.output += recipe.output.count;
+    return true;
   }
 
   getRecipe() {

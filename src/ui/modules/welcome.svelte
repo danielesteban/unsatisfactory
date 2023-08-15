@@ -60,7 +60,7 @@
     font-size: 1rem;
     width: 100%;
     height: 2.5rem;
-    background: rgba(90, 255, 90, .5);
+    background: rgba(90, 255, 90, 0.5);
   }
   .heading {
     font-size: 1rem;

@@ -29,6 +29,7 @@ import Terrain from './objects/terrain';
 import Walls from './objects/walls';
 import Wires, { Wire } from './objects/wires';
 import UI, { setTooltip } from './ui';
+import Achievements from './ui/stores/achievements';
 import Settings from './ui/settings.svelte';
 
 const viewport = new Viewport();
@@ -190,6 +191,7 @@ const create = (intersection: Intersection<Object3D<Event>>) => {
       return;
     case Brush.generator:
       generators.create(snap(intersection), rotation);
+      Achievements.complete('generator');
       return;
     case Brush.miner: {
       if (!(intersection.object instanceof Deposit)) {
@@ -203,6 +205,7 @@ const create = (intersection: Intersection<Object3D<Event>>) => {
         }
       }
       miners.create(position, rotation, intersection.object.getItem(), intersection.object.getPurity());
+      Achievements.complete('miner');
       return;
     }
     case Brush.pole:
@@ -272,6 +275,7 @@ const handleInput = (
   if (build) {
     setBrush(Brush.none);
     UI('build');
+    Achievements.complete('build');
   }
   if (dismantle) {
     setBrush(brush === Brush.dismantle ? Brush.none : Brush.dismantle);
@@ -387,6 +391,7 @@ const hover = (intersection: Intersection<Object3D<Event>>) => {
     && intersection?.object.getWorldPosition(aux).distanceToSquared(viewport.camera.position) <= interactionLimit
   ) {
     setTooltip('yield', undefined, undefined, intersection?.object.getItem(), intersection?.object.getPurity());
+    Achievements.complete('deposit');
     return;
   }
 

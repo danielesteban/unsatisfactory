@@ -16,6 +16,7 @@ import { loadTexture } from '../textures';
 import DiffuseMap from '../textures/rust_coarse_01_diff_1k.webp';
 import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.webp';
 import RoughnessMap from '../textures/rust_coarse_01_rough_1k.webp';
+import Achievements from '../ui/stores/achievements';
 
 export class Fabricator extends Transformer {
   private static connectorOffset: Vector3 = new Vector3(0, -1, 0);
@@ -24,6 +25,14 @@ export class Fabricator extends Transformer {
       .add(Fabricator.connectorOffset)
       .addScaledVector(direction, 1.5)
       .add(offset);
+  }
+
+  override process() {
+    const hasOutput = super.process();
+    if (hasOutput) {
+      Achievements.complete('fabricator');
+    }
+    return hasOutput;
   }
 };
 
