@@ -3,13 +3,85 @@
   import completed from './stores/achievements';
 
   const Achievements = [
-    { id: 'deposit', name: 'Find a resource deposit' },
-    { id: 'build', name: 'Open the build menu [Q]' },
-    { id: 'miner', name: 'Build a Miner on top of the deposit' },
-    { id: 'generator', name: 'Build a Generator near the Miner' },
-    { id: 'power', name: 'Wire the Miner to the Generator' },
-    { id: 'smelter', name: 'Smelt some Ore into Ingots' },
-    { id: 'fabricator', name: 'Fabricate a Box/Cylinder' },
+    {
+      id: 'deposit',
+      name: 'Find a Deposit',
+      help: [
+        'Resource deposits are scattered around the world.',
+        'Go explore and look for stone-ish blobs on the ground.',
+        'When you find one, survey it by holding the cursor over it.',
+      ],
+    },
+    {
+      id: 'build',
+      name: 'Open the build menu',
+      help: [
+        'Press [Q] to open the build menu.',
+        'Clicking on a blueprint will select it for building.',
+        'Pressing the number keys while holding the cursor',
+        'over a blueprint will add it the hotbar.',
+      ],
+    },
+    {
+      id: 'miner',
+      name: 'Build a Miner',
+      help: [
+        'Miners can only be placed on top of Deposits.',
+        'Select the Miner from the build menu [Q] and',
+        'Click over a Deposit to place it on top.',
+        'The Miner yield will depend on the deposit purity.',
+      ],
+    },
+    {
+      id: 'generator',
+      name: 'Build a Generator',
+      help: [
+        'Miners and many other machines require power.',
+        'Select the Generator from the build menu [Q] and',
+        'Click over the terrain (or a foundation) to place it on top.',
+      ],
+    },
+    {
+      id: 'power',
+      name: 'Power the Miner',
+      help: [
+        'Select the Wire from the build menu [Q] and',
+        'Click over the Generator, and then',
+        'Click over the Miner to wire them together.',
+        'The use of Poles is advised since the Generator',
+        'can only handle 4 simultaneous direct connections.'
+      ],
+    },
+    {
+      id: 'smelter',
+      name: 'Smelt Ore into Ingots',
+      help: [
+        'Select the Smelter from the build menu [Q] and',
+        'Click over the terrain (or a foundation) to place it on top.',
+        '',
+        'Then select the Belt (from the build menu, again) and',
+        'Click over the Miner, and then',
+        'Click over the Smelter to belt them together.',
+        '',
+        'Finally, wire the Smelter so it gets powered and',
+        'belt the other side of it into a Buffer.',
+      ],
+    },
+    {
+      id: 'fabricator',
+      name: 'Fabricate a Cylinder',
+      help: [
+        'Select the Fabricator from the build menu [Q] and',
+        'Click over the terrain (or a foundation) to place it on top.',
+        '',
+        'Then select the Belt (from the build menu, again) and',
+        'Click over the Smelter, and then',
+        'Click over the Fabricator to belt them together.',
+        '',
+        'Finally, wire the Fabricator so it gets powered and',
+        'belt the other side of it into a Buffer.',
+      ],
+    },
   ];
   const current = derived([completed], ([$completed]) => Achievements.find((achievement) => !$completed.includes(achievement.id)));
   let achievement: (typeof Achievements[0] & { completed: boolean; }) | undefined;
@@ -33,15 +105,22 @@
 
 {#if achievement}
   <div class="achievement" class:completed={achievement.completed}>
-    <div class="status">
-      <svg viewBox="0 0 24 24">
-        <path d="M9 22H15C20 22 22 20 22 15V9C22 4 20 2 15 2H9C4 2 2 4 2 9V15C2 20 4 22 9 22Z" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        {#if achievement.completed}
-          <path d="M7.75 12L10.58 14.83L16.25 9.17004" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        {/if}
-      </svg>
+    <div class="heading">
+      <div class="status">
+        <svg viewBox="0 0 24 24">
+          <path d="M9 22H15C20 22 22 20 22 15V9C22 4 20 2 15 2H9C4 2 2 4 2 9V15C2 20 4 22 9 22Z" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          {#if achievement.completed}
+            <path d="M7.75 12L10.58 14.83L16.25 9.17004" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          {/if}
+        </svg>
+      </div>
+      <div>{achievement.name}</div>
     </div>
-    <div>{achievement.name}</div>
+    <div class="help">
+      {#each achievement.help as line}
+        <div>{line}</div>
+      {/each}
+    </div>
   </div>
 {/if}
 
@@ -50,15 +129,15 @@
     position: absolute;
     top: 1rem;
     left: 1rem;
-    background: rgba(0, 0, 0, 0.2);
+    background: rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(0.5rem);
     padding: 1rem;
     border-radius: 0.5rem;
-    pointer-events: none;
-    font-size: 1rem;
+    flex-direction: column;
     gap: 0.5rem;
-    z-index: 2;
+    pointer-events: none;
     display: none;
+    z-index: 2;
   }
 
   :global(body.hotbar) .achievement, :global(body.pointerlock) .achievement {
@@ -66,8 +145,18 @@
   }
 
   .achievement.completed {
-    background: rgba(90, 255, 90, 0.5);
+    background: rgba(90, 255, 90, 0.3);
     color: #111; 
+  }
+
+  .heading {
+    display: flex;
+    gap: 0.5rem;
+    font-size: 1rem;
+  }
+
+  .help > div {
+    min-height: 1.125rem;
   }
 
   .status > svg {
