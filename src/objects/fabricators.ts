@@ -13,16 +13,16 @@ import SFX from '../core/sfx';
 import Transformer from '../core/transformer';
 import { Recipe, Recipes, Transformer as ItemTransformer } from './items';
 import { loadTexture } from '../textures';
-import DiffuseMap from '../textures/rust_coarse_01_diff_1k.jpg';
-import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.jpg';
-import RoughnessMap from '../textures/rust_coarse_01_rough_1k.jpg';
+import DiffuseMap from '../textures/rust_coarse_01_diff_1k.webp';
+import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.webp';
+import RoughnessMap from '../textures/rust_coarse_01_rough_1k.webp';
 
 export class Fabricator extends Transformer {
   private static connectorOffset: Vector3 = new Vector3(0, -1, 0);
   override getConnector(direction: Vector3, offset: Vector3) {
     return this.position.clone()
       .add(Fabricator.connectorOffset)
-      .addScaledVector(direction, 1.75)
+      .addScaledVector(direction, 1.5)
       .add(offset);
   }
 };

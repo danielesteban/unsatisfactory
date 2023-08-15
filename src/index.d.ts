@@ -3,12 +3,12 @@ declare module "*.exr" {
   export default url;
 }
 
-declare module "*.jpg" {
+declare module "*.ogg" {
   const url: string;
   export default url;
 }
 
-declare module "*.ogg" {
+declare module "*.webp" {
   const url: string;
   export default url;
 }

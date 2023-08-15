@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import commonjs from '@rollup/plugin-commonjs';
 import html from '@rollup/plugin-html';
 import livereload from 'rollup-plugin-livereload';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
@@ -25,7 +26,8 @@ export default {
     sourcemap: !production,
   },
   plugins: [
-    url({ include: ['**/*.exr', '**/*.jpg', '**/*.ogg'], destDir: 'dist/assets', publicPath: '/assets/' }),
+    commonjs(),
+    url({ include: ['**/*.exr', '**/*.ogg', '**/*.webp'], destDir: 'dist/assets', publicPath: '/assets/' }),
     nodeResolve({ extensions: ['.js', '.ts'] }),
     svelte({ preprocess: sveltePreprocess({ sourceMap: !production }) }),
     typescript({ sourceMap: !production, inlineSources: !production }),

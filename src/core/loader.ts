@@ -12,7 +12,7 @@ import Smelters, { Smelter } from '../objects/smelters';
 import Walls from '../objects/walls';
 import Wires, { Wire } from '../objects/wires';
 
-const version = 3;
+const version = 4;
 
 type SerializedConnection = [number, number];
 type SerializedDirection = [number, number, number];
@@ -25,7 +25,7 @@ type Serialized = {
   fabricators: [SerializedPosition, number, SerializedEnabled, number][];
   foundations: [SerializedPosition, number][];
   generators: [SerializedPosition, number, SerializedEnabled][];
-  miners: [SerializedPosition, number, SerializedEnabled, Item][];
+  miners: [SerializedPosition, number, SerializedEnabled, Item, number][];
   poles: [SerializedPosition, number][];
   smelters: [SerializedPosition, number, SerializedEnabled, number][];
   walls: [SerializedPosition, number][];
@@ -127,8 +127,8 @@ export const deserialize = (
       }
       return generator;
     }),
-    serialized.miners.map(([position, rotation, enabled, item]) => {
-      const miner = miners.create(aux.fromArray(position), rotation, item);
+    serialized.miners.map(([position, rotation, enabled, item, purity]) => {
+      const miner = miners.create(aux.fromArray(position), rotation, item, purity);
       if (!enabled) {
         miner.setEnabled(false);
       }
@@ -229,6 +229,15 @@ const migrations: Record<number, (serialized: Serialized) => Serialized> = {
         rotation,
       ])),
       version: 3,
+    };
+  },
+  [3]: (serialized: Serialized) => {
+    return {
+      ...serialized,
+      miners: [],
+      belts: serialized.belts.filter(([from, _fromDirection, to, _toDirection]) => from[0] !== 3 && to[0] !== 3),
+      wires: serialized.wires.filter(([from, to]) => from[0] !== 3 && to[0] !== 3),
+      version: 4,
     };
   },
 };

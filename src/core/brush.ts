@@ -8,6 +8,7 @@ import {
 import Instances, { Instance } from '../core/instances';
 import { Belt } from '../objects/belts';
 import Buffers, { Buffer } from '../objects/buffers';
+import Deposit from '../objects/deposit';
 import Fabricators, { Fabricator}  from '../objects/fabricators';
 import Foundations, { Foundation } from '../objects/foundations';
 import Generators, { Generator } from '../objects/generators';
@@ -157,6 +158,12 @@ const rotatedDirection = new Vector3();
 const rotatedOffset = new Vector3();
 const rotatedBrushOffset = new Vector3();
 export const snap = (intersection: Intersection<Object3D<Event>>) => {
+  if (intersection.object instanceof Deposit) {
+    if (brush === Brush.miner) {
+      return intersection.object.localToWorld(new Vector3(0, 2, 0)).add(terrainOffsets[brush]);
+    }
+    return intersection.point.clone().add(terrainOffsets[brush]);
+  }
   if (intersection.object instanceof TerrainChunk) {
     return intersection.point.clone().add(terrainOffsets[brush]);
   }

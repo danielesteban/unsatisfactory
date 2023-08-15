@@ -14,9 +14,9 @@ import {
 import { Connector } from '../core/container';
 import Items, { Item } from './items';
 import { loadTexture } from '../textures';
-import DiffuseMap from '../textures/green_metal_rust_diff_1k.jpg';
-import NormalMap from '../textures/green_metal_rust_nor_gl_1k.jpg';
-import RoughnessMap from '../textures/green_metal_rust_rough_1k.jpg';
+import DiffuseMap from '../textures/green_metal_rust_diff_1k.webp';
+import NormalMap from '../textures/green_metal_rust_nor_gl_1k.webp';
+import RoughnessMap from '../textures/green_metal_rust_rough_1k.webp';
 
 export class Belt extends Mesh {
   public readonly from: Connector;

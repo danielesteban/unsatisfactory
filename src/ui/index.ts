@@ -5,7 +5,7 @@ import { Buffer } from '../objects/buffers';
 import { Belt } from '../objects/belts';
 import { Fabricator } from '../objects/fabricators';
 import { Generator } from '../objects/generators';
-import { Transformer as ItemTransformer } from '../objects/items';
+import { Item, Transformer as ItemTransformer } from '../objects/items';
 import { Miner } from '../objects/miners';
 import { Smelter } from '../objects/smelters';
 import { Wire } from '../objects/wires';
@@ -81,8 +81,11 @@ export default (type: 'build' | 'container', instance?: Instance) => {
 const cursor = new CursorUI({ target });
 
 export const setTooltip = (
-  action?: 'belt' | 'build' | 'configure' | 'dismantle' | 'wire',
-  instance?: Instance | Belt | Wire, from?: Instance
+  action?: 'belt' | 'build' | 'configure' | 'dismantle' | 'invalid' | 'wire' | 'yield',
+  instance?: Instance | Belt | Wire,
+  from?: Instance,
+  item?: Item,
+  value?: number
 ) => {
   if (!action) {
     cursor.$set({ action: undefined });
@@ -90,8 +93,10 @@ export const setTooltip = (
   }
   cursor.$set({
     action,
+    item,
     objectBrush: getFromObject(instance),
     fromBrush: getFromObject(from),
+    value,
   });
 };
 

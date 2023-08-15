@@ -11,16 +11,17 @@ import {
 import Viewport from './core/viewport';
 import { Brush, brush, pick, rotation, set as setBrush, snap } from './core/brush';
 import { download, load, serialize, deserialize } from './core/loader';
-import Belts, { Belt } from './objects/belts';
-import Buffers from './objects/buffers';
 import Container, { PoweredContainer, Connector } from './core/container';
 import Instances, { Instance } from './core/instances';
+import Belts, { Belt } from './objects/belts';
+import Buffers from './objects/buffers';
+import Deposit from './objects/deposit';
 import Fabricators from './objects/fabricators';
 import Foundations from './objects/foundations';
 import Generators from './objects/generators';
 import Ghost from './objects/ghost';
 import Grass from './objects/grass';
-import Items, { Item } from './objects/items';
+import Items from './objects/items';
 import Miners from './objects/miners';
 import Poles from './objects/poles';
 import Smelters from './objects/smelters';
@@ -29,13 +30,13 @@ import Walls from './objects/walls';
 import Wires, { Wire } from './objects/wires';
 import UI, { setTooltip } from './ui';
 import Settings from './ui/settings.svelte';
-import Debug from './debug';
 
 const viewport = new Viewport();
 
 [
   Belts.getMaterial(),
   Buffers.getMaterial(),
+  Deposit.getMaterial(),
   Fabricators.getMaterial(),
   Foundations.getMaterial(),
   Generators.getMaterial(),
@@ -49,9 +50,9 @@ const viewport = new Viewport();
 ].forEach(viewport.setupMaterialCSM.bind(viewport));
 
 [
-  Ghost.getMaterial(),
   Generators.getMaterial(),
   Generators.getDepthMaterial(),
+  Ghost.getMaterial(),
   Grass.getMaterial(),
 ].forEach(viewport.setupMaterialTime.bind(viewport));
 
@@ -190,9 +191,20 @@ const create = (intersection: Intersection<Object3D<Event>>) => {
     case Brush.generator:
       generators.create(snap(intersection), rotation);
       return;
-    case Brush.miner:
-      miners.create(snap(intersection), rotation, Item.ore);
+    case Brush.miner: {
+      if (!(intersection.object instanceof Deposit)) {
+        return 'nope';
+      }
+      const position = snap(intersection);
+      // @dani @incomplete abstract this out of here and do the same check at hover
+      for (let i = 0, l = miners.count; i < l; i++) {
+        if (miners.getInstance(i).position.equals(position)) {
+          return 'nope';
+        }
+      }
+      miners.create(position, rotation, intersection.object.getItem(), intersection.object.getPurity());
       return;
+    }
     case Brush.pole:
       poles.create(snap(intersection), rotation);
       return;
@@ -275,6 +287,7 @@ const handleInput = (
   }
 };
 
+const aux = new Vector3();
 const hover = (intersection: Intersection<Object3D<Event>>) => {
   if (
     intersection?.object
@@ -311,8 +324,9 @@ const hover = (intersection: Intersection<Object3D<Event>>) => {
         geometry = Walls.getGeometry();
         break;
     }
-    ghost.update(geometry!, snap(intersection), rotation);
-    setTooltip('build');
+    const isValid = brush !== Brush.miner || intersection.object instanceof Deposit;
+    ghost.update(geometry!, snap(intersection), rotation, isValid);
+    setTooltip(isValid ? 'build' : 'invalid');
     return;
   }
   ghost.visible = false;
@@ -350,6 +364,12 @@ const hover = (intersection: Intersection<Object3D<Event>>) => {
     const instance = (intersection.object as Instances<Instance>).getInstance(intersection.instanceId!);
     setTooltip(brush === Brush.belt ? 'belt' : 'wire', instance, from.container);
     return;
+  } else if (
+    from.container
+    && (brush === Brush.belt || brush === Brush.wire)
+  ) {
+    setTooltip(brush === Brush.belt ? 'belt' : 'wire', from.container);
+    return;
   }
 
   if (
@@ -360,6 +380,16 @@ const hover = (intersection: Intersection<Object3D<Event>>) => {
     setTooltip('configure', (intersection.object as Instances<Instance>).getInstance(intersection.instanceId!));
     return;
   }
+
+  if (
+    brush === Brush.none
+    && intersection?.object instanceof Deposit
+    && intersection?.object.getWorldPosition(aux).distanceToSquared(viewport.camera.position) <= interactionLimit
+  ) {
+    setTooltip('yield', undefined, undefined, intersection?.object.getItem(), intersection?.object.getPurity());
+    return;
+  }
+
   setTooltip(undefined);
 };
 
@@ -428,11 +458,5 @@ const settings = new Settings({
   target: document.getElementById('ui')!,
 });
 
-if (!restore()) {
-  Debug(
-    belts, buffers, fabricators, foundations, generators, miners, poles, smelters, walls, wires,
-    viewport.camera
-  );
-}
-
+restore();
 setInterval(save, 60000);

@@ -1,10 +1,13 @@
 <script lang="ts">
   import { derived } from 'svelte/store';
   import { Brush, names, subscribe } from '../core/brush';
+  import { Item, ItemName } from '../objects/items';
 
-  export let action: 'belt' | 'build' | 'configure' | 'dismantle' | 'wire' | undefined;
+  export let action: 'belt' | 'build' | 'configure' | 'dismantle' | 'invalid' | 'wire' | 'yield' | undefined;
+  export let item: Item = Item.none;
   export let objectBrush: Brush = Brush.none;
   export let fromBrush: Brush = Brush.none;
+  export let value: number = 0;
 
   $: object = objectBrush === Brush.none ? undefined : names[objectBrush];
   $: from = fromBrush === Brush.none ? undefined : names[fromBrush];
@@ -32,8 +35,12 @@
         Press <span class="key">E</span> to configure <span class="object">{object}</span>
       {:else if action === 'dismantle'}
         Dismantle <span class="object">{object}</span>
-      {:else}
+      {:else if action === 'invalid'}
+        Invalid placement
+      {:else if action === 'wire'}
         Wire from <span class="object">{from || object}</span>{#if from} to <span class="object">{object}</span>{/if}
+      {:else if action === 'yield'}
+        <span class="object">{ItemName[item]}</span> ({value === 1 ? 'Pure' : 'Impure'})
       {/if}
     </div>
   {/if}

@@ -8,9 +8,9 @@ import {
 } from 'three';
 import Instances, { Instance } from '../core/instances';
 import { loadTexture } from '../textures';
-import DiffuseMap from '../textures/hexagonal_concrete_paving_diff_1k.jpg';
-import NormalMap from '../textures/hexagonal_concrete_paving_nor_gl_1k.jpg';
-import RoughnessMap from '../textures/hexagonal_concrete_paving_rough_1k.jpg';
+import DiffuseMap from '../textures/hexagonal_concrete_paving_diff_1k.webp';
+import NormalMap from '../textures/hexagonal_concrete_paving_nor_gl_1k.webp';
+import RoughnessMap from '../textures/hexagonal_concrete_paving_rough_1k.webp';
 
 export class Foundation extends Instance {};
 

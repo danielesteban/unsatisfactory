@@ -113,6 +113,9 @@ class Instances<InstanceType extends Instance> extends InstancedMesh {
   }
 
   override raycast(raycaster: Raycaster, intersects: Intersection[]) {
+    if (!this.visible) {
+      return;
+    }
     let geometry: BufferGeometry | undefined;
     if (this.collider) {
       geometry = this.geometry;

@@ -11,11 +11,12 @@ import {
   Vector3,
 } from 'three';
 import { ImprovedNoise } from 'three/examples/jsm/math/ImprovedNoise.js';
+import Deposit from './deposit';
 import Grass from './grass';
 import { loadTexture } from '../textures';
-import DiffuseMap from '../textures/coast_sand_rocks_02_diff_1k.jpg';
-import NormalMap from '../textures/coast_sand_rocks_02_nor_gl_1k.jpg';
-import RoughnessMap from '../textures/coast_sand_rocks_02_rough_1k.jpg';
+import DiffuseMap from '../textures/coast_sand_rocks_02_diff_1k.webp';
+import NormalMap from '../textures/coast_sand_rocks_02_nor_gl_1k.webp';
+import RoughnessMap from '../textures/coast_sand_rocks_02_rough_1k.webp';
 
 export class TerrainChunk extends Mesh {
   public static readonly size: number = 16;
@@ -32,12 +33,15 @@ export class TerrainChunk extends Mesh {
   }
 
   public readonly chunk: Vector3;
+  public readonly deposit: Deposit;
   public readonly grass: Grass;
   constructor(material: Material) {
     super(TerrainChunk.getGeometry().clone(), material);
     this.castShadow = this.receiveShadow = true;
     this.matrixAutoUpdate = false;
     this.chunk = new Vector3();
+    this.deposit = new Deposit();
+    this.add(this.deposit);
     this.grass = new Grass(this.geometry.boundingSphere!);
     this.add(this.grass);
   }
@@ -45,7 +49,7 @@ export class TerrainChunk extends Mesh {
   private static readonly aux: Vector3 = new Vector3();
   private static readonly center: Vector3 = new Vector3();
   update(chunk: Vector3, getHeight: (position: Vector3) => number) {
-    const { geometry, grass, position: origin } = this;
+    const { deposit, geometry, grass, position: origin } = this;
     const { aux, center } = TerrainChunk;
     this.chunk.copy(chunk);
     origin.copy(chunk).multiplyScalar(TerrainChunk.size);
@@ -57,9 +61,14 @@ export class TerrainChunk extends Mesh {
     }
     geometry.boundingSphere!.radius = Math.sqrt(maxRadiusSq);
     position.needsUpdate = true;
+    deposit.visible = grass.visible = false;
     this.updateMatrix();
     this.updateMatrixWorld();
-    grass.visible = false;
+  }
+
+  updateDeposit(getDeposit: (position: Vector3) => number, getGrass: (position: Vector3) => number, getHeight: (position: Vector3) => number) {
+    const { deposit, position } = this;
+    deposit.update(position, getDeposit, getGrass, getHeight);
   }
 
   updateGrass(getGrass: (position: Vector3) => number, getHeight: (position: Vector3) => number) {
@@ -157,6 +166,7 @@ class Terrain extends Group {
     super();
     this.updateMatrixWorld();
     this.matrixAutoUpdate = false;
+    this.getDeposit = this.getDeposit.bind(this);
     this.getGrass = this.getGrass.bind(this);
     this.getHeight = this.getHeight.bind(this);
     this.anchor = new Vector3(Infinity, Infinity, Infinity);
@@ -164,6 +174,19 @@ class Terrain extends Group {
     this.noise = new ImprovedNoise();
     this.pool = [];
     this.queue = [];
+  }
+
+  getDeposit(position: Vector3) {
+    const { noise } = this;
+    let v = 0;
+    let f = 0.3;
+    let a = 0.5;
+    for (let j = 0; j < 3; j++) {
+      v += noise.noise(position.x * f, position.z * f, 1337) * a;
+      f *= 2;
+      a *= 0.5;
+    }
+    return v;
   }
 
   getGrass(position: Vector3) {
@@ -201,7 +224,9 @@ class Terrain extends Group {
     aux.y = 0;
     if (anchor.equals(aux)) {
       for (let i = 0, l = Math.min(queue.length, 4); i < l; i++) {
-        queue.shift()!.updateGrass(this.getGrass, this.getHeight);
+        const queued = queue.shift()!;
+        queued.updateDeposit(this.getDeposit, this.getGrass, this.getHeight);
+        queued.updateGrass(this.getGrass, this.getHeight);
       }
       return;
     }

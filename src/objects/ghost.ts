@@ -27,7 +27,7 @@ export class Ghost extends Mesh {
           .replace(
             'vec4 diffuseColor = vec4( diffuse, opacity );',
             /* glsl */`
-            float line = smoothstep(1.0, 3.0, mod(float(gl_FragCoord.y) - time * 0.05, 5.0));
+            float line = smoothstep(1.0, 3.0, mod(float(gl_FragCoord.y) + time * 20.0, 5.0));
             vec4 diffuseColor = vec4(diffuse, opacity * line);
             `
           );
@@ -47,10 +47,11 @@ export class Ghost extends Mesh {
 
   }
 
-  update(geometry: BufferGeometry, position: Vector3, rotation: number) {
+  update(geometry: BufferGeometry, position: Vector3, rotation: number, isValid: boolean) {
     this.geometry = geometry;
     this.position.copy(position);
     this.rotation.y = rotation;
+    (this.material as MeshStandardMaterial).color.setHex(isValid ? 0x555599 : 0x995555);
     this.updateMatrix();
     this.visible = true;
   }

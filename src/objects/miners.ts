@@ -1,6 +1,7 @@
 import {
   BoxGeometry,
   BufferGeometry,
+  ConeGeometry,
   CylinderGeometry,
   MeshStandardMaterial,
   PositionalAudio,
@@ -14,28 +15,34 @@ import { PoweredContainer } from '../core/container';
 import SFX from '../core/sfx';
 import { Item, Mining } from './items';
 import { loadTexture } from '../textures';
-import DiffuseMap from '../textures/rust_coarse_01_diff_1k.jpg';
-import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.jpg';
-import RoughnessMap from '../textures/rust_coarse_01_rough_1k.jpg';
+import DiffuseMap from '../textures/rust_coarse_01_diff_1k.webp';
+import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.webp';
+import RoughnessMap from '../textures/rust_coarse_01_rough_1k.webp';
 
 export class Miner extends PoweredContainer {
   private readonly item: Item;
+  private readonly purity: number;
   private rate: number;
   private readonly sfx: SFX;
   private sound?: PositionalAudio;
   private tick: number;
 
-  constructor(position: Vector3, rotation: number, item: Item, sfx: SFX) {
+  constructor(position: Vector3, rotation: number, item: Item, purity: number, sfx: SFX) {
     const { consumption, rate } = Mining[item] || { consumption: 0, rate: 0 };
-    super(position, rotation, 0, consumption);
+    super(position, rotation, 0, consumption / purity);
     this.item = item;
-    this.rate = rate;
+    this.purity = purity;
+    this.rate = rate * purity;
     this.sfx = sfx;
     this.tick = 0;
   }
 
   getItem() {
     return this.item;
+  }
+
+  getPurity() {
+    return this.purity;
   }
 
   getRate() {
@@ -60,19 +67,18 @@ export class Miner extends PoweredContainer {
     return item;
   }
 
-  private static connectorOffset: Vector3 = new Vector3(0, -1, 0);
   override getConnector(direction: Vector3, offset: Vector3) {
     return this.position.clone()
-      .add(Miner.connectorOffset)
-      .addScaledVector(direction, 0.75)
+      .addScaledVector(direction, 0.5)
       .add(offset);
   }
 
   override serialize() {
-    const { item } = this;
+    const { item, purity } = this;
     return [
       ...super.serialize(),
       item,
+      purity,
     ];
   }
 };
@@ -93,12 +99,15 @@ class Miners extends Instances<Miner> {
       const csgEvaluator = new Evaluator();
       const base = new Brush(new BoxGeometry(2, 4, 2));
       const opening = new Brush(new BoxGeometry(1.5, 1.5, 0.5));
-      let brush: Brush = base;
+      const drill = new Brush(new ConeGeometry(1, 1));
+      drill.geometry.rotateX(Math.PI);
+      drill.geometry.translate(0, -2.5, 0);
+      let brush = csgEvaluator.evaluate(base, drill, ADDITION);
       ([
-        [new Vector3(0, -1, 1), 0],
-        [new Vector3(0, -1, -1), 0],
-        [new Vector3(1, -1, 0), Math.PI * 0.5],
-        [new Vector3(-1, -1, 0), Math.PI * 0.5],
+        [new Vector3(0, 0, 1), 0],
+        [new Vector3(0, 0, -1), 0],
+        [new Vector3(1, 0, 0), Math.PI * 0.5],
+        [new Vector3(-1, 0, 0), Math.PI * 0.5],
       ] as [Vector3, number][]).forEach(([position, rotation]) => {
         opening.position.copy(position);
         opening.rotation.y = rotation;
@@ -141,10 +150,10 @@ class Miners extends Instances<Miner> {
     this.sfx = sfx;
   }
 
-  create(position: Vector3, rotation: number, item: Item) {
+  create(position: Vector3, rotation: number, item: Item, purity: number) {
     const { sfx } = this;
     const instance = super.addInstance(
-      new Miner(position, rotation, item, sfx)
+      new Miner(position, rotation, item, purity, sfx)
     );
     return instance;
   }

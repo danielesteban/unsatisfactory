@@ -7,15 +7,18 @@
   "type": "module",
   "dependencies": {
     "n8ao": "^1.6.8",
+    "seedrandom": "^3.0.5",
     "three": "^0.155.0",
     "three-bvh-csg": "^0.0.9"
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.4",
     "@rollup/plugin-html": "^1.0.2",
     "@rollup/plugin-node-resolve": "^15.1.0",
     "@rollup/plugin-terser": "^0.4.3",
     "@rollup/plugin-typescript": "^11.1.2",
     "@rollup/plugin-url": "^8.0.1",
+    "@types/seedrandom": "^3.0.5",
     "@types/three": "^0.155.0",
     "postcss": "^8.4.27",
     "rollup": "^3.28.0",

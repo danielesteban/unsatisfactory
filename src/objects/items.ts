@@ -16,9 +16,12 @@ import {
   Vector3,
 } from 'three';
 import { loadTexture } from '../textures';
-import DiffuseMap from '../textures/rust_coarse_01_diff_1k.jpg';
-import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.jpg';
-import RoughnessMap from '../textures/rust_coarse_01_rough_1k.jpg';
+import RockDiffuseMap from '../textures/rock_boulder_dry_diff_1k.webp';
+import RockNormalMap from '../textures/rock_boulder_dry_nor_gl_1k.webp';
+import RockRoughnessMap from '../textures/rock_boulder_dry_rough_1k.webp';
+import RustDiffuseMap from '../textures/rust_coarse_01_diff_1k.webp';
+import RustNormalMap from '../textures/rust_coarse_01_nor_gl_1k.webp';
+import RustRoughnessMap from '../textures/rust_coarse_01_rough_1k.webp';
 
 export enum Item {
   none,
@@ -37,7 +40,7 @@ export const ItemName = {
 };
 
 export const Mining: Partial<Record<Item, { consumption: number; rate: number; }>> = {
-  [Item.ore]: { consumption: 10, rate: 3 },
+  [Item.ore]: { consumption: 100, rate: 3 },
 };
 
 export enum Transformer {
@@ -152,25 +155,31 @@ class Items extends Group {
   private static materials: Record<Exclude<Item, Item.none>, MeshStandardMaterial> | undefined;
   private static setupMaterials() {
     if (!Items.materials) {
-      const raw = new MeshStandardMaterial({
-        map: loadTexture(DiffuseMap),
-        normalMap: loadTexture(NormalMap),
-        roughnessMap: loadTexture(RoughnessMap),
-      });
-      raw.map!.anisotropy = 16;
-      raw.map!.colorSpace = SRGBColorSpace;
-      [raw.map!, raw.normalMap!, raw.roughnessMap!].forEach((map) => {
-        map.wrapS = map.wrapT = RepeatWrapping;
-      });
+      const getMaterial = (diffuse: string, normal: string, roughness: string) => {
+        const material = new MeshStandardMaterial({
+          map: loadTexture(diffuse),
+          normalMap: loadTexture(normal),
+          roughnessMap: loadTexture(roughness),
+        });
+        material.map!.anisotropy = 16;
+        material.map!.colorSpace = SRGBColorSpace;
+        [material.map!, material.normalMap!, material.roughnessMap!].forEach((map) => {
+          map.wrapS = map.wrapT = RepeatWrapping;
+        });
+        return material;
+      };
       const processed = new MeshStandardMaterial({
         color: 0x332211,
         roughness: 0.15,
       });
+      const rock = getMaterial(RockDiffuseMap, RockNormalMap, RockRoughnessMap);
+      rock.envMapIntensity = rock.roughness = 0.7;
+      const rust = getMaterial(RustDiffuseMap, RustNormalMap, RustRoughnessMap);
       Items.materials = {
         [Item.box]: processed,
         [Item.cylinder]: processed,
-        [Item.ingot]: raw,
-        [Item.ore]: raw,
+        [Item.ingot]: rust,
+        [Item.ore]: rock,
       };
     }
     return Items.materials;

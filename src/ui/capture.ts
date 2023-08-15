@@ -162,7 +162,7 @@ const process = () => {
     camera.position.set(0, 0.5, 1).multiplyScalar(zoom);
     camera.lookAt(0, 0, 0);
     composer.render();
-    return renderer.domElement.toDataURL('jpg');
+    return renderer.domElement.toDataURL();
   });
   scene.remove(mesh);
   captures.set(brush, capture);

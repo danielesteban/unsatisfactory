@@ -12,9 +12,9 @@ import { ADDITION, Brush, Evaluator } from 'three-bvh-csg';
 import Instances from '../core/instances';
 import { PoweredContainer } from '../core/container';
 import { loadTexture } from '../textures';
-import DiffuseMap from '../textures/rust_coarse_01_diff_1k.jpg';
-import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.jpg';
-import RoughnessMap from '../textures/rust_coarse_01_rough_1k.jpg';
+import DiffuseMap from '../textures/rust_coarse_01_diff_1k.webp';
+import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.webp';
+import RoughnessMap from '../textures/rust_coarse_01_rough_1k.webp';
 
 export class Pole extends PoweredContainer {
   constructor(position: Vector3, rotation: number) {

@@ -57,7 +57,7 @@ class Container<Events extends BaseEvent = BaseEvent> extends Instance<Events> {
   }
 
   getConnector(direction: Vector3, offset: Vector3) {
-    return this.position.clone().addScaledVector(direction, 0.75).add(offset);
+    return this.position.clone().addScaledVector(direction, 0.5).add(offset);
   }
 
   getBelts() {

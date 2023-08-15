@@ -179,6 +179,7 @@
     width: 6rem;
     top: 1rem;
     left: 1rem;
+    pointer-events: none;
   }
   .brush > img:nth-child(2) {
     display: none;
