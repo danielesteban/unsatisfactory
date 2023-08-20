@@ -54,18 +54,18 @@
   <div>
     <div class="keys">
       <div>
-        <div class="key spacebar">Space</div>
+        <div class="key shift">Shift</div>
       </div>
     </div>
-    <div>Jump</div>
+    <div>Sprint</div>
   </div>
   <div>
     <div class="keys">
       <div>
-        <div class="key shift">Shit</div>
+        <div class="key spacebar">Space</div>
       </div>
     </div>
-    <div>Sprint</div>
+    <div>Jump</div>
   </div>
 </div>
 
@@ -80,18 +80,21 @@
   .help > div {
     display: flex;
     align-items: center;
-    gap: 2.75rem;
+    justify-content: center;
+    gap: 2rem;
   }
-  .keys, .pointer {
+  .help > div > div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     width: 5rem;
     height: 2.75rem;
+  }
+  .keys, .pointer {
     color: #fff;
   }
   .keys {
-    display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
     gap: 0.5rem;
   }
   .keys > div {
@@ -114,9 +117,6 @@
     width: 4.5rem;
   }
   .pointer {
-    display: flex;
-    align-items: center;
-    justify-content: center;
     gap: 0.25rem;
   }
   .pointer > svg {
