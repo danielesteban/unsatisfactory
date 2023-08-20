@@ -1,6 +1,5 @@
 import RAPIER from '@dimforge/rapier3d-compat';
 import {
-  BaseEvent,
   BoxGeometry,
   BufferGeometry,
   MeshStandardMaterial,
@@ -9,57 +8,19 @@ import {
 } from 'three';
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
-import Instances from '../core/instances';
 import Container from '../core/container';
-import { Item } from './items';
+import Instances from '../core/instances';
 import Physics from '../core/physics';
 import { loadTexture } from '../textures';
 import DiffuseMap from '../textures/rust_coarse_01_diff_1k.webp';
 import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.webp';
 import RoughnessMap from '../textures/rust_coarse_01_rough_1k.webp';
 
-export type BufferEvent = BaseEvent & (
-  {
-    type: 'sink';
-    status: boolean;
-  }
-);
-
-export class Buffer extends Container<BufferEvent> {
-  private sink: boolean;
-
+export class Buffer extends Container {
   constructor(position: Vector3, rotation: number) {
     super(position, rotation, 10);
-    this.sink = false;
   }
-
-  override canInput(item: Item) {
-    return this.sink || super.canInput(item);
-  }
-
-  override input(item: Item) {
-    if (!this.sink) {
-      super.input(item);
-    }
-  }
-
-  isSink() {
-    return this.sink;
-  }
-
-  setSink(status: boolean) {
-    this.sink = status;
-    this.dispatchEvent({ type: 'sink', status });
-  }
-
-  override serialize() {
-    const { sink } = this;
-    return [
-      ...super.serialize(),
-      sink ? 1 : 0,
-    ];
-  }
-};
+}
 
 class Buffers extends Instances<Buffer> {
   private static collider: RAPIER.ColliderDesc | undefined;

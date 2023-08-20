@@ -1,21 +1,21 @@
 import { SvelteComponent } from 'svelte';
 import { getFromObject } from '../core/brush';
 import { Instance } from '../core/instances';
-import { Buffer } from '../objects/buffers';
 import { Belt } from '../objects/belts';
 import { Fabricator } from '../objects/fabricators';
 import { Generator } from '../objects/generators';
 import { Item, Transformer as ItemTransformer } from '../objects/items';
 import { Miner } from '../objects/miners';
+import { Sink } from '../objects/sinks';
 import { Smelter } from '../objects/smelters';
 import { Wire } from '../objects/wires';
 import AchievementsUI from './achievements.svelte';
-import BufferUI from './buffer.svelte';
 import BuildUI from './build.svelte';
 import CursorUI from './cursor.svelte';
 import HotbarUI from './hotbar.svelte';
 import GeneratorUI from './generator.svelte';
 import MinerUI from './miner.svelte';
+import SinkUI from './sink.svelte';
 import TransformerUI from './transformer.svelte';
 
 let current: SvelteComponent | undefined = undefined;
@@ -43,12 +43,6 @@ export default (type: 'build' | 'container', instance?: Instance) => {
       });
       break;
     case 'container': {
-      if (instance instanceof Buffer) {
-        dialog = new BufferUI({
-          props: { close, instance },
-          target,
-        });
-      }
       if (instance instanceof Fabricator) {
         dialog = new TransformerUI({
           props: { close, instance, transformer: ItemTransformer.fabricator },
@@ -63,6 +57,12 @@ export default (type: 'build' | 'container', instance?: Instance) => {
       }
       if (instance instanceof Miner) {
         dialog = new MinerUI({
+          props: { close, instance },
+          target,
+        });
+      }
+      if (instance instanceof Sink) {
+        dialog = new SinkUI({
           props: { close, instance },
           target,
         });

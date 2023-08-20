@@ -51,7 +51,7 @@ export class Smelter extends Transformer {
     }
     return hasOutput;
   }
-};
+}
 
 class Smelters extends Instances<Smelter> {
   private static collider: RAPIER.ColliderDesc[] | undefined;

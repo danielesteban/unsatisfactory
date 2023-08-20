@@ -8,11 +8,12 @@ import Generators, { Generator }  from '../objects/generators';
 import { Item, Recipes }  from '../objects/items';
 import Miners, { Miner } from '../objects/miners';
 import Poles, { Pole } from '../objects/poles';
+import Sinks, { Sink } from '../objects/sinks';
 import Smelters, { Smelter } from '../objects/smelters';
 import Walls from '../objects/walls';
 import Wires, { Wire } from '../objects/wires';
 
-const version = 5;
+const version = 6;
 
 type SerializedConnection = [number, number];
 type SerializedDirection = [number, number, number];
@@ -21,12 +22,13 @@ type SerializedPosition = [number, number, number];
 
 type Serialized = {
   belts: [SerializedConnection, SerializedDirection, SerializedConnection, SerializedDirection][];
-  buffers: [SerializedPosition, number, SerializedEnabled][];
+  buffers: [SerializedPosition, number][];
   fabricators: [SerializedPosition, number, SerializedEnabled, number][];
   foundations: [SerializedPosition, number][];
   generators: [SerializedPosition, number, SerializedEnabled][];
   miners: [SerializedPosition, number, SerializedEnabled, Item, number][];
   poles: [SerializedPosition, number][];
+  sinks: [SerializedPosition, number, SerializedEnabled][];
   smelters: [SerializedPosition, number, SerializedEnabled, number][];
   walls: [SerializedPosition, number][];
   wires: [SerializedConnection, SerializedConnection][];
@@ -35,11 +37,11 @@ type Serialized = {
 };
 
 export const serialize = (
-  belts: Belts, buffers: Buffers, fabricators: Fabricators, foundations: Foundations, generators: Generators, miners: Miners, poles: Poles, smelters: Smelters, walls: Walls, wires: Wires,
+  belts: Belts, buffers: Buffers, fabricators: Fabricators, foundations: Foundations, generators: Generators, miners: Miners, poles: Poles, sinks: Sinks, smelters: Smelters, walls: Walls, wires: Wires,
   camera: Camera
 ): Serialized => {
   const containers = new WeakMap<Container, number>();
-  const serializeInstances = (instances: Buffers | Fabricators | Foundations | Generators | Miners | Poles | Smelters | Walls) => (
+  const serializeInstances = (instances: Buffers | Fabricators | Foundations | Generators | Miners | Poles | Sinks | Smelters | Walls) => (
     Array.from({ length: instances.count }, (_v, i) => {
       const instance = instances.getInstance(i);
       if (instance instanceof Container) {
@@ -65,8 +67,11 @@ export const serialize = (
     if (instance instanceof Pole) {
       key = 4;
     }
-    if (instance instanceof Smelter) {
+    if (instance instanceof Sink) {
       key = 5;
+    }
+    if (instance instanceof Smelter) {
+      key = 6;
     }
     return [key, containers.get(instance)];
   };
@@ -77,6 +82,7 @@ export const serialize = (
     generators: serializeInstances(generators) as Serialized['generators'],
     miners: serializeInstances(miners) as Serialized['miners'],
     poles: serializeInstances(poles) as Serialized['poles'],
+    sinks: serializeInstances(sinks) as Serialized['sinks'],
     smelters: serializeInstances(smelters) as Serialized['smelters'],
     walls: serializeInstances(walls) as Serialized['walls'],
     belts: (belts.children as Belt[]).map((belt) => [
@@ -96,7 +102,7 @@ export const serialize = (
 
 export const deserialize = (
   serialized: Serialized,
-  belts: Belts, buffers: Buffers, fabricators: Fabricators, foundations: Foundations, generators: Generators, miners: Miners, poles: Poles, smelters: Smelters, walls: Walls, wires: Wires,
+  belts: Belts, buffers: Buffers, fabricators: Fabricators, foundations: Foundations, generators: Generators, miners: Miners, poles: Poles, sinks: Sinks, smelters: Smelters, walls: Walls, wires: Wires,
   camera: Camera
 ) => {
   serialized = migrate(serialized);
@@ -106,13 +112,9 @@ export const deserialize = (
   const aux = new Vector3();
   const auxB = new Vector3();
   const containers = [
-    serialized.buffers.map(([position, rotation, sink]) => {
-      const buffer = buffers.create(aux.fromArray(position), rotation);
-      if (sink) {
-        buffer.setSink(true);
-      }
-      return buffer;
-    }),
+    serialized.buffers.map(([position, rotation]) => (
+      buffers.create(aux.fromArray(position), rotation)
+    )),
     serialized.fabricators.map(([position, rotation, enabled, recipe]) => {
       const fabricator = fabricators.create(aux.fromArray(position), rotation, Recipes[recipe]);
       if (!enabled) {
@@ -137,6 +139,13 @@ export const deserialize = (
     serialized.poles.map(([position, rotation]) => (
       poles.create(aux.fromArray(position), rotation)
     )),
+    serialized.sinks.map(([position, rotation, enabled]) => {
+      const sink = sinks.create(aux.fromArray(position), rotation)
+      if (!enabled) {
+        sink.setEnabled(false);
+      }
+      return sink;
+    }),
     serialized.smelters.map(([position, rotation, enabled, recipe]) => {
       const smelter = smelters.create(aux.fromArray(position), rotation, Recipes[recipe]);
       if (!enabled) {
@@ -252,6 +261,23 @@ const migrations: Record<number, (serialized: Serialized) => Serialized> = {
         serialized.camera[1],
       ],
       version: 5,
+    };
+  },
+  [5]: (serialized: Serialized) => {
+    const remap = (connection: SerializedConnection) => {
+      switch (connection[0]) {
+        case 5:
+          return [6, connection[1]] as SerializedConnection;
+        default:
+          return connection;
+      }
+    };
+    return {
+      ...serialized,
+      sinks: [],
+      belts: serialized.belts.map(([from, fromDirection, to, toDirection]) => [remap(from), fromDirection, remap(to), toDirection]),
+      wires: serialized.wires.map(([from, to]) => [remap(from), remap(to)]),
+      version: 6,
     };
   },
 };

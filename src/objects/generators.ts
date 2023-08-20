@@ -46,7 +46,7 @@ export class Generator extends PoweredContainer {
       )
       .addScaledVector(Object3D.DEFAULT_UP, -3.5);
   }
-};
+}
 
 class Generators extends Instances<Generator> {
   private static collider: RAPIER.ColliderDesc[] | undefined;

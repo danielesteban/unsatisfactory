@@ -5,6 +5,7 @@ import {
   ConeGeometry,
   CylinderGeometry,
   MeshStandardMaterial,
+  Object3D,
   PositionalAudio,
   SRGBColorSpace,
   Vector3,
@@ -83,6 +84,10 @@ export class Miner extends PoweredContainer {
       .add(offset);
   }
 
+  override getWireConnector(): Vector3 {
+    return this.position.clone().addScaledVector(Object3D.DEFAULT_UP, 2.5);
+  }
+
   override serialize() {
     const { item, purity } = this;
     return [
@@ -91,7 +96,7 @@ export class Miner extends PoweredContainer {
       purity,
     ];
   }
-};
+}
 
 class Miners extends Instances<Miner> {
   private static collider: RAPIER.ColliderDesc | undefined;

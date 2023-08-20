@@ -6,7 +6,7 @@ import {
   Vector3,
 } from 'three';
 
-export class Ghost extends Mesh {
+class Ghost extends Mesh {
   private static material: MeshStandardMaterial | undefined;
   static getMaterial() {
     if (!Ghost.material) {
@@ -51,6 +51,6 @@ export class Ghost extends Mesh {
     this.updateMatrix();
     this.visible = true;
   }
-};
+}
 
 export default Ghost;

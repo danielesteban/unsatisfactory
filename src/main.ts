@@ -23,6 +23,7 @@ import Grass from './objects/grass';
 import Items from './objects/items';
 import Miners, { Miner } from './objects/miners';
 import Poles, { Pole } from './objects/poles';
+import Sinks, { Sink } from './objects/sinks';
 import Smelters, { Smelter } from './objects/smelters';
 import Terrain from './objects/terrain';
 import Walls, { Wall } from './objects/walls';
@@ -43,6 +44,7 @@ const viewport = new Viewport();
   ...Items.getMaterials(),
   Miners.getMaterial(),
   Poles.getMaterial(),
+  Sinks.getMaterial(),
   Smelters.getMaterial(),
   Terrain.getMaterial(),
   Walls.getMaterial(),
@@ -80,6 +82,9 @@ viewport.scene.add(miners);
 const poles = new Poles(viewport.physics);
 viewport.scene.add(poles);
 
+const sinks = new Sinks(viewport.physics);
+viewport.scene.add(sinks);
+
 const smelters = new Smelters(viewport.physics, viewport.sfx);
 viewport.scene.add(smelters);
 
@@ -106,11 +111,15 @@ const canBelt = (intersection: Intersection) => (
     intersection.object instanceof Buffer
     || intersection.object instanceof Fabricator
     || intersection.object instanceof Miner
+    || intersection.object instanceof Sink
     || intersection.object instanceof Smelter
   )
   && Math.abs(intersection.normal.dot(Object3D.DEFAULT_UP)) == 0
   && !(
-    (intersection.object instanceof Fabricators || intersection.object instanceof Smelters)
+    (
+      intersection.object instanceof Fabricator
+      || intersection.object instanceof Smelter
+    )
     && Math.abs(intersection.normal.dot(worldNorth)) > 0
   )
   && (!from.container || from.container !== intersection.object)
@@ -120,10 +129,10 @@ const interactionLimit = 12 ** 2;
 const canInteract = (intersection: Intersection) => {
   if (
     !(
-      intersection.object instanceof Buffer
-      || intersection.object instanceof Fabricator
+      intersection.object instanceof Fabricator
       || intersection.object instanceof Generator
       || intersection.object instanceof Miner
+      || intersection.object instanceof Sink
       || intersection.object instanceof Smelter
     )
   ) {
@@ -139,6 +148,7 @@ const canWire = (intersection: Intersection) => {
       || intersection.object instanceof Generator
       || intersection.object instanceof Miner
       || intersection.object instanceof Pole
+      || intersection.object instanceof Sink
       || intersection.object instanceof Smelter
     )
   ) {
@@ -206,6 +216,9 @@ const create = (intersection: Intersection) => {
     case Brush.pole:
       poles.create(snap(intersection), rotation);
       return;
+    case Brush.sink:
+      sinks.create(snap(intersection), rotation);
+      return;
     case Brush.smelter:
       smelters.create(snap(intersection), rotation);
       return;
@@ -248,6 +261,8 @@ const remove = (intersection: Intersection) => {
       miners.removeInstance(instance);
     } else if (instance instanceof Pole) {
       poles.removeInstance(instance);
+    } else if (instance instanceof Sink) {
+      sinks.removeInstance(instance);
     } else if (instance instanceof Smelter) {
       smelters.removeInstance(instance);
     } else if (instance instanceof Wall) {
@@ -330,6 +345,9 @@ const hover = (intersection?: Intersection) => {
         break;
       case Brush.pole:
         geometry = Poles.getGeometry();
+        break;
+      case Brush.sink:
+        geometry = Sinks.getGeometry();
         break;
       case Brush.smelter:
         geometry = Smelters.getGeometry();
@@ -449,7 +467,7 @@ const restore = () => {
   }
   deserialize(
     serialized,
-    belts, buffers, fabricators, foundations, generators, miners, poles, smelters, walls, wires,
+    belts, buffers, fabricators, foundations, generators, miners, poles, sinks, smelters, walls, wires,
     viewport.camera
   );
 };
@@ -457,7 +475,7 @@ const restore = () => {
 const save = () => {
   localStorage.setItem(
     'autosave',
-    JSON.stringify(serialize(belts, buffers, fabricators, foundations, generators, miners, poles, smelters, walls, wires, viewport.camera))
+    JSON.stringify(serialize(belts, buffers, fabricators, foundations, generators, miners, poles, sinks, smelters, walls, wires, viewport.camera))
   );
   settings.$set({ lastSave: new Date() });
 };
@@ -466,7 +484,7 @@ const settings = new Settings({
   props: {
     lastSave: new Date(),
     download: () => (
-      download(serialize(belts, buffers, fabricators, foundations, generators, miners, poles, smelters, walls, wires, viewport.camera))
+      download(serialize(belts, buffers, fabricators, foundations, generators, miners, poles, sinks, smelters, walls, wires, viewport.camera))
     ),
     load: async () => {
       let serialized;

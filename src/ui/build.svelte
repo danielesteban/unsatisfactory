@@ -25,6 +25,7 @@
     [
       Brush.belt,
       Brush.buffer,
+      Brush.sink,
     ],
     [
       Brush.generator,

@@ -14,7 +14,9 @@ import DiffuseMap from '../textures/hexagonal_concrete_paving_diff_1k.webp';
 import NormalMap from '../textures/hexagonal_concrete_paving_nor_gl_1k.webp';
 import RoughnessMap from '../textures/hexagonal_concrete_paving_rough_1k.webp';
 
-export class Wall extends Instance {};
+export class Wall extends Instance {
+
+}
 
 class Walls extends Instances<Wall> {
   private static collider: RAPIER.ColliderDesc | undefined;

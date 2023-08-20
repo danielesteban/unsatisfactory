@@ -27,6 +27,7 @@ import Foundations from '../objects/foundations';
 import Generators from '../objects/generators';
 import Miners from '../objects/miners';
 import Poles from '../objects/poles';
+import Sinks from '../objects/sinks';
 import Smelters from '../objects/smelters';
 import Walls from '../objects/walls';
 import Wires from '../objects/wires';
@@ -105,6 +106,10 @@ const process = () => {
       geometry = Poles.getGeometry();
       material = Poles.getMaterial();
       break;
+    case Brush.sink:
+      geometry = Sinks.getGeometry();
+      material = Sinks.getMaterial();
+      break;
     case Brush.smelter:
       geometry = Smelters.getGeometry();
       material = Smelters.getMaterial();
@@ -149,7 +154,7 @@ const process = () => {
   const mesh = new Mesh(geometry, material);
   scene.add(mesh);
   const capture = [6.5, 5.5].map((zoom) => {
-    if (brush === Brush.belt || brush === Brush.buffer) {
+    if (brush === Brush.belt || brush === Brush.buffer || brush === Brush.sink) {
       zoom -= 1.5;
     }
     if (brush === Brush.generator) {

@@ -26,7 +26,7 @@ export class Pole extends PoweredContainer {
   override getWireConnector(): Vector3 {
     return this.position.clone().addScaledVector(Object3D.DEFAULT_UP, 2.75);
   }
-};
+}
 
 class Poles extends Instances<Pole> {
   private static collider: RAPIER.ColliderDesc | undefined;

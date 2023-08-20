@@ -36,7 +36,7 @@ export class Fabricator extends Transformer {
     }
     return hasOutput;
   }
-};
+}
 
 class Fabricators extends Instances<Fabricator> {
   private static collider: RAPIER.ColliderDesc | undefined;
