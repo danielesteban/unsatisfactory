@@ -34,7 +34,7 @@ export class Sink extends PoweredContainer {
   override output() {
     return Item.none;
   }
-  
+
   override getConnector(direction: Vector3, offset: Vector3) {
     return this.position.clone().addScaledVector(direction, 1.5).add(offset);
   }
@@ -44,7 +44,7 @@ class Sinks extends Instances<Sink> {
   private static collider: RAPIER.ColliderDesc | undefined;
   static getCollider() {
     if (!Sinks.collider) {
-      Sinks.collider = RAPIER.ColliderDesc.cuboid(2, 1, 2);
+      Sinks.collider = RAPIER.ColliderDesc.cuboid(2, 2, 2);
     }
     return Sinks.collider;
   }
@@ -53,7 +53,7 @@ class Sinks extends Instances<Sink> {
   static getGeometry() {
     if (!Sinks.geometry) {
       const csgEvaluator = new Evaluator();
-      const base = new Brush(new BoxGeometry(4, 2, 4));
+      const base = new Brush(new BoxGeometry(4, 4, 4));
       const opening = new Brush(new BoxGeometry(1.5, 1.5, 0.5));
       let brush: Brush = base;
       ([
@@ -68,7 +68,7 @@ class Sinks extends Instances<Sink> {
         brush = csgEvaluator.evaluate(brush, opening, SUBTRACTION);
       });
       const pole = new Brush(new CylinderGeometry(0.125, 0.125, 0.25));
-      pole.position.set(0, 1.125, 0);
+      pole.position.set(0, 2.125, 0);
       pole.updateMatrixWorld();
       brush = csgEvaluator.evaluate(brush, pole, ADDITION);
       const connector = new Brush(new CylinderGeometry(0.25, 0.25, 0.5));

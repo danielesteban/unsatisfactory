@@ -154,7 +154,7 @@ const process = () => {
   const mesh = new Mesh(geometry, material);
   scene.add(mesh);
   const capture = [6.5, 5.5].map((zoom) => {
-    if (brush === Brush.belt || brush === Brush.buffer || brush === Brush.sink) {
+    if (brush === Brush.belt || brush === Brush.buffer) {
       zoom -= 1.5;
     }
     if (brush === Brush.generator) {

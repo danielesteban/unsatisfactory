@@ -5,7 +5,6 @@ import {
   ConeGeometry,
   CylinderGeometry,
   MeshStandardMaterial,
-  Object3D,
   PositionalAudio,
   SRGBColorSpace,
   Vector3,
@@ -78,16 +77,6 @@ export class Miner extends PoweredContainer {
     return item;
   }
 
-  override getConnector(direction: Vector3, offset: Vector3) {
-    return this.position.clone()
-      .addScaledVector(direction, 0.5)
-      .add(offset);
-  }
-
-  override getWireConnector(): Vector3 {
-    return this.position.clone().addScaledVector(Object3D.DEFAULT_UP, 2.5);
-  }
-
   override serialize() {
     const { item, purity } = this;
     return [
@@ -133,7 +122,7 @@ class Miners extends Instances<Miner> {
       pole.updateMatrixWorld();
       brush = csgEvaluator.evaluate(brush, pole, ADDITION);
       const connector = new Brush(new CylinderGeometry(0.25, 0.25, 0.5));
-      connector.position.set(0, 2.5, 0);
+      connector.position.copy(pole.position).add(new Vector3(0, 0.375, 0));
       connector.updateMatrixWorld();
       brush = csgEvaluator.evaluate(brush, connector, ADDITION);
       Miners.geometry = mergeVertices(brush.geometry);

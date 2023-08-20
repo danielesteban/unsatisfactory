@@ -148,7 +148,7 @@ const offsets = {
   [Brush.generator]: new Vector3(2, 6, 2),
   [Brush.miner]: new Vector3(1, 2, 1),
   [Brush.pole]: new Vector3(0.5, 3, 0.5),
-  [Brush.sink]: new Vector3(2, 1, 2),
+  [Brush.sink]: new Vector3(2, 2, 2),
   [Brush.smelter]: new Vector3(2, 2, 1),
   [Brush.wall]: new Vector3(2, 2, 0.25),
   [Brush.wire]: new Vector3(),

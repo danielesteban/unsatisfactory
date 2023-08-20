@@ -111,7 +111,7 @@ export class PoweredContainer<Events extends BaseEvent = BaseEvent> extends Cont
   }
 
   getWireConnector(): Vector3 {
-    return this.position.clone().addScaledVector(Object3D.DEFAULT_UP, 1.5);
+    return this.position.clone().addScaledVector(Object3D.DEFAULT_UP, 2.5);
   }
 
   getConsumption() {
