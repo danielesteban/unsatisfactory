@@ -1,3 +1,4 @@
+import RAPIER from '@dimforge/rapier3d-compat';
 import {
   BoxGeometry,
   BufferAttribute,
@@ -7,6 +8,7 @@ import {
   Vector3,
 } from 'three';
 import Instances, { Instance } from '../core/instances';
+import Physics from '../core/physics';
 import { loadTexture } from '../textures';
 import DiffuseMap from '../textures/hexagonal_concrete_paving_diff_1k.webp';
 import NormalMap from '../textures/hexagonal_concrete_paving_nor_gl_1k.webp';
@@ -15,6 +17,14 @@ import RoughnessMap from '../textures/hexagonal_concrete_paving_rough_1k.webp';
 export class Foundation extends Instance {};
 
 class Foundations extends Instances<Foundation> {
+  private static collider: RAPIER.ColliderDesc | undefined;
+  static getCollider() {
+    if (!Foundations.collider) {
+      Foundations.collider = RAPIER.ColliderDesc.cuboid(2, 0.5, 2);
+    }
+    return Foundations.collider;
+  }
+
   private static geometry: BoxGeometry | undefined;
   static getGeometry() {
     if (!Foundations.geometry) {
@@ -55,8 +65,8 @@ class Foundations extends Instances<Foundation> {
     return Foundations.material;
   }
 
-  constructor() {
-    super(Foundations.getGeometry(), Foundations.getMaterial());
+  constructor(physics: Physics) {
+    super(Foundations.getCollider(), Foundations.getGeometry(), Foundations.getMaterial(), physics);
   }
   
   create(position: Vector3, rotation: number) {

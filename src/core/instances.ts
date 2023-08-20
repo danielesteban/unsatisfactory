@@ -1,17 +1,17 @@
+import RAPIER from '@dimforge/rapier3d-compat';
 import {
   BaseEvent,
   BufferGeometry,
   EventDispatcher,
   InstancedBufferAttribute,
   InstancedMesh,
-  Intersection,
   Matrix4,
   Material,
   Object3D,
   Quaternion,
-  Raycaster,
   Vector3,
 } from 'three';
+import Physics from './physics';
 
 export class Instance<Event extends BaseEvent = BaseEvent> extends EventDispatcher<Event> {
   public readonly position: Vector3;
@@ -37,14 +37,15 @@ export class Instance<Event extends BaseEvent = BaseEvent> extends EventDispatch
 }
 
 class Instances<InstanceType extends Instance> extends InstancedMesh {
-  private readonly collider: BufferGeometry | undefined;
+  private readonly collider: RAPIER.ColliderDesc | RAPIER.ColliderDesc[];
   private readonly instances: InstanceType[];
   private maxInstanceCount: number;
+  private physics: Physics;
   private static rotation: Quaternion = new Quaternion();
   private static scale: Vector3 = new Vector3(1, 1, 1);
   private static transform: Matrix4 = new Matrix4();
 
-  constructor(geometry: BufferGeometry, material: Material, collider?: BufferGeometry, depthMaterial?: Material) {
+  constructor(collider: RAPIER.ColliderDesc | RAPIER.ColliderDesc[], geometry: BufferGeometry, material: Material, physics: Physics, depthMaterial?: Material) {
     super(geometry, material, 16);
     this.castShadow = this.receiveShadow = true;
     this.customDepthMaterial = depthMaterial;
@@ -52,6 +53,7 @@ class Instances<InstanceType extends Instance> extends InstancedMesh {
     this.matrixAutoUpdate = false;
     this.visible = false;
     this.collider = collider;
+    this.physics = physics;
     this.instances = [];
     this.maxInstanceCount = this.count;
     this.count = 0;
@@ -63,10 +65,18 @@ class Instances<InstanceType extends Instance> extends InstancedMesh {
   }
 
   addInstance(instance: InstanceType) {
-    const { instances, maxInstanceCount } = this;
+    const { collider, instances, maxInstanceCount, physics } = this;
     instances.push(instance);
+    const rotation = Instances.rotation.setFromAxisAngle(Object3D.DEFAULT_UP, instance.rotation);
+    physics.addBody(
+      instance,
+      RAPIER.RigidBodyDesc.fixed()
+        .setTranslation(instance.position.x, instance.position.y, instance.position.z)
+        .setRotation(rotation),
+      collider
+    );
     if (instances.length > maxInstanceCount) {
-      this.maxInstanceCount *= 2;
+      this.maxInstanceCount += 16;
       this.instanceMatrix = new InstancedBufferAttribute(new Float32Array(this.maxInstanceCount * 16), 16);
       this.updateInstances();
     } else {
@@ -85,13 +95,14 @@ class Instances<InstanceType extends Instance> extends InstancedMesh {
   }
 
   removeInstance(instance: InstanceType) {
-    const { instances } = this;
+    const { instances, physics } = this;
     const i = instances.indexOf(instance);
     if (i === -1) {
       return;
     }
     instances.splice(i, 1);
     instance.dispose();
+    physics.removeBody(instance);
     this.updateInstances();
     this.visible = this.count > 0;
   }
@@ -110,21 +121,6 @@ class Instances<InstanceType extends Instance> extends InstancedMesh {
     });
     this.instanceMatrix.needsUpdate = true;
     this.computeBoundingSphere();
-  }
-
-  override raycast(raycaster: Raycaster, intersects: Intersection[]) {
-    if (!this.visible) {
-      return;
-    }
-    let geometry: BufferGeometry | undefined;
-    if (this.collider) {
-      geometry = this.geometry;
-      this.geometry = this.collider;
-    }
-    super.raycast(raycaster, intersects);
-    if (geometry) {
-      this.geometry = geometry;
-    }
   }
 }
 

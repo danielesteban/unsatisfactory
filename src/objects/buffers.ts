@@ -1,3 +1,4 @@
+import RAPIER from '@dimforge/rapier3d-compat';
 import {
   BaseEvent,
   BoxGeometry,
@@ -11,6 +12,7 @@ import { SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 import Instances from '../core/instances';
 import Container from '../core/container';
 import { Item } from './items';
+import Physics from '../core/physics';
 import { loadTexture } from '../textures';
 import DiffuseMap from '../textures/rust_coarse_01_diff_1k.webp';
 import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.webp';
@@ -60,11 +62,10 @@ export class Buffer extends Container<BufferEvent> {
 };
 
 class Buffers extends Instances<Buffer> {
-  private static collider: BufferGeometry | undefined;
+  private static collider: RAPIER.ColliderDesc | undefined;
   static getCollider() {
     if (!Buffers.collider) {
-      Buffers.collider = new BoxGeometry(2, 2, 2);
-      Buffers.collider.computeBoundingSphere();
+      Buffers.collider = RAPIER.ColliderDesc.cuboid(1, 1, 1);
     }
     return Buffers.collider;
   }
@@ -108,8 +109,8 @@ class Buffers extends Instances<Buffer> {
     return Buffers.material;
   }
 
-  constructor() {
-    super(Buffers.getGeometry(), Buffers.getMaterial(), Buffers.getCollider());
+  constructor(physics: Physics) {
+    super(Buffers.getCollider(), Buffers.getGeometry(), Buffers.getMaterial(), physics);
   }
 
   create(position: Vector3, rotation: number) {

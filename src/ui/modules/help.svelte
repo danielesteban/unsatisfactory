@@ -57,7 +57,7 @@
         <div class="key spacebar">Space</div>
       </div>
     </div>
-    <div>Move Up</div>
+    <div>Jump</div>
   </div>
   <div>
     <div class="keys">
@@ -65,7 +65,7 @@
         <div class="key shift">Shit</div>
       </div>
     </div>
-    <div>Move Down</div>
+    <div>Sprint</div>
   </div>
 </div>
 

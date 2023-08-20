@@ -1,11 +1,10 @@
+import RAPIER from '@dimforge/rapier3d-compat';
 import {
   BoxGeometry,
   BufferGeometry,
   CylinderGeometry,
-  Intersection,
   Mesh,
   MeshStandardMaterial,
-  Raycaster,
   SRGBColorSpace,
   SphereGeometry,
   Vector3,
@@ -20,12 +19,10 @@ import NormalMap from '../textures/rock_boulder_dry_nor_gl_1k.webp';
 import RoughnessMap from '../textures/rock_boulder_dry_rough_1k.webp';
 
 export class Deposit extends Mesh {
-  private static collider: BufferGeometry | undefined;
+  private static collider: RAPIER.ColliderDesc | undefined;
   static getCollider() {
     if (!Deposit.collider) {
-      Deposit.collider = new SphereGeometry(4);
-      Deposit.collider.scale(1, 0.5, 1);
-      Deposit.collider.computeBoundingSphere();
+      Deposit.collider = RAPIER.ColliderDesc.cuboid(4, 2, 4);
     }
     return Deposit.collider;
   }
@@ -110,16 +107,6 @@ export class Deposit extends Mesh {
 
   getPurity() {
     return this.purity;
-  }
-
-  override raycast(raycaster: Raycaster, intersects: Intersection[]) {
-    const { geometry, visible } = this;
-    if (!visible) {
-      return;
-    }
-    this.geometry = Deposit.getCollider();
-    super.raycast(raycaster, intersects);
-    this.geometry = geometry;
   }
 
   private static readonly aux: Vector3 = new Vector3();

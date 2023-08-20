@@ -1,22 +1,20 @@
 import {
-  Event,
-  Intersection,
   Object3D,
   Quaternion,
   Vector3,
 } from 'three';
-import Instances, { Instance } from '../core/instances';
+import { Instance } from './instances';
+import { Intersection } from './physics';
 import { Belt } from '../objects/belts';
-import Buffers, { Buffer } from '../objects/buffers';
+import { Buffer } from '../objects/buffers';
 import Deposit from '../objects/deposit';
-import Fabricators, { Fabricator}  from '../objects/fabricators';
-import Foundations, { Foundation } from '../objects/foundations';
-import Generators, { Generator } from '../objects/generators';
-import Miners, { Miner } from '../objects/miners';
-import Poles, { Pole } from '../objects/poles';
-import Smelters, { Smelter } from '../objects/smelters';
-import { TerrainChunk } from '../objects/terrain';
-import Walls, { Wall } from '../objects/walls';
+import { Fabricator }  from '../objects/fabricators';
+import { Foundation } from '../objects/foundations';
+import { Generator } from '../objects/generators';
+import { Miner } from '../objects/miners';
+import { Pole } from '../objects/poles';
+import { Smelter } from '../objects/smelters';
+import { Wall } from '../objects/walls';
 import { Wire } from '../objects/wires';
 
 export enum Brush {
@@ -87,33 +85,33 @@ export const names: Record<Brush, string> = {
   [Brush.wire]: 'Wire',
 };
 
-export const getFromObject = (instance?: Instances<Instance> | Instance | Belt | Wire) => {
-  if (instance instanceof Buffer || instance instanceof Buffers) {
-    return Brush.buffer;
-  }
-  if (instance instanceof Fabricator || instance instanceof Fabricators) {
-    return Brush.fabricator;
-  }
-  if (instance instanceof Foundation || instance instanceof Foundations) {
-    return Brush.foundation;
-  }
-  if (instance instanceof Generator || instance instanceof Generators) {
-    return Brush.generator;
-  }
-  if (instance instanceof Miner || instance instanceof Miners) {
-    return Brush.miner;
-  }
-  if (instance instanceof Pole || instance instanceof Poles) {
-    return Brush.pole;
-  }
-  if (instance instanceof Smelter || instance instanceof Smelters) {
-    return Brush.smelter;
-  }
-  if (instance instanceof Wall || instance instanceof Walls) {
-    return Brush.wall;
-  }
+export const getFromObject = (instance?: Instance | Belt | Wire) => {
   if (instance instanceof Belt) {
     return Brush.belt;
+  }
+  if (instance instanceof Buffer) {
+    return Brush.buffer;
+  }
+  if (instance instanceof Fabricator) {
+    return Brush.fabricator;
+  }
+  if (instance instanceof Foundation) {
+    return Brush.foundation;
+  }
+  if (instance instanceof Generator) {
+    return Brush.generator;
+  }
+  if (instance instanceof Miner) {
+    return Brush.miner;
+  }
+  if (instance instanceof Pole) {
+    return Brush.pole;
+  }
+  if (instance instanceof Smelter) {
+    return Brush.smelter;
+  }
+  if (instance instanceof Wall) {
+    return Brush.wall;
   }
   if (instance instanceof Wire) {
     return Brush.wire;
@@ -121,16 +119,16 @@ export const getFromObject = (instance?: Instances<Instance> | Instance | Belt |
   return Brush.none;
 };
 
-export const pick = (intersection: Intersection<Object3D<Event>>) => {
-  if (intersection.object instanceof Instances) {
-    rotation = intersection.object.getInstance(intersection.instanceId!).rotation;
-  }
+export const pick = (intersection: Intersection) => {
   if (
-    intersection.object instanceof Instances
+    intersection.object instanceof Instance
     || intersection.object instanceof Belt
     || intersection.object instanceof Wire
   ) {
     set(getFromObject(intersection.object));
+  }
+  if (intersection.object instanceof Instance) {
+    rotation = intersection.object.rotation;
   }
 };
 
@@ -157,34 +155,26 @@ const quaternion = new Quaternion();
 const rotatedDirection = new Vector3();
 const rotatedOffset = new Vector3();
 const rotatedBrushOffset = new Vector3();
-export const snap = (intersection: Intersection<Object3D<Event>>) => {
-  if (intersection.object instanceof Deposit) {
-    if (brush === Brush.miner) {
-      return intersection.object.localToWorld(new Vector3(0, 2, 0)).add(terrainOffsets[brush]);
-    }
-    return intersection.point.clone().add(terrainOffsets[brush]);
+export const snap = (intersection: Intersection) => {
+  if (intersection.object instanceof Deposit && brush === Brush.miner) {
+    return intersection.object.localToWorld(new Vector3(0, 2, 0)).add(terrainOffsets[brush]);
   }
-  if (intersection.object instanceof TerrainChunk) {
-    return intersection.point.clone().add(terrainOffsets[brush]);
-  }
-  if (intersection.object instanceof Instances) {
-    const instance = intersection.object.getInstance(intersection.instanceId!);
+  if (intersection.object instanceof Instance) {
     const brushOffset = offsets[brush];
     const offset = offsets[getFromObject(intersection.object)];
 
-    const direction = intersection.face!.normal;
-    quaternion.setFromAxisAngle(Object3D.DEFAULT_UP, instance.rotation);
-    rotatedOffset.copy(offset).multiply(direction).applyQuaternion(quaternion);
+    quaternion.setFromAxisAngle(Object3D.DEFAULT_UP, intersection.object.rotation);
+    rotatedOffset.copy(offset).multiply(intersection.normal).applyQuaternion(quaternion);
 
-    rotatedDirection.copy(direction).applyQuaternion(quaternion);
+    rotatedDirection.copy(intersection.normal).applyQuaternion(quaternion);
     quaternion.setFromAxisAngle(Object3D.DEFAULT_UP, -rotation);
     rotatedDirection.applyQuaternion(quaternion);
     quaternion.invert();
     rotatedBrushOffset.copy(brushOffset).multiply(rotatedDirection).applyQuaternion(quaternion);
 
-    return instance.position.clone()
+    return intersection.object.position.clone()
       .add(rotatedOffset)
       .add(rotatedBrushOffset);
   }
-  return intersection.point;
+  return intersection.point.clone().add(terrainOffsets[brush]);
 };

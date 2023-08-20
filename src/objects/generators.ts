@@ -1,3 +1,4 @@
+import RAPIER from '@dimforge/rapier3d-compat';
 import {
   BoxGeometry,
   BufferAttribute,
@@ -16,6 +17,7 @@ import { mergeGeometries, mergeVertices } from 'three/examples/jsm/utils/BufferG
 import { ADDITION, Brush, Evaluator } from 'three-bvh-csg';
 import Instances from '../core/instances';
 import { PoweredContainer } from '../core/container';
+import Physics from '../core/physics';
 import { loadTexture } from '../textures';
 import DiffuseMap from '../textures/rust_coarse_01_diff_1k.webp';
 import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.webp';
@@ -47,16 +49,15 @@ export class Generator extends PoweredContainer {
 };
 
 class Generators extends Instances<Generator> {
-  private static collider: BufferGeometry | undefined;
+  private static collider: RAPIER.ColliderDesc[] | undefined;
   static getCollider() {
     if (!Generators.collider) {
-      const colliderA = new BoxGeometry(4, 2, 4);
-      colliderA.translate(0, -5, 0);
-      const colliderB = new BoxGeometry(1, 10, 1);
-      colliderB.translate(1, 1, 0);
-      const collider = mergeGeometries([colliderA, colliderB]);
-      collider.computeBoundingSphere();
-      Generators.collider = collider;
+      Generators.collider = [
+        RAPIER.ColliderDesc.cuboid(2, 1, 2)
+          .setTranslation(0, -5, 0),
+        RAPIER.ColliderDesc.cuboid(0.5, 5, 0.5)
+          .setTranslation(1, 1, 0),
+      ];
     }
     return Generators.collider;
   }
@@ -204,8 +205,8 @@ class Generators extends Instances<Generator> {
     return Generators.depthMaterial;
   }
 
-  constructor() {
-    super(Generators.getGeometry(), Generators.getMaterial(), Generators.getCollider(), Generators.getDepthMaterial());
+  constructor(physics: Physics) {
+    super(Generators.getCollider(), Generators.getGeometry(), Generators.getMaterial(), physics, Generators.getDepthMaterial());
   }
 
   create(position: Vector3, rotation: number, power: number = 100) {

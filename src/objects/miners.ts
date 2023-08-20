@@ -1,3 +1,4 @@
+import RAPIER from '@dimforge/rapier3d-compat';
 import {
   BoxGeometry,
   BufferGeometry,
@@ -12,6 +13,7 @@ import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 import Instances from '../core/instances';
 import { PoweredContainer } from '../core/container';
+import Physics from '../core/physics';
 import SFX from '../core/sfx';
 import { Item, Mining } from './items';
 import { loadTexture } from '../textures';
@@ -92,11 +94,10 @@ export class Miner extends PoweredContainer {
 };
 
 class Miners extends Instances<Miner> {
-  private static collider: BufferGeometry | undefined;
+  private static collider: RAPIER.ColliderDesc | undefined;
   static getCollider() {
     if (!Miners.collider) {
-      Miners.collider = new BoxGeometry(2, 4, 2);
-      Miners.collider.computeBoundingSphere();
+      Miners.collider = RAPIER.ColliderDesc.cuboid(1, 2, 1);
     }
     return Miners.collider;
   }
@@ -153,8 +154,8 @@ class Miners extends Instances<Miner> {
 
   private readonly sfx: SFX;
 
-  constructor(sfx: SFX) {
-    super(Miners.getGeometry(), Miners.getMaterial(), Miners.getCollider());
+  constructor(physics: Physics, sfx: SFX) {
+    super(Miners.getCollider(), Miners.getGeometry(), Miners.getMaterial(), physics);
     this.sfx = sfx;
   }
 

@@ -1,3 +1,4 @@
+import RAPIER from '@dimforge/rapier3d-compat';
 import {
   BoxGeometry,
   BufferGeometry,
@@ -9,6 +10,7 @@ import {
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 import Instances from '../core/instances';
+import Physics from '../core/physics';
 import SFX from '../core/sfx';
 import Transformer from '../core/transformer';
 import { Recipe, Recipes, Transformer as ItemTransformer } from './items';
@@ -37,11 +39,10 @@ export class Fabricator extends Transformer {
 };
 
 class Fabricators extends Instances<Fabricator> {
-  private static collider: BufferGeometry | undefined;
+  private static collider: RAPIER.ColliderDesc | undefined;
   static getCollider() {
     if (!Fabricators.collider) {
-      Fabricators.collider = new BoxGeometry(4, 4, 2);
-      Fabricators.collider.computeBoundingSphere();
+      Fabricators.collider = RAPIER.ColliderDesc.cuboid(2, 2, 1);
     }
     return Fabricators.collider;
   }
@@ -105,8 +106,8 @@ class Fabricators extends Instances<Fabricator> {
 
   private readonly sfx: SFX;
 
-  constructor(sfx: SFX) {
-    super(Fabricators.getGeometry(), Fabricators.getMaterial(), Fabricators.getCollider());
+  constructor(physics: Physics, sfx: SFX) {
+    super(Fabricators.getCollider(), Fabricators.getGeometry(), Fabricators.getMaterial(), physics);
     this.sfx = sfx;
   }
 

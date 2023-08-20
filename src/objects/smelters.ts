@@ -1,3 +1,4 @@
+import RAPIER from '@dimforge/rapier3d-compat';
 import {
   BoxGeometry,
   BufferGeometry,
@@ -8,9 +9,10 @@ import {
   SRGBColorSpace,
   Vector3,
 } from 'three';
-import { mergeGeometries, mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 import Instances from '../core/instances';
+import Physics from '../core/physics';
 import SFX from '../core/sfx';
 import Transformer from '../core/transformer';
 import { Recipe, Recipes, Transformer as ItemTransformer } from './items';
@@ -52,16 +54,15 @@ export class Smelter extends Transformer {
 };
 
 class Smelters extends Instances<Smelter> {
-  private static collider: BufferGeometry | undefined;
+  private static collider: RAPIER.ColliderDesc[] | undefined;
   static getCollider() {
     if (!Smelters.collider) {
-      const colliderA = new BoxGeometry(2, 4, 2);
-      colliderA.translate(1, 0, 0);
-      const colliderB = new BoxGeometry(2, 2, 2);
-      colliderB.translate(-1, -1, 0);
-      const collider = mergeGeometries([colliderA, colliderB]);
-      collider.computeBoundingSphere();
-      Smelters.collider = collider;
+      Smelters.collider = [
+        RAPIER.ColliderDesc.cuboid(1, 2, 1)
+          .setTranslation(1, 0, 0),
+        RAPIER.ColliderDesc.cuboid(1, 1, 1)
+          .setTranslation(-1, -1, 0),
+      ];
     }
     return Smelters.collider;
   }
@@ -129,8 +130,8 @@ class Smelters extends Instances<Smelter> {
 
   private readonly sfx: SFX;
 
-  constructor(sfx: SFX) {
-    super(Smelters.getGeometry(), Smelters.getMaterial(), Smelters.getCollider());
+  constructor(physics: Physics, sfx: SFX) {
+    super(Smelters.getCollider(), Smelters.getGeometry(), Smelters.getMaterial(), physics);
     this.sfx = sfx;
   }
 

@@ -1,7 +1,5 @@
 import './main.css';
 import {
-  Event,
-  Intersection,
   Object3D,
   Quaternion,
   Raycaster,
@@ -12,21 +10,22 @@ import Viewport from './core/viewport';
 import { Brush, brush, pick, rotation, set as setBrush, snap } from './core/brush';
 import { download, load, serialize, deserialize } from './core/loader';
 import Container, { PoweredContainer, Connector } from './core/container';
-import Instances, { Instance } from './core/instances';
+import { Instance } from './core/instances';
+import { Intersection } from './core/physics';
 import Belts, { Belt } from './objects/belts';
-import Buffers from './objects/buffers';
+import Buffers, { Buffer } from './objects/buffers';
 import Deposit from './objects/deposit';
-import Fabricators from './objects/fabricators';
-import Foundations from './objects/foundations';
-import Generators from './objects/generators';
+import Fabricators, { Fabricator } from './objects/fabricators';
+import Foundations, { Foundation } from './objects/foundations';
+import Generators, { Generator } from './objects/generators';
 import Ghost from './objects/ghost';
 import Grass from './objects/grass';
 import Items from './objects/items';
-import Miners from './objects/miners';
-import Poles from './objects/poles';
-import Smelters from './objects/smelters';
+import Miners, { Miner } from './objects/miners';
+import Poles, { Pole } from './objects/poles';
+import Smelters, { Smelter } from './objects/smelters';
 import Terrain from './objects/terrain';
-import Walls from './objects/walls';
+import Walls, { Wall } from './objects/walls';
 import Wires, { Wire } from './objects/wires';
 import UI, { setTooltip } from './ui';
 import Achievements from './ui/stores/achievements';
@@ -57,35 +56,34 @@ const viewport = new Viewport();
   Grass.getMaterial(),
 ].forEach(viewport.setupMaterialTime.bind(viewport));
 
-const terrain = new Terrain();
-viewport.controls.setHeightmap(terrain);
+const terrain = new Terrain(viewport.physics);
 viewport.scene.add(terrain);
 
 const belts = new Belts();
 viewport.scene.add(belts);
 
-const buffers = new Buffers();
+const buffers = new Buffers(viewport.physics);
 viewport.scene.add(buffers);
 
-const fabricators = new Fabricators(viewport.sfx);
+const fabricators = new Fabricators(viewport.physics, viewport.sfx);
 viewport.scene.add(fabricators);
 
-const foundations = new Foundations();
+const foundations = new Foundations(viewport.physics);
 viewport.scene.add(foundations);
 
-const generators = new Generators();
+const generators = new Generators(viewport.physics);
 viewport.scene.add(generators);
 
-const miners = new Miners(viewport.sfx);
+const miners = new Miners(viewport.physics, viewport.sfx);
 viewport.scene.add(miners);
 
-const poles = new Poles();
+const poles = new Poles(viewport.physics);
 viewport.scene.add(poles);
 
-const smelters = new Smelters(viewport.sfx);
+const smelters = new Smelters(viewport.physics, viewport.sfx);
 viewport.scene.add(smelters);
 
-const walls = new Walls();
+const walls = new Walls(viewport.physics);
 viewport.scene.add(walls);
 
 const wires = new Wires();
@@ -103,57 +101,54 @@ const to: Omit<Connector, 'container'> & { container: Container | PoweredContain
   direction: new Vector3(),
 };
 
-const canBelt = (intersection: Intersection<Object3D<Event>>) => (
+const canBelt = (intersection: Intersection) => (
   (
-    intersection.object instanceof Buffers
-    || intersection.object instanceof Fabricators
-    || intersection.object instanceof Miners
-    || intersection.object instanceof Smelters
+    intersection.object instanceof Buffer
+    || intersection.object instanceof Fabricator
+    || intersection.object instanceof Miner
+    || intersection.object instanceof Smelter
   )
-  && Math.abs(intersection.face!.normal.dot(Object3D.DEFAULT_UP)) == 0
+  && Math.abs(intersection.normal.dot(Object3D.DEFAULT_UP)) == 0
   && !(
     (intersection.object instanceof Fabricators || intersection.object instanceof Smelters)
-    && Math.abs(intersection.face!.normal.dot(worldNorth)) > 0
+    && Math.abs(intersection.normal.dot(worldNorth)) > 0
   )
-  && (!from.container || from.container !== intersection.object.getInstance(intersection.instanceId!))
+  && (!from.container || from.container !== intersection.object)
 );
 
 const interactionLimit = 12 ** 2;
-const canInteract = (intersection: Intersection<Object3D<Event>>) => {
+const canInteract = (intersection: Intersection) => {
   if (
     !(
-      intersection.object instanceof Buffers
-      || intersection.object instanceof Fabricators
-      || intersection.object instanceof Generators
-      || intersection.object instanceof Miners
-      || intersection.object instanceof Smelters
+      intersection.object instanceof Buffer
+      || intersection.object instanceof Fabricator
+      || intersection.object instanceof Generator
+      || intersection.object instanceof Miner
+      || intersection.object instanceof Smelter
     )
   ) {
     return false;
   }
-  const instance = intersection.object.getInstance(intersection.instanceId!);
-  return instance.position.distanceToSquared(viewport.camera.position) <= interactionLimit;
+  return intersection.object.position.distanceToSquared(viewport.camera.position) <= interactionLimit;
 };
 
-const canWire = (intersection: Intersection<Object3D<Event>>) => {
+const canWire = (intersection: Intersection) => {
   if (
     !(
-      intersection.object instanceof Fabricators
-      || intersection.object instanceof Generators
-      || intersection.object instanceof Miners
-      || intersection.object instanceof Poles
-      || intersection.object instanceof Smelters
+      intersection.object instanceof Fabricator
+      || intersection.object instanceof Generator
+      || intersection.object instanceof Miner
+      || intersection.object instanceof Pole
+      || intersection.object instanceof Smelter
     )
   ) {
     return false;
   }
-  const instance = intersection.object.getInstance(intersection.instanceId!);
-  return instance.canWire(from.container as PoweredContainer);
+  return intersection.object.canWire(from.container as PoweredContainer);
 };
 
-const quaternion = new Quaternion();
 const worldNorth = new Vector3(0, 0, -1);
-const create = (intersection: Intersection<Object3D<Event>>) => {
+const create = (intersection: Intersection) => {
   if (
     brush === Brush.none
     || brush === Brush.dismantle
@@ -168,12 +163,12 @@ const create = (intersection: Intersection<Object3D<Event>>) => {
         return 'nope';
       }
       if (!from.container) {
-        from.container = (intersection.object as Buffers | Fabricators | Miners | Smelters).getInstance(intersection.instanceId!);
-        from.direction.copy(intersection.face!.normal);
+        from.container = intersection.object as Container;
+        from.direction.copy(intersection.normal);
         return 'tap';
       }
-      to.container = (intersection.object as Buffers | Fabricators | Miners | Smelters).getInstance(intersection.instanceId!);
-      to.direction.copy(intersection.face!.normal);
+      to.container = intersection.object as Container;
+      to.direction.copy(intersection.normal);
       quaternion.setFromAxisAngle(Object3D.DEFAULT_UP, from.container.rotation);
       from.direction.applyQuaternion(quaternion);
       quaternion.setFromAxisAngle(Object3D.DEFAULT_UP, to.container.rotation);
@@ -222,18 +217,18 @@ const create = (intersection: Intersection<Object3D<Event>>) => {
         return 'nope';
       }
       if (!from.container) {
-        from.container = (intersection.object as Fabricators | Generators | Miners | Poles | Smelters).getInstance(intersection.instanceId!);
+        from.container = intersection.object as Container;
         return 'tap';
       }
-      to.container = (intersection.object as Fabricators | Generators | Miners | Poles | Smelters).getInstance(intersection.instanceId!);
+      to.container = intersection.object as Container;
       wires.create(from.container as PoweredContainer, to.container as PoweredContainer);
       return 'wire';
   }
 };
 
-const remove = (intersection: Intersection<Object3D<Event>>) => {
-  if (intersection.object instanceof Instances) {
-    const instance = intersection.object.getInstance(intersection.instanceId!);
+const remove = (intersection: Intersection) => {
+  if (intersection.object instanceof Instance) {
+    const instance = intersection.object;
     if (instance instanceof Container) {
       const { input, output } = instance.getBelts();
       [...input, ...output].forEach((belt) => belts.remove(belt));
@@ -241,7 +236,23 @@ const remove = (intersection: Intersection<Object3D<Event>>) => {
     if (instance instanceof PoweredContainer) {
       [...instance.getWires()].forEach((wire) => wires.remove(wire));
     }
-    intersection.object.removeInstance(instance);
+    if (instance instanceof Buffer) {
+      buffers.removeInstance(instance);
+    } else if (instance instanceof Fabricator) {
+      fabricators.removeInstance(instance);
+    } else if (instance instanceof Foundation) {
+      foundations.removeInstance(instance);
+    } else if (instance instanceof Generator) {
+      generators.removeInstance(instance);
+    } else if (instance instanceof Miner) {
+      miners.removeInstance(instance);
+    } else if (instance instanceof Pole) {
+      poles.removeInstance(instance);
+    } else if (instance instanceof Smelter) {
+      smelters.removeInstance(instance);
+    } else if (instance instanceof Wall) {
+      walls.removeInstance(instance);
+    }
     return;
   }
   if (intersection.object instanceof Belt) {
@@ -257,17 +268,16 @@ const remove = (intersection: Intersection<Object3D<Event>>) => {
 
 const handleInput = (
   { primary, secondary, tertiary, build, dismantle, interact }: { primary: boolean; secondary: boolean; tertiary: boolean; build: boolean; dismantle: boolean; interact: boolean; },
-  intersection: Intersection<Object3D<Event>>
+  intersection?: Intersection
 ) => {
   const hasFrom = from.container !== undefined;
-  if (primary && brush !== Brush.none && intersection?.object && intersection?.face) {
-    if (brush === Brush.dismantle) {
-      const sound = remove(intersection) || 'build';
-      viewport.sfx.playAt(sound, intersection.point, 0, sound === 'nope' ? 0 : Math.random() * -600);
-    } else {
-      const sound = create(intersection) || 'build';
-      viewport.sfx.playAt(sound, intersection.point, 0, sound === 'nope' ? 0 : Math.random() * (sound === 'wire' ? 100 : 600));
-    }
+  if (primary && intersection && brush !== Brush.none && brush !== Brush.dismantle) {
+    const sound = create(intersection) || 'build';
+    viewport.sfx.playAt(sound, intersection.point, 0, sound === 'nope' ? 0 : Math.random() * (sound === 'wire' ? 100 : 600));
+  }
+  if (primary && intersection?.object && brush === Brush.dismantle) {
+    const sound = remove(intersection) || 'build';
+    viewport.sfx.playAt(sound, intersection.point, 0, sound === 'nope' ? 0 : Math.random() * -600);
   }
   if (tertiary && intersection?.object) {
     pick(intersection);
@@ -283,7 +293,7 @@ const handleInput = (
   if (interact || secondary) {
     setBrush(Brush.none);
     if (intersection?.object && canInteract(intersection)) {
-      UI('container', (intersection.object as Instances<Instance>).getInstance(intersection.instanceId!));
+      UI('container', intersection.object as Instance);
     }
   }
   if (hasFrom) {
@@ -292,9 +302,9 @@ const handleInput = (
 };
 
 const aux = new Vector3();
-const hover = (intersection: Intersection<Object3D<Event>>) => {
+const hover = (intersection?: Intersection) => {
   if (
-    intersection?.object
+    intersection
     && !(
       intersection.object instanceof Belt
       || intersection.object instanceof Wire
@@ -339,34 +349,23 @@ const hover = (intersection: Intersection<Object3D<Event>>) => {
     intersection?.object
     && brush === Brush.dismantle
     && (
-      intersection.object instanceof Instances
+      intersection.object instanceof Instance
       || intersection.object instanceof Belt
       || intersection.object instanceof Wire
     )
   ) {
-    let instance;
-    if (
-      intersection.object instanceof Belt
-      || intersection.object instanceof Wire
-    ) {
-      instance = intersection.object;
-    } else {
-      instance = (intersection.object as Instances<Instance>).getInstance(intersection.instanceId!);
-    }
-    setTooltip('dismantle', instance);
+    setTooltip('dismantle', intersection.object);
     return;
   }
 
   if (
-    intersection?.face
-    && intersection?.object
+    intersection?.object
     && (
       (brush === Brush.belt && canBelt(intersection))
       || (brush === Brush.wire && canWire(intersection))
     )
   ) {
-    const instance = (intersection.object as Instances<Instance>).getInstance(intersection.instanceId!);
-    setTooltip(brush === Brush.belt ? 'belt' : 'wire', instance, from.container);
+    setTooltip(brush === Brush.belt ? 'belt' : 'wire', intersection.object as Instance, from.container);
     return;
   } else if (
     from.container
@@ -381,7 +380,7 @@ const hover = (intersection: Intersection<Object3D<Event>>) => {
     && intersection?.object
     && canInteract(intersection)
   ) {
-    setTooltip('configure', (intersection.object as Instances<Instance>).getInstance(intersection.instanceId!));
+    setTooltip('configure', intersection.object as Instance);
     return;
   }
 
@@ -398,35 +397,61 @@ const hover = (intersection: Intersection<Object3D<Event>>) => {
   setTooltip(undefined);
 };
 
+const terrainRadius = 8;
 const center = new Vector2();
+const intersection: Intersection = {
+  distance: 0,
+  normal: new Vector3(),
+  point: new Vector3(),
+};
+const quaternion = new Quaternion();
 const raycaster = new Raycaster();
+raycaster.far = viewport.camera.far;
 viewport.setAnimationLoop((buttons, delta) => {
   belts.step(delta);
-  terrain.update(viewport.camera.position, 8);
+  terrain.update(viewport.camera.position, terrainRadius);
   raycaster.setFromCamera(center, viewport.camera);
-  const intersection = raycaster.intersectObjects(viewport.scene.children)[0];
-  hover(intersection);
+  // @dani @incomplete
+  // belts and wires don't have physics colliders implemented yet,
+  // so.. keep using the threejs raycaster for those and merge them in.
+  const vertexHit = (brush === Brush.dismantle || buttons.tertiary) && raycaster.intersectObjects([belts, wires])[0];
+  const physicsHit = viewport.physics.castRay(intersection, raycaster.ray.origin, raycaster.ray.direction, raycaster.far);
+  let hit;
+  if (physicsHit && (!vertexHit || intersection.distance < vertexHit.distance)) {
+    hit = intersection;
+    if (intersection.object && intersection.object instanceof Instance) {
+      quaternion.setFromAxisAngle(Object3D.DEFAULT_UP, -intersection.object.rotation);
+      intersection.normal.applyQuaternion(quaternion);
+    }
+  } else if (vertexHit) {
+    intersection.distance = vertexHit.distance;
+    intersection.normal.copy(vertexHit.face!.normal);
+    intersection.object = vertexHit.object;
+    intersection.point.copy(vertexHit.point);
+    hit = intersection;
+  }
+  hover(hit);
   if (buttons.primary || buttons.secondary || buttons.tertiary || buttons.build || buttons.dismantle || buttons.interact) {
-    handleInput(buttons, intersection);
+    handleInput(buttons, hit);
   }
 });
 
 const restore = () => {
   const stored = localStorage.getItem('autosave');
-  if (stored) {
-    let serialized;
-    try {
-      serialized = JSON.parse(stored);
-    } catch (e) {
-      return false;
-    }
-    return deserialize(
-      serialized,
-      belts, buffers, fabricators, foundations, generators, miners, poles, smelters, walls, wires,
-      viewport.camera
-    );
+  if (!stored) {
+    return;
   }
-  return false;
+  let serialized;
+  try {
+    serialized = JSON.parse(stored);
+  } catch (e) {
+    return;
+  }
+  deserialize(
+    serialized,
+    belts, buffers, fabricators, foundations, generators, miners, poles, smelters, walls, wires,
+    viewport.camera
+  );
 };
 
 const save = () => {
@@ -465,3 +490,4 @@ const settings = new Settings({
 
 restore();
 setInterval(save, 60000);
+terrain.update(viewport.camera.position, terrainRadius);

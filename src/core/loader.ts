@@ -12,7 +12,7 @@ import Smelters, { Smelter } from '../objects/smelters';
 import Walls from '../objects/walls';
 import Wires, { Wire } from '../objects/wires';
 
-const version = 4;
+const version = 5;
 
 type SerializedConnection = [number, number];
 type SerializedDirection = [number, number, number];
@@ -238,6 +238,20 @@ const migrations: Record<number, (serialized: Serialized) => Serialized> = {
       belts: serialized.belts.filter(([from, _fromDirection, to, _toDirection]) => from[0] !== 3 && to[0] !== 3),
       wires: serialized.wires.filter(([from, to]) => from[0] !== 3 && to[0] !== 3),
       version: 4,
+    };
+  },
+  [4]: (serialized: Serialized) => {
+    return {
+      ...serialized,
+      camera: [
+        [
+          serialized.camera[0][0],
+          serialized.camera[0][1] + 0.15,
+          serialized.camera[0][2],
+        ],
+        serialized.camera[1],
+      ],
+      version: 5,
     };
   },
 };

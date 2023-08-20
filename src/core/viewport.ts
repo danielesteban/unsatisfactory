@@ -15,6 +15,7 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { N8AOPass } from 'n8ao';
 import { SMAAPass } from 'three/examples/jsm/postprocessing/SMAAPass.js';
 import Controls, { Buttons } from './controls';
+import Physics from './physics';
 import SFX from './sfx';
 import { loadEnvironment } from '../textures';
 import Environment from '../textures/industrial_sunset_puresky_1k.exr';
@@ -28,6 +29,7 @@ class Viewport extends EventDispatcher {
   public readonly camera: PerspectiveCamera;
   public readonly controls: Controls;
   public readonly dom: HTMLElement;
+  public readonly physics: Physics;
   public readonly renderer: WebGLRenderer;
   public readonly scene: Scene;
   public readonly sfx: SFX;
@@ -43,7 +45,8 @@ class Viewport extends EventDispatcher {
     
     this.camera = new PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     this.clock = new Clock();
-    this.controls = new Controls(this.camera, dom);
+    this.physics = new Physics();
+    this.controls = new Controls(this.camera, this.physics, dom);
     this.renderer = new WebGLRenderer({
       depth: false,
       stencil: false,
@@ -115,13 +118,14 @@ class Viewport extends EventDispatcher {
   }
 
   private render() {
-    const { camera, clock, composer, controls, csm, sfx, time } = this;
+    const { camera, clock, composer, controls, csm, physics, sfx, time } = this;
     if (!this.animate) {
       return;
     }
     const delta = Math.min(clock.getDelta(), 0.2);
     time.value = clock.oldTime / 1000;
     controls.update(delta);
+    physics.step(delta);
     this.animate(controls.buttons, delta, time.value);
     controls.clearButtons();
     sfx.updateListener(camera);

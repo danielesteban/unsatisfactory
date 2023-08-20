@@ -1,3 +1,4 @@
+import RAPIER from '@dimforge/rapier3d-compat';
 import {
   BoxGeometry,
   BufferGeometry,
@@ -11,6 +12,7 @@ import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { ADDITION, Brush, Evaluator } from 'three-bvh-csg';
 import Instances from '../core/instances';
 import { PoweredContainer } from '../core/container';
+import Physics from '../core/physics';
 import { loadTexture } from '../textures';
 import DiffuseMap from '../textures/rust_coarse_01_diff_1k.webp';
 import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.webp';
@@ -27,11 +29,10 @@ export class Pole extends PoweredContainer {
 };
 
 class Poles extends Instances<Pole> {
-  private static collider: BufferGeometry | undefined;
+  private static collider: RAPIER.ColliderDesc | undefined;
   static getCollider() {
     if (!Poles.collider) {
-      Poles.collider = new BoxGeometry(0.5, 6, 0.5);
-      Poles.collider.computeBoundingSphere();
+      Poles.collider = RAPIER.ColliderDesc.cuboid(0.25, 3, 0.25);
     }
     return Poles.collider;
   }
@@ -72,8 +73,8 @@ class Poles extends Instances<Pole> {
     return Poles.material;
   }
 
-  constructor() {
-    super(Poles.getGeometry(), Poles.getMaterial(), Poles.getCollider());
+  constructor(physics: Physics) {
+    super(Poles.getCollider(), Poles.getGeometry(), Poles.getMaterial(), physics);
   }
 
   create(position: Vector3, rotation: number) {

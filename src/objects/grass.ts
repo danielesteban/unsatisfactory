@@ -158,10 +158,6 @@ class Grass extends Mesh {
     instances.needsUpdate = true;
     this.visible = true;
   }
-  
-  override raycast() {
-
-  }
 }
 
 export default Grass;

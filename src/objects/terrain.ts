@@ -1,3 +1,4 @@
+import RAPIER from '@dimforge/rapier3d-compat';
 import {
   Group,
   Material,
@@ -11,6 +12,7 @@ import {
   Vector3,
 } from 'three';
 import { ImprovedNoise } from 'three/examples/jsm/math/ImprovedNoise.js';
+import Physics from '../core/physics';
 import Deposit from './deposit';
 import Grass from './grass';
 import { loadTexture } from '../textures';
@@ -33,6 +35,7 @@ export class TerrainChunk extends Mesh {
   }
 
   public readonly chunk: Vector3;
+  public readonly heightmap: Float32Array;
   public readonly deposit: Deposit;
   public readonly grass: Grass;
   constructor(material: Material) {
@@ -40,6 +43,7 @@ export class TerrainChunk extends Mesh {
     this.castShadow = this.receiveShadow = true;
     this.matrixAutoUpdate = false;
     this.chunk = new Vector3();
+    this.heightmap = new Float32Array((TerrainChunk.size + 1) * (TerrainChunk.size + 1));
     this.deposit = new Deposit();
     this.add(this.deposit);
     this.grass = new Grass(this.geometry.boundingSphere!);
@@ -49,15 +53,25 @@ export class TerrainChunk extends Mesh {
   private static readonly aux: Vector3 = new Vector3();
   private static readonly center: Vector3 = new Vector3();
   update(chunk: Vector3, getHeight: (position: Vector3) => number) {
-    const { deposit, geometry, grass, position: origin } = this;
+    const { deposit, geometry, grass, heightmap, position: origin } = this;
     const { aux, center } = TerrainChunk;
     this.chunk.copy(chunk);
     origin.copy(chunk).multiplyScalar(TerrainChunk.size);
     const position = geometry.getAttribute('position');
+    for (let i = 0, x = 0; x < (TerrainChunk.size + 1); x++) {
+      for (let z = 0; z < (TerrainChunk.size + 1); z++, i++) {
+        heightmap[i] = getHeight(aux.set(x - TerrainChunk.size * 0.5, 0, z - TerrainChunk.size * 0.5).add(origin));
+      }
+    }
     let maxRadiusSq = 0;
     for (let i = 0; i < position.count; i++) {
-      position.setY(i, getHeight(aux.fromBufferAttribute(position, i).add(origin)));
-      maxRadiusSq = Math.max(maxRadiusSq, center.distanceToSquared(aux.fromBufferAttribute(position, i)));
+      aux.fromBufferAttribute(position, i);
+      aux.y = heightmap[
+        Math.floor(aux.x + TerrainChunk.size * 0.5) * (TerrainChunk.size + 1)
+        + Math.floor(aux.z + TerrainChunk.size * 0.5)
+      ];
+      position.setY(i, aux.y);
+      maxRadiusSq = Math.max(maxRadiusSq, center.distanceToSquared(aux));
     }
     geometry.boundingSphere!.radius = Math.sqrt(maxRadiusSq);
     position.needsUpdate = true;
@@ -159,10 +173,11 @@ class Terrain extends Group {
   private readonly anchor: Vector3;
   private readonly map: Map<string, TerrainChunk>;
   private readonly noise: ImprovedNoise;
+  private readonly physics: Physics;
   private readonly pool: TerrainChunk[];
   private readonly queue: TerrainChunk[];
 
-  constructor() {
+  constructor(physics: Physics) {
     super();
     this.updateMatrixWorld();
     this.matrixAutoUpdate = false;
@@ -172,6 +187,7 @@ class Terrain extends Group {
     this.anchor = new Vector3(Infinity, Infinity, Infinity);
     this.map = new Map();
     this.noise = new ImprovedNoise();
+    this.physics = physics;
     this.pool = [];
     this.queue = [];
   }
@@ -218,7 +234,7 @@ class Terrain extends Group {
   private static readonly aux: Vector3 = new Vector3();
   private static readonly center: Vector3 = new Vector3(TerrainChunk.size * 0.5, 0, TerrainChunk.size * 0.5);
   update(position: Vector3, radius: number) {
-    const { anchor, children, map, pool, queue } = this;
+    const { anchor, children, map, physics, pool, queue } = this;
     const { aux, center } = Terrain;
     aux.copy(position).add(center).divideScalar(TerrainChunk.size).floor();
     aux.y = 0;
@@ -227,6 +243,15 @@ class Terrain extends Group {
         const queued = queue.shift()!;
         queued.updateDeposit(this.getDeposit, this.getGrass, this.getHeight);
         queued.updateGrass(this.getGrass, this.getHeight);
+        if (queued.deposit.visible) {
+          physics.addBody(
+            queued.deposit,
+            RAPIER.RigidBodyDesc.fixed()
+              .setTranslation(queued.position.x + queued.deposit.position.x, queued.position.y + queued.deposit.position.y, queued.position.z + queued.deposit.position.z)
+              .setRotation(queued.deposit.quaternion),
+            Deposit.getCollider()
+          );
+        }
       }
       return;
     }
@@ -237,6 +262,8 @@ class Terrain extends Group {
       const child = children[i] as TerrainChunk;
       if (child.chunk.distanceToSquared(anchor) >= radiusSQ) {
         map.delete(`${child.chunk.x}:${child.chunk.z}`);
+        physics.removeCollider(child);
+        physics.removeBody(child.deposit);
         pool.push(child);
         this.remove(child);
         const queued = queue.indexOf(child);
@@ -254,6 +281,18 @@ class Terrain extends Group {
       if (!map.has(key)) {
         const chunk = pool.pop() || new TerrainChunk(Terrain.getMaterial());
         chunk.update(aux, this.getHeight);
+        physics.addCollider(
+          chunk,
+          RAPIER.ColliderDesc
+            .heightfield(
+              TerrainChunk.size,
+              TerrainChunk.size,
+              chunk.heightmap,
+              { x: TerrainChunk.size, y: 1, z: TerrainChunk.size }
+            )
+            .setTranslation(chunk.position.x, chunk.position.y, chunk.position.z)
+        );
+        physics.removeBody(chunk.deposit);
         map.set(key, chunk);
         queue.push(chunk);
         this.add(chunk);

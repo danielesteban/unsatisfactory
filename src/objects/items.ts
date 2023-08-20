@@ -109,13 +109,13 @@ class InstancedItems extends InstancedMesh {
     this.count++;
   }
 
+  override raycast() {
+
+  }
+
   reset() {
     this.count = 0;
     this.visible = false;
-  }
-
-  override raycast() {
-
   }
 
   update() {

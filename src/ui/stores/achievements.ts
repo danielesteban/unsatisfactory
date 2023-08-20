@@ -21,7 +21,6 @@ export default {
     if (map.has(achievement)) {
       return;
     }
-    console.log('huh')
     map.set(achievement, true);
     update((achievements) => {
       achievements = [...achievements];

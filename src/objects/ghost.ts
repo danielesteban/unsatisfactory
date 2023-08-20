@@ -43,10 +43,6 @@ export class Ghost extends Mesh {
     this.visible = false;
   }
 
-  override raycast() {
-
-  }
-
   update(geometry: BufferGeometry, position: Vector3, rotation: number, isValid: boolean) {
     this.geometry = geometry;
     this.position.copy(position);
