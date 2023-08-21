@@ -28,7 +28,7 @@ type Serialized = {
   generators: [SerializedPosition, number, SerializedEnabled][];
   miners: [SerializedPosition, number, SerializedEnabled, Item, number][];
   poles: [SerializedPosition, number][];
-  sinks: [SerializedPosition, number, SerializedEnabled][];
+  sinks: [SerializedPosition, number, SerializedEnabled, number][];
   smelters: [SerializedPosition, number, SerializedEnabled, number][];
   walls: [SerializedPosition, number][];
   wires: [SerializedConnection, SerializedConnection][];
@@ -139,10 +139,13 @@ export const deserialize = (
     serialized.poles.map(([position, rotation]) => (
       poles.create(aux.fromArray(position), rotation)
     )),
-    serialized.sinks.map(([position, rotation, enabled]) => {
+    serialized.sinks.map(([position, rotation, enabled, points]) => {
       const sink = sinks.create(aux.fromArray(position), rotation)
       if (!enabled) {
         sink.setEnabled(false);
+      }
+      if (points > 0) {
+        sink.setPoints(points);
       }
       return sink;
     }),

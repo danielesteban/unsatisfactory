@@ -30,17 +30,14 @@ export class Sink extends PoweredContainer<
     this.points = 0;
   }
 
-  getPoints() {
-    return this.points;
-  }
-
   override canInput() {
     return this.enabled && this.powered;
   }
 
   override input(item: Item) {
-    this.points += Sinking[item] || 1;
-    this.dispatchEvent({ type: 'points', count: this.points });
+    this.setPoints(
+      this.points + (Sinking[item] || 1)
+    );
   }
 
   override output() {
@@ -49,6 +46,23 @@ export class Sink extends PoweredContainer<
 
   override getConnector(direction: Vector3, offset: Vector3) {
     return this.position.clone().addScaledVector(direction, 1.5).add(offset);
+  }
+
+  getPoints() {
+    return this.points;
+  }
+
+  setPoints(count: number) {
+    this.points = count;
+    this.dispatchEvent({ type: 'points', count });
+  }
+
+  override serialize() {
+    const { points } = this;
+    return [
+      ...super.serialize(),
+      points,
+    ];
   }
 }
 
