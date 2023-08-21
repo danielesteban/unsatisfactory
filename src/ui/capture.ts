@@ -27,6 +27,7 @@ import Foundations from '../objects/foundations';
 import Generators from '../objects/generators';
 import Miners from '../objects/miners';
 import Poles from '../objects/poles';
+import Ramps from '../objects/ramps';
 import Sinks from '../objects/sinks';
 import Smelters from '../objects/smelters';
 import Walls from '../objects/walls';
@@ -105,6 +106,10 @@ const process = () => {
     case Brush.pole:
       geometry = Poles.getGeometry();
       material = Poles.getMaterial();
+      break;
+    case Brush.ramp:
+      geometry = Ramps.getGeometry();
+      material = Ramps.getMaterial();
       break;
     case Brush.sink:
       geometry = Sinks.getGeometry();

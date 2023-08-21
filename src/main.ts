@@ -24,6 +24,7 @@ import Grass from './objects/grass';
 import Items from './objects/items';
 import Miners, { Miner } from './objects/miners';
 import Poles, { Pole } from './objects/poles';
+import Ramps, { Ramp } from './objects/ramps';
 import Sinks, { Sink } from './objects/sinks';
 import Smelters, { Smelter } from './objects/smelters';
 import Terrain from './objects/terrain';
@@ -45,6 +46,7 @@ const viewport = new Viewport();
   ...Items.getMaterials(),
   Miners.getMaterial(),
   Poles.getMaterial(),
+  Ramps.getMaterial(),
   Sinks.getMaterial(),
   Smelters.getMaterial(),
   Terrain.getMaterial(),
@@ -83,6 +85,9 @@ viewport.scene.add(miners);
 
 const poles = new Poles(viewport.physics);
 viewport.scene.add(poles);
+
+const ramps = new Ramps(viewport.physics);
+viewport.scene.add(ramps);
 
 const sinks = new Sinks(viewport.physics);
 viewport.scene.add(sinks);
@@ -221,6 +226,9 @@ const create = (intersection: Intersection) => {
     case Brush.pole:
       poles.create(snap(intersection), rotation);
       return;
+    case Brush.ramp:
+      ramps.create(snap(intersection), rotation);
+      return;
     case Brush.sink:
       sinks.create(snap(intersection), rotation);
       return;
@@ -266,6 +274,8 @@ const remove = (intersection: Intersection) => {
       miners.removeInstance(instance);
     } else if (instance instanceof Pole) {
       poles.removeInstance(instance);
+    } else if (instance instanceof Ramp) {
+      ramps.removeInstance(instance);
     } else if (instance instanceof Sink) {
       sinks.removeInstance(instance);
     } else if (instance instanceof Smelter) {
@@ -350,6 +360,9 @@ const hover = (intersection?: Intersection) => {
         break;
       case Brush.pole:
         geometry = Poles.getGeometry();
+        break;
+      case Brush.ramp:
+        geometry = Ramps.getGeometry();
         break;
       case Brush.sink:
         geometry = Sinks.getGeometry();
@@ -474,7 +487,7 @@ const restore = () => {
   }
   deserialize(
     serialized,
-    belts, buffers, fabricators, foundations, generators, miners, poles, sinks, smelters, walls, wires,
+    belts, buffers, fabricators, foundations, generators, miners, poles, ramps, sinks, smelters, walls, wires,
     viewport.camera
   );
 };
@@ -482,7 +495,7 @@ const restore = () => {
 const save = () => {
   localStorage.setItem(
     'autosave',
-    JSON.stringify(serialize(belts, buffers, fabricators, foundations, generators, miners, poles, sinks, smelters, walls, wires, viewport.camera))
+    JSON.stringify(serialize(belts, buffers, fabricators, foundations, generators, miners, poles, ramps, sinks, smelters, walls, wires, viewport.camera))
   );
   settings.$set({ lastSave: new Date() });
 };
@@ -491,7 +504,7 @@ const settings = new Settings({
   props: {
     lastSave: new Date(),
     download: () => (
-      download(serialize(belts, buffers, fabricators, foundations, generators, miners, poles, sinks, smelters, walls, wires, viewport.camera))
+      download(serialize(belts, buffers, fabricators, foundations, generators, miners, poles, ramps, sinks, smelters, walls, wires, viewport.camera))
     ),
     load: async () => {
       let serialized;

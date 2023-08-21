@@ -13,6 +13,7 @@ import { Foundation } from '../objects/foundations';
 import { Generator } from '../objects/generators';
 import { Miner } from '../objects/miners';
 import { Pole } from '../objects/poles';
+import { Ramp } from '../objects/ramps';
 import { Sink } from '../objects/sinks';
 import { Smelter } from '../objects/smelters';
 import { Wall } from '../objects/walls';
@@ -28,6 +29,7 @@ export enum Brush {
   generator,
   miner,
   pole,
+  ramp,
   sink,
   smelter,
   wall,
@@ -82,6 +84,7 @@ export const names: Record<Brush, string> = {
   [Brush.generator]: 'Generator',
   [Brush.miner]: 'Miner',
   [Brush.pole]: 'Pole',
+  [Brush.ramp]: 'Ramp',
   [Brush.sink]: 'Sink',
   [Brush.smelter]: 'Smelter',
   [Brush.wall]: 'Wall',
@@ -109,6 +112,9 @@ export const getFromObject = (instance?: Instance | Belt | Wire) => {
   }
   if (instance instanceof Pole) {
     return Brush.pole;
+  }
+  if (instance instanceof Ramp) {
+    return Brush.ramp;
   }
   if (instance instanceof Sink) {
     return Brush.sink;
@@ -148,6 +154,7 @@ const offsets = {
   [Brush.generator]: new Vector3(2, 6, 2),
   [Brush.miner]: new Vector3(1, 2, 1),
   [Brush.pole]: new Vector3(0.5, 3, 0.5),
+  [Brush.ramp]: new Vector3(2, 1, 2),
   [Brush.sink]: new Vector3(2, 2, 2),
   [Brush.smelter]: new Vector3(2, 2, 1),
   [Brush.wall]: new Vector3(2, 2, 0.25),

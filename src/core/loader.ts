@@ -8,12 +8,13 @@ import Generators, { Generator }  from '../objects/generators';
 import { Item, Recipes }  from '../objects/items';
 import Miners, { Miner } from '../objects/miners';
 import Poles, { Pole } from '../objects/poles';
+import Ramps from '../objects/ramps';
 import Sinks, { Sink } from '../objects/sinks';
 import Smelters, { Smelter } from '../objects/smelters';
 import Walls from '../objects/walls';
 import Wires, { Wire } from '../objects/wires';
 
-const version = 7;
+const version = 8;
 
 type SerializedConnection = [number, number];
 type SerializedDirection = [number, number, number];
@@ -29,6 +30,7 @@ type Serialized = {
   generators: [SerializedPosition, number, SerializedEnabled][];
   miners: [SerializedPosition, number, SerializedEnabled, Item, number][];
   poles: [SerializedPosition, number][];
+  ramps: [SerializedPosition, number][];
   sinks: [SerializedPosition, number, SerializedEnabled, number][];
   smelters: [SerializedPosition, number, SerializedEnabled, number][];
   walls: [SerializedPosition, number][];
@@ -63,11 +65,11 @@ const deserializeItems = (items: SerializedItems) => items.reduce((items, item) 
 }, [] as Item[]);
 
 export const serialize = (
-  belts: Belts, buffers: Buffers, fabricators: Fabricators, foundations: Foundations, generators: Generators, miners: Miners, poles: Poles, sinks: Sinks, smelters: Smelters, walls: Walls, wires: Wires,
+  belts: Belts, buffers: Buffers, fabricators: Fabricators, foundations: Foundations, generators: Generators, miners: Miners, poles: Poles, ramps: Ramps, sinks: Sinks, smelters: Smelters, walls: Walls, wires: Wires,
   camera: Camera
 ): Serialized => {
   const containers = new WeakMap<Container, number>();
-  const serializeInstances = (instances: Buffers | Fabricators | Foundations | Generators | Miners | Poles | Sinks | Smelters | Walls) => (
+  const serializeInstances = (instances: Buffers | Fabricators | Foundations | Generators | Miners | Poles | Ramps | Sinks | Smelters | Walls) => (
     Array.from({ length: instances.count }, (_v, i) => {
       const instance = instances.getInstance(i);
       if (instance instanceof Container) {
@@ -108,6 +110,7 @@ export const serialize = (
     generators: serializeInstances(generators) as Serialized['generators'],
     miners: serializeInstances(miners) as Serialized['miners'],
     poles: serializeInstances(poles) as Serialized['poles'],
+    ramps: serializeInstances(ramps) as Serialized['ramps'],
     sinks: serializeInstances(sinks) as Serialized['sinks'],
     smelters: serializeInstances(smelters) as Serialized['smelters'],
     walls: serializeInstances(walls) as Serialized['walls'],
@@ -129,7 +132,7 @@ export const serialize = (
 
 export const deserialize = (
   serialized: Serialized,
-  belts: Belts, buffers: Buffers, fabricators: Fabricators, foundations: Foundations, generators: Generators, miners: Miners, poles: Poles, sinks: Sinks, smelters: Smelters, walls: Walls, wires: Wires,
+  belts: Belts, buffers: Buffers, fabricators: Fabricators, foundations: Foundations, generators: Generators, miners: Miners, poles: Poles, ramps: Ramps, sinks: Sinks, smelters: Smelters, walls: Walls, wires: Wires,
   camera: Camera
 ) => {
   serialized = migrate(serialized);
@@ -186,6 +189,9 @@ export const deserialize = (
   ];
   serialized.foundations.forEach(([position, rotation]) => (
     foundations.create(aux.fromArray(position), rotation)
+  ));
+  serialized.ramps.forEach(([position, rotation]) => (
+    ramps.create(aux.fromArray(position), rotation)
   ));
   serialized.walls.forEach(([position, rotation]) => (
     walls.create(aux.fromArray(position), rotation)
@@ -318,6 +324,13 @@ const migrations: Record<number, (serialized: Serialized) => Serialized> = {
       ...serialized,
       belts: serialized.belts.map(([from, fromDirection, to, toDirection, items]) => [from, fromDirection, to, toDirection, items || []]),
       version: 7,
+    };
+  },
+  [7]: (serialized: Serialized) => {
+    return {
+      ...serialized,
+      ramps: [],
+      version: 8,
     };
   },
 };

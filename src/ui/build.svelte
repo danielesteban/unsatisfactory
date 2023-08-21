@@ -15,6 +15,7 @@
   const brushes = [
     [
       Brush.foundation,
+      Brush.ramp,
       Brush.wall,
     ],
     [
