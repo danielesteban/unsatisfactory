@@ -28,7 +28,7 @@ import Smelters, { Smelter } from './objects/smelters';
 import Terrain from './objects/terrain';
 import Walls, { Wall } from './objects/walls';
 import Wires, { Wire } from './objects/wires';
-import UI, { setTooltip } from './ui';
+import UI, { setCompass, setTooltip } from './ui';
 import Achievements from './ui/stores/achievements';
 import Settings from './ui/settings.svelte';
 
@@ -452,6 +452,7 @@ viewport.setAnimationLoop((buttons, delta) => {
   if (buttons.primary || buttons.secondary || buttons.tertiary || buttons.build || buttons.dismantle || buttons.interact) {
     handleInput(buttons, hit);
   }
+  setCompass(viewport.camera.rotation.y);
 });
 
 const restore = () => {

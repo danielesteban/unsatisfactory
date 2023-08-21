@@ -11,6 +11,7 @@ import { Smelter } from '../objects/smelters';
 import { Wire } from '../objects/wires';
 import AchievementsUI from './achievements.svelte';
 import BuildUI from './build.svelte';
+import CompassUI from './compass.svelte';
 import CursorUI from './cursor.svelte';
 import HotbarUI from './hotbar.svelte';
 import GeneratorUI from './generator.svelte';
@@ -79,8 +80,13 @@ export default (type: 'build' | 'container', instance?: Instance) => {
   current = dialog;
 };
 
-const cursor = new CursorUI({ target });
+const compass = new CompassUI({ target });
+export const setCompass = (orientation: number) => {
+  orientation = Math.PI * 2 - (orientation - Math.floor(orientation/(Math.PI * 2)) * Math.PI * 2);
+  compass.$set({ orientation: Math.floor(orientation / Math.PI * 18000) / 100 });
+};
 
+const cursor = new CursorUI({ target });
 export const setTooltip = (
   action?: 'belt' | 'build' | 'configure' | 'dismantle' | 'invalid' | 'wire' | 'yield',
   instance?: Instance | Belt | Wire,
