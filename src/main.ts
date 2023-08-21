@@ -65,7 +65,7 @@ const viewport = new Viewport();
 const terrain = new Terrain(viewport.physics);
 viewport.scene.add(terrain);
 
-const belts = new Belts();
+const belts = new Belts(viewport.physics);
 viewport.scene.add(belts);
 
 const buffers = new Buffers(viewport.physics);
@@ -449,9 +449,9 @@ viewport.setAnimationLoop((buttons, delta) => {
   terrain.update(viewport.camera.position, terrainRadius);
   raycaster.setFromCamera(center, viewport.camera);
   // @dani @incomplete
-  // belts and wires don't have physics colliders implemented yet,
+  // wires don't have physics colliders implemented yet,
   // so.. keep using the threejs raycaster for those and merge them in.
-  const vertexHit = (brush === Brush.dismantle || buttons.tertiary) && raycaster.intersectObjects([belts, wires])[0];
+  const vertexHit = (brush === Brush.dismantle || buttons.tertiary) && raycaster.intersectObjects(wires.children, false)[0];
   const physicsHit = viewport.physics.castRay(intersection, raycaster.ray.origin, raycaster.ray.direction, raycaster.far);
   let hit;
   if (physicsHit && (!vertexHit || intersection.distance < vertexHit.distance)) {

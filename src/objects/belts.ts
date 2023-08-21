@@ -1,3 +1,4 @@
+import RAPIER from '@dimforge/rapier3d-compat';
 import {
   CubicBezierCurve3,
   ExtrudeGeometry,
@@ -11,7 +12,9 @@ import {
   SRGBColorSpace,
   Vector3,
 } from 'three';
+import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { Connector } from '../core/container';
+import Physics from '../core/physics';
 import Items, { Item } from './items';
 import { loadTexture } from '../textures';
 import DiffuseMap from '../textures/green_metal_rust_diff_1k.webp';
@@ -56,7 +59,7 @@ export class Belt extends Mesh {
       }
     }
     const segments = Math.ceil(path.getLength() / 0.1);
-    const geometry = new ExtrudeGeometry(shape, { extrudePath: path, steps: segments });
+    const geometry = mergeVertices(new ExtrudeGeometry(shape, { extrudePath: path, steps: segments }));
     super(geometry, material);
     this.castShadow = this.receiveShadow = true;
     this.updateMatrixWorld();
@@ -180,24 +183,37 @@ class Belts extends Group {
     return Belts.shape;
   }
 
+  private readonly physics: Physics;
   private timer: number;
 
-  constructor() {
+  constructor(physics: Physics) {
     super();
     this.updateMatrixWorld();
     this.matrixAutoUpdate = false;
+    this.physics = physics;
     this.timer = 0;
   }
 
   create(from: Connector, to: Connector) {
+    const { physics } = this;
     const belt = new Belt(Belts.getMaterial(), Belts.getShape(), from, to);
     this.add(belt);
+    physics.addBody(
+      belt,
+      RAPIER.RigidBodyDesc.fixed(),
+      RAPIER.ColliderDesc.trimesh(
+        belt.geometry.getAttribute('position').array as Float32Array,
+        belt.geometry.getIndex()!.array as Uint32Array
+      )!
+    );
     return belt;
   }
   
   override remove(belt: Belt) {
+    const { physics } = this;
     super.remove(belt);
     belt.dispose();
+    physics.removeBody(belt);
     return this;
   }
 
