@@ -70,7 +70,7 @@ export const serialize = (
 ): Serialized => {
   const containers = new WeakMap<Container, number>();
   const serializeInstances = (instances: Buffers | Fabricators | Foundations | Generators | Miners | Poles | Ramps | Sinks | Smelters | Walls) => (
-    Array.from({ length: instances.count }, (_v, i) => {
+    Array.from({ length: instances.getCount() }, (_v, i) => {
       const instance = instances.getInstance(i);
       if (instance instanceof Container) {
         containers.set(instance, i);

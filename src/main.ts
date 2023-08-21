@@ -124,13 +124,13 @@ const canBelt = (intersection: Intersection) => (
     || intersection.object instanceof Sink
     || intersection.object instanceof Smelter
   )
-  && Math.abs(intersection.normal.dot(Object3D.DEFAULT_UP)) == 0
+  && Math.abs(intersection.normal.dot(Object3D.DEFAULT_UP)) < 0.001
   && !(
     (
       intersection.object instanceof Fabricator
       || intersection.object instanceof Smelter
     )
-    && Math.abs(intersection.normal.dot(worldNorth)) > 0
+    && Math.abs(intersection.normal.dot(worldNorth)) > 0.001
   )
   && (!from.container || from.container !== intersection.object)
 );
@@ -214,7 +214,7 @@ const create = (intersection: Intersection) => {
       }
       const position = snap(intersection);
       // @dani @incomplete abstract this out of here and do the same check at hover
-      for (let i = 0, l = miners.count; i < l; i++) {
+      for (let i = 0, l = miners.getCount(); i < l; i++) {
         if (miners.getInstance(i).position.equals(position)) {
           return 'nope';
         }

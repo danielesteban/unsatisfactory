@@ -184,8 +184,8 @@ class Belts extends Group {
 
   constructor() {
     super();
-    this.matrixAutoUpdate = false;
     this.updateMatrixWorld();
+    this.matrixAutoUpdate = false;
     this.timer = 0;
   }
 
