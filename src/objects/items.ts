@@ -43,6 +43,12 @@ export const Mining: Partial<Record<Item, { consumption: number; rate: number; }
   [Item.ore]: { consumption: 100, rate: 3 },
 };
 
+export const Sinking: Partial<Record<Item, number>> = {
+  [Item.box]: 4,
+  [Item.cylinder]: 8,
+  [Item.ingot]: 2,
+};
+
 export enum Transformer {
   fabricator,
   smelter,

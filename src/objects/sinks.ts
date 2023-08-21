@@ -12,23 +12,35 @@ import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 import { PoweredContainer } from '../core/container';
 import Instances from '../core/instances';
 import Physics from '../core/physics';
-import { Item } from './items';
+import { Item, Sinking } from './items';
 import { loadTexture } from '../textures';
 import DiffuseMap from '../textures/rust_coarse_01_diff_1k.webp';
 import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.webp';
 import RoughnessMap from '../textures/rust_coarse_01_rough_1k.webp';
 
-export class Sink extends PoweredContainer {
+export class Sink extends PoweredContainer<
+  {
+    type: 'points';
+    count: number;
+  }
+> {
+  private points: number;
   constructor(position: Vector3, rotation: number) {
     super(position, rotation, 0, 100);
+    this.points = 0;
+  }
+
+  getPoints() {
+    return this.points;
   }
 
   override canInput() {
     return this.enabled && this.powered;
   }
 
-  override input() {
-
+  override input(item: Item) {
+    this.points += Sinking[item] || 1;
+    this.dispatchEvent({ type: 'points', count: this.points });
   }
 
   override output() {

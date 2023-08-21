@@ -31,10 +31,8 @@
     recipe = data;
     recipeIndex = recipes.indexOf(recipe);
   };
-  // @ts-ignore
   instance.addEventListener('recipe', onRecipe);
   onDestroy(() => (
-    // @ts-ignore
     instance.removeEventListener('recipe', onRecipe)
   ));
 </script>
