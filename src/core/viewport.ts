@@ -42,8 +42,7 @@ class Viewport extends EventDispatcher {
       throw new Error('Couldn\'t get viewport');
     }
     this.dom = dom;
-    
-    this.camera = new PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    this.camera = new PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 128);
     this.clock = new Clock();
     this.physics = new Physics();
     this.controls = new Controls(this.camera, this.physics, dom);
