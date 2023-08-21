@@ -65,8 +65,8 @@ class Viewport extends EventDispatcher {
     this.csm = new CSM({
       camera: this.camera,
       cascades: 4,
-      lightDirection: (new Vector3(-0.5, -1, -0.25)).normalize(),
-      maxFar: 1000,
+      lightDirection: (new Vector3(-0.5, -1, -0.5)).normalize(),
+      maxFar: this.camera.far,
       mode: 'practical' as any,
       parent: this.scene,
       shadowMapSize: 1024,
