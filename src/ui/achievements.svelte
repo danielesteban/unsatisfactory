@@ -82,6 +82,20 @@
         'belt the other side of it into a Buffer.',
       ],
     },
+    {
+      id: 'points',
+      name: 'Get some points',
+      help: [
+        'Feeding items into the Sink will give you points.',
+        'Complex items yield more points than raw materials.',
+        '',
+        'Select the Sink from the build menu [Q] and',
+        'Click over the terrain (or a foundation) to place it on top.',
+        'Then belt the output of a Smelter or Fabricator into the Sink.',
+        '',
+        'Remember to wire the Sink so it gets powered.',
+      ],
+    },
   ];
   const current = derived([completed], ([$completed]) => Achievements.find((achievement) => !$completed.includes(achievement.id)));
   let achievement: (typeof Achievements[0] & { completed: boolean; }) | undefined;
