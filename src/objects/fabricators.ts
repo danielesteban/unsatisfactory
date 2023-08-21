@@ -107,7 +107,14 @@ class Fabricators extends Instances<Fabricator> {
   private readonly sfx: SFX;
 
   constructor(physics: Physics, sfx: SFX) {
-    super(Fabricators.getCollider(), Fabricators.getGeometry(), Fabricators.getMaterial(), physics);
+    super(
+      {
+        collider: Fabricators.getCollider(),
+        geometry: Fabricators.getGeometry(),
+        material: Fabricators.getMaterial(),
+      },
+      physics
+    );
     this.sfx = sfx;
   }
 

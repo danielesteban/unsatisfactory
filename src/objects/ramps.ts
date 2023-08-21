@@ -105,7 +105,14 @@ class Ramps extends Instances<Ramp> {
   }
 
   constructor(physics: Physics) {
-    super(Ramps.getCollider(), Ramps.getGeometry(), Ramps.getMaterial(), physics);
+    super(
+      {
+        collider: Ramps.getCollider(),
+        geometry: Ramps.getGeometry(),
+        material: Ramps.getMaterial(),
+      },
+      physics
+    );
   }
 
   create(position: Vector3, rotation: number) {

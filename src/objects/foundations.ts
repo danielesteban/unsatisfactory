@@ -68,7 +68,14 @@ class Foundations extends Instances<Foundation> {
   }
 
   constructor(physics: Physics) {
-    super(Foundations.getCollider(), Foundations.getGeometry(), Foundations.getMaterial(), physics);
+    super(
+      {
+        collider: Foundations.getCollider(),
+        geometry: Foundations.getGeometry(),
+        material: Foundations.getMaterial(),
+      },
+      physics
+    );
   }
   
   create(position: Vector3, rotation: number) {

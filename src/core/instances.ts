@@ -106,33 +106,30 @@ class InstancesChunk extends InstancedMesh {
   }
 }
 
+type InstanceModel = {
+  collider: RAPIER.ColliderDesc | RAPIER.ColliderDesc[];
+  geometry: BufferGeometry;
+  depthMaterial?: Material;
+  material: Material;
+};
+
 class Instances<InstanceType extends Instance> extends Group {
   private static maxDistance: number = 64 ** 2;
 
   private readonly chunks: InstancesChunk[];
   private readonly instances: InstanceType[];
   private readonly instanceChunks: WeakMap<InstanceType, InstancesChunk>;
-  private readonly model: {
-    collider: RAPIER.ColliderDesc | RAPIER.ColliderDesc[];
-    geometry: BufferGeometry;
-    depthMaterial?: Material;
-    material: Material;
-  };
+  private readonly model: InstanceModel;
   private readonly physics: Physics;
 
-  constructor(collider: RAPIER.ColliderDesc | RAPIER.ColliderDesc[], geometry: BufferGeometry, material: Material, physics: Physics, depthMaterial?: Material) {
+  constructor(model: InstanceModel, physics: Physics) {
     super();
     this.updateMatrixWorld();
     this.matrixAutoUpdate = false;
-    this.model = {
-      collider,
-      geometry,
-      depthMaterial,
-      material,
-    };
     this.chunks = [];
     this.instances = [];
     this.instanceChunks = new WeakMap();
+    this.model = model;
     this.physics = physics;
   }
 
@@ -149,14 +146,14 @@ class Instances<InstanceType extends Instance> extends Group {
   private static rotation: Quaternion = new Quaternion();
   addInstance(instance: InstanceType) {
     const { chunks, instances, instanceChunks, model, physics } = this;
-    let { chunk } = chunks.reduce((closest, chunk) => {
+    let { chunk } = chunks.reduce<{ chunk: undefined | InstancesChunk; distance: number; }>((closest, chunk) => {
       const distance = chunk.boundingSphere!.center.distanceToSquared(instance.position);
       if (distance < Instances.maxDistance && closest.distance > distance) {
         closest.distance = distance;
         closest.chunk = chunk;
       }
       return closest;
-    }, { chunk: undefined, distance: Infinity } as { chunk: undefined | InstancesChunk; distance: number; });
+    }, { chunk: undefined, distance: Infinity });
     if (!chunk) {
       chunk = new InstancesChunk(model.geometry, model.material, model.depthMaterial);
       chunks.push(chunk);

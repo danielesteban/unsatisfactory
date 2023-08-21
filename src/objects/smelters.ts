@@ -131,7 +131,14 @@ class Smelters extends Instances<Smelter> {
   private readonly sfx: SFX;
 
   constructor(physics: Physics, sfx: SFX) {
-    super(Smelters.getCollider(), Smelters.getGeometry(), Smelters.getMaterial(), physics);
+    super(
+      {
+        collider: Smelters.getCollider(),
+        geometry: Smelters.getGeometry(),
+        material: Smelters.getMaterial(),
+      },
+      physics
+    );
     this.sfx = sfx;
   }
 

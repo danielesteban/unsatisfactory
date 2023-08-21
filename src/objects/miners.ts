@@ -149,7 +149,14 @@ class Miners extends Instances<Miner> {
   private readonly sfx: SFX;
 
   constructor(physics: Physics, sfx: SFX) {
-    super(Miners.getCollider(), Miners.getGeometry(), Miners.getMaterial(), physics);
+    super(
+      {
+        collider: Miners.getCollider(),
+        geometry: Miners.getGeometry(),
+        material: Miners.getMaterial(),
+      },
+      physics
+    );
     this.sfx = sfx;
   }
 

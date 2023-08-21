@@ -40,13 +40,13 @@
       return brushes;
     }
     search = search.toLocaleLowerCase();
-    return brushes.reduce((groups, group) => {
+    return brushes.reduce<{ id: Brush, name: string, images: Promise<string[]> }[][]>((groups, group) => {
       group = group.filter(({ name }) => name.toLocaleLowerCase().indexOf(search) !== -1);
       if (group.length) {
         groups.push(group);
       }
       return groups;
-    }, [] as { id: Brush, name: string, images: Promise<string[]> }[][]);
+    }, []);
   };
 
   let search = '';

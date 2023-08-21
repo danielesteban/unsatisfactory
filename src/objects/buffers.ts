@@ -71,7 +71,14 @@ class Buffers extends Instances<Buffer> {
   }
 
   constructor(physics: Physics) {
-    super(Buffers.getCollider(), Buffers.getGeometry(), Buffers.getMaterial(), physics);
+    super(
+      {
+        collider: Buffers.getCollider(),
+        geometry: Buffers.getGeometry(),
+        material: Buffers.getMaterial(),
+      },
+      physics
+    );
   }
 
   create(position: Vector3, rotation: number) {

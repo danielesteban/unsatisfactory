@@ -73,7 +73,14 @@ class Walls extends Instances<Wall> {
   }
 
   constructor(physics: Physics) {
-    super(Walls.getCollider(), Walls.getGeometry(), Walls.getMaterial(), physics);
+    super(
+      {
+        collider: Walls.getCollider(),
+        geometry: Walls.getGeometry(),
+        material: Walls.getMaterial(),
+      },
+      physics
+    );
   }
 
   create(position: Vector3, rotation: number) {

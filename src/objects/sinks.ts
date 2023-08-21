@@ -125,7 +125,14 @@ class Sinks extends Instances<Sink> {
   }
 
   constructor(physics: Physics) {
-    super(Sinks.getCollider(), Sinks.getGeometry(), Sinks.getMaterial(), physics);
+    super(
+      {
+        collider: Sinks.getCollider(),
+        geometry: Sinks.getGeometry(),
+        material: Sinks.getMaterial(),
+      },
+      physics
+    );
   }
 
   create(position: Vector3, rotation: number) {

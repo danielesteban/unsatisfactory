@@ -206,7 +206,15 @@ class Generators extends Instances<Generator> {
   }
 
   constructor(physics: Physics) {
-    super(Generators.getCollider(), Generators.getGeometry(), Generators.getMaterial(), physics, Generators.getDepthMaterial());
+    super(
+      {
+        collider: Generators.getCollider(),
+        geometry: Generators.getGeometry(),
+        depthMaterial: Generators.getDepthMaterial(),
+        material: Generators.getMaterial(),
+      },
+      physics
+    );
   }
 
   create(position: Vector3, rotation: number, power: number = 100) {

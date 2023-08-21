@@ -74,7 +74,14 @@ class Poles extends Instances<Pole> {
   }
 
   constructor(physics: Physics) {
-    super(Poles.getCollider(), Poles.getGeometry(), Poles.getMaterial(), physics);
+    super(
+      {
+        collider: Poles.getCollider(),
+        geometry: Poles.getGeometry(),
+        material: Poles.getMaterial(),
+      },
+      physics
+    );
   }
 
   create(position: Vector3, rotation: number) {

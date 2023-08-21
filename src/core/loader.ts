@@ -39,7 +39,7 @@ type Serialized = {
   version: number;
 };
 
-const serializeItems = (items: Item[]) => items.reduce((items, item) => {
+const serializeItems = (items: Item[]) => items.reduce<SerializedItems>((items, item) => {
   let last = items[items.length - 1];
   const prevItem = Array.isArray(last) ? last[0] : last;
   if (prevItem === item) {
@@ -51,9 +51,9 @@ const serializeItems = (items: Item[]) => items.reduce((items, item) => {
     items.push(item);
   }
   return items;
-}, [] as SerializedItems);
+}, []);
 
-const deserializeItems = (items: SerializedItems) => items.reduce((items, item) => {
+const deserializeItems = (items: SerializedItems) => items.reduce<Item[]>((items, item) => {
   if (Array.isArray(item)) {
     for (let i = 0; i < item[1]; i++) {
       items.push(item[0]);
@@ -62,7 +62,7 @@ const deserializeItems = (items: SerializedItems) => items.reduce((items, item) 
     items.push(item);
   }
   return items;
-}, [] as Item[]);
+}, []);
 
 export const serialize = (
   belts: Belts, buffers: Buffers, fabricators: Fabricators, foundations: Foundations, generators: Generators, miners: Miners, poles: Poles, ramps: Ramps, sinks: Sinks, smelters: Smelters, walls: Walls, wires: Wires,
