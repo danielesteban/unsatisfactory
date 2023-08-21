@@ -80,6 +80,14 @@ export default (type: 'build' | 'container', instance?: Instance) => {
   current = dialog;
 };
 
+export const close = () => {
+  if (!current) {
+    return;
+  }
+  current.$destroy();
+  current = undefined;
+};
+
 const compass = new CompassUI({ target });
 export const setCompass = (orientation: number) => {
   orientation = Math.PI * 2 - (orientation - Math.floor(orientation/(Math.PI * 2)) * Math.PI * 2);

@@ -1,5 +1,6 @@
 <script lang="ts">
   import SFX from '../core/sfx';
+  import { close as closeCurrentUI } from '.';
   import Dialog from './components/dialog.svelte';
   import Grid from './components/grid.svelte';
   import Heading from './components/heading.svelte';
@@ -25,9 +26,13 @@
   let isWelcome = true;
   const toggle = () => {
     isOpen = !isOpen;
+    if (isOpen) {
+      closeCurrentUI();
+    } else {
+      document.getElementById('viewport')!.requestPointerLock();
+    }
     if (isWelcome) {
       isWelcome = false;
-      document.getElementById('viewport')!.requestPointerLock();
     }
   };
 
@@ -35,11 +40,13 @@
 </script>
 
 <div class="actions">
-  <button class="settings" class:hidden={isOpen} on:click={toggle}>
-    <svg viewBox="0 0 15 15">
-      <path d="M1.5 1C0.671573 1 0 1.67157 0 2.5V12.5C0 13.3284 0.671573 14 1.5 14H13.5C14.3284 14 15 13.3284 15 12.5V4.5C15 3.67157 14.3284 3 13.5 3H7.70711L5.70711 1H1.5Z"/>
-    </svg>
-  </button>
+  {#if !isOpen}
+    <button class="settings" on:click={toggle}>
+      <svg viewBox="0 0 15 15">
+        <path d="M1.5 1C0.671573 1 0 1.67157 0 2.5V12.5C0 13.3284 0.671573 14 1.5 14H13.5C14.3284 14 15 13.3284 15 12.5V4.5C15 3.67157 14.3284 3 13.5 3H7.70711L5.70711 1H1.5Z"/>
+      </svg>
+    </button>
+  {/if}
   <button class="sfx" on:click={toggleSFX}>
     {#if isMuted}
       <svg viewBox="0 0 48 48">
@@ -102,19 +109,19 @@
 <style>
   .actions {
     position: absolute;
-    top: 1rem;
-    right: 1rem;
+    top: 0.5rem;
+    right: 0.5rem;
     display: flex;
-    gap: 1rem;
+    z-index: 2;
   }
   :global(body.pointerlock) .actions {
     display: none;
   }
   .settings, .sfx {
-    position: relative;
     background: transparent;
     min-width: auto;
     height: auto;
+    padding: 0.5rem;
   }
   .settings > svg, .sfx > svg {
     fill: currentColor;
@@ -123,16 +130,9 @@
     height: 1.5rem;
     pointer-events: none;
   }
-  .settings.hidden {
-    opacity: 0;
-  }
   .settings > svg {
     stroke-width: 0.4;
   }
-  .sfx {
-    z-index: 2;
-  }
-
   .last {
     color: #aaa;
   }
