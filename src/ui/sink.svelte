@@ -21,7 +21,7 @@
     instance.removeEventListener('points', onPoints)
   ));
 
-  $: formattedPoints = ('000000' + points).slice(-6);
+  $: formattedPoints = ('00000000' + points).slice(-8);
 </script>
 
 <Dialog close={close}>
@@ -48,9 +48,9 @@
     align-items: center;
     justify-content: center;
     width: 100%;
-    font-size: 3.75rem;
+    font-size: 3.5rem;
     line-height: 1em;
-    padding: 0.5rem 0;
+    padding: 1rem 0;
     background: rgba(0, 0, 0, 0.2);
     border-radius: 0.5rem;
   }
