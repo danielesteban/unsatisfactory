@@ -5,7 +5,7 @@ import Buffers, { Buffer } from '../objects/buffers';
 import Fabricators, { Fabricator } from '../objects/fabricators';
 import Foundations from '../objects/foundations';
 import Generators, { Generator }  from '../objects/generators';
-import { Item, Recipes }  from '../objects/items';
+import { Item, Recipes, SerializedItems, serializeItems, deserializeItems }  from '../objects/items';
 import Miners, { Miner } from '../objects/miners';
 import Poles, { Pole } from '../objects/poles';
 import Ramps from '../objects/ramps';
@@ -19,12 +19,11 @@ const version = 8;
 type SerializedConnection = [number, number];
 type SerializedDirection = [number, number, number];
 type SerializedEnabled = 0 | 1;
-type SerializedItems = ([Item, number] | number)[];
 type SerializedPosition = [number, number, number];
 
 type Serialized = {
-  belts: [SerializedConnection, SerializedDirection, SerializedConnection, SerializedDirection, SerializedItems][];
-  buffers: [SerializedPosition, number][];
+  belts: [SerializedConnection, SerializedDirection, SerializedConnection, SerializedDirection, SerializedItems | undefined][];
+  buffers: [SerializedPosition, number, SerializedItems | undefined][];
   fabricators: [SerializedPosition, number, SerializedEnabled, number][];
   foundations: [SerializedPosition, number][];
   generators: [SerializedPosition, number, SerializedEnabled][];
@@ -38,31 +37,6 @@ type Serialized = {
   camera: [SerializedPosition, [number, number, number]];
   version: number;
 };
-
-const serializeItems = (items: Item[]) => items.reduce<SerializedItems>((items, item) => {
-  let last = items[items.length - 1];
-  const prevItem = Array.isArray(last) ? last[0] : last;
-  if (prevItem === item) {
-    if (!Array.isArray(last)) {
-      items[items.length - 1] = last = [last, 1];
-    }
-    last[1]++;
-  } else {
-    items.push(item);
-  }
-  return items;
-}, []);
-
-const deserializeItems = (items: SerializedItems) => items.reduce<Item[]>((items, item) => {
-  if (Array.isArray(item)) {
-    for (let i = 0; i < item[1]; i++) {
-      items.push(item[0]);
-    }
-  } else {
-    items.push(item);
-  }
-  return items;
-}, []);
 
 export const serialize = (
   belts: Belts, buffers: Buffers, fabricators: Fabricators, foundations: Foundations, generators: Generators, miners: Miners, poles: Poles, ramps: Ramps, sinks: Sinks, smelters: Smelters, walls: Walls, wires: Wires,
@@ -114,13 +88,16 @@ export const serialize = (
     sinks: serializeInstances(sinks) as Serialized['sinks'],
     smelters: serializeInstances(smelters) as Serialized['smelters'],
     walls: serializeInstances(walls) as Serialized['walls'],
-    belts: (belts.children as Belt[]).map((belt) => [
-      serializeContainer(belt.from.container),
-      belt.from.direction.toArray(),
-      serializeContainer(belt.to.container),
-      belt.to.direction.toArray(),
-      serializeItems(belt.getItems()),
-    ]) as Serialized['belts'],
+    belts: (belts.children as Belt[]).map((belt) => {
+      const items = serializeItems(belt.getItems());
+      return [
+        serializeContainer(belt.from.container),
+        belt.from.direction.toArray(),
+        serializeContainer(belt.to.container),
+        belt.to.direction.toArray(),
+        ...(items ? [items] : []),
+      ];
+    }) as Serialized['belts'],
     wires: (wires.children as Wire[]).map((wire) => [
       serializeContainer(wire.from),
       serializeContainer(wire.to),
@@ -142,9 +119,13 @@ export const deserialize = (
   const aux = new Vector3();
   const auxB = new Vector3();
   const containers = [
-    serialized.buffers.map(([position, rotation]) => (
-      buffers.create(aux.fromArray(position), rotation)
-    )),
+    serialized.buffers.map(([position, rotation, items]) => {
+      const buffer = buffers.create(aux.fromArray(position), rotation);
+      if (items?.length) {
+        buffer.setItems(deserializeItems(items));
+      }
+      return buffer;
+    }),
     serialized.fabricators.map(([position, rotation, enabled, recipe]) => {
       const fabricator = fabricators.create(aux.fromArray(position), rotation, Recipes[recipe]);
       if (!enabled) {
@@ -201,7 +182,7 @@ export const deserialize = (
       { container: containers[from[0]][from[1]], direction: aux.fromArray(fromDirection) },
       { container: containers[to[0]][to[1]], direction: auxB.fromArray(toDirection) },
     );
-    if (items.length) {
+    if (items?.length) {
       belt.setItems(deserializeItems(items));
     }
   });

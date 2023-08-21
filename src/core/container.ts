@@ -17,11 +17,11 @@ class Container<Events extends BaseEvent = BaseEvent> extends Instance<Events> {
   protected readonly items: Item[];
   protected outputBelt: number;
 
-  constructor(position: Vector3, rotation: number, capacity: number, items: Item[] = []) {
+  constructor(position: Vector3, rotation: number, capacity: number) {
     super(position, rotation);
     this.belts = { input: [], output: [] };
     this.capacity = capacity;
-    this.items = items;
+    this.items = [];
     this.outputBelt = 0;
   }
 
@@ -96,8 +96,8 @@ export class PoweredContainer<Events extends BaseEvent = BaseEvent> extends Cont
   protected powered: boolean;
   protected wires: Wire[];
 
-  constructor(position: Vector3, rotation: number, capacity: number, consumption: number, maxConnections: number = 1, items: Item[] = []) {
-    super(position, rotation, capacity, items);
+  constructor(position: Vector3, rotation: number, capacity: number, consumption: number, maxConnections: number = 1) {
+    super(position, rotation, capacity);
     this.connections = [];
     this.consumption = consumption;
     this.enabled = true;

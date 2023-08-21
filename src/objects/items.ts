@@ -100,6 +100,36 @@ export const Recipes: Recipe[] = [
   }
 ];
 
+export type SerializedItems = ([Item, number] | number)[];
+
+export const serializeItems = (items: Item[]) => {
+  const serialized = items.reduce<SerializedItems>((items, item) => {
+    let last = items[items.length - 1];
+    const prevItem = Array.isArray(last) ? last[0] : last;
+    if (prevItem === item) {
+      if (!Array.isArray(last)) {
+        items[items.length - 1] = last = [last, 1];
+      }
+      last[1]++;
+    } else {
+      items.push(item);
+    }
+    return items;
+  }, []);
+  return serialized.length ? serialized : undefined;
+};
+
+export const deserializeItems = (items: SerializedItems) => items.reduce<Item[]>((items, item) => {
+  if (Array.isArray(item)) {
+    for (let i = 0; i < item[1]; i++) {
+      items.push(item[0]);
+    }
+  } else {
+    items.push(item);
+  }
+  return items;
+}, []);
+
 class InstancedItems extends InstancedMesh {
   constructor(geometry: BufferGeometry, material: Material, count: number) {
     super(geometry, material, count);

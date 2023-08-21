@@ -133,7 +133,7 @@ export class Belt extends Mesh {
   setItems(items: Item[]) {
     const { slots } = this;
     this.enabled = true;
-    items = items.slice(0, slots.length);
+    items = items.slice(0, slots.length).reverse();
     const gap = Math.floor(slots.length / items.length);
     items.forEach((item, i) => {
       slots[slots.length - 1 - i * gap].item = item;

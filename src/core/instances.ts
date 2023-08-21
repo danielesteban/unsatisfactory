@@ -33,7 +33,7 @@ export class Instance<Event extends BaseEvent = BaseEvent> extends EventDispatch
     return [
       position.toArray(),
       rotation,
-    ];
+    ] as any[];
   }
 }
 
