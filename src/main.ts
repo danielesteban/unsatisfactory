@@ -13,6 +13,7 @@ import Container, { PoweredContainer, Connector } from './core/container';
 import { Instance } from './core/instances';
 import { Intersection } from './core/physics';
 import Belts, { Belt } from './objects/belts';
+import Birds from './objects/birds';
 import Buffers, { Buffer } from './objects/buffers';
 import Deposit from './objects/deposit';
 import Fabricators, { Fabricator } from './objects/fabricators';
@@ -52,6 +53,7 @@ const viewport = new Viewport();
 ].forEach(viewport.setupMaterialCSM.bind(viewport));
 
 [
+  Birds.getMaterial(),
   Generators.getMaterial(),
   Generators.getDepthMaterial(),
   Ghost.getMaterial(),
@@ -93,6 +95,9 @@ viewport.scene.add(walls);
 
 const wires = new Wires();
 viewport.scene.add(wires);
+
+const birds = new Birds(viewport.camera.position);
+viewport.scene.add(birds);
 
 const ghost = new Ghost();
 viewport.scene.add(ghost);
@@ -427,6 +432,7 @@ const raycaster = new Raycaster();
 raycaster.far = viewport.camera.far;
 viewport.setAnimationLoop((buttons, delta) => {
   belts.step(delta);
+  birds.step(delta);
   terrain.update(viewport.camera.position, terrainRadius);
   raycaster.setFromCamera(center, viewport.camera);
   // @dani @incomplete
@@ -509,4 +515,5 @@ const settings = new Settings({
 
 restore();
 setInterval(save, 60000);
+birds.reset();
 terrain.update(viewport.camera.position, terrainRadius);
