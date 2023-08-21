@@ -23,9 +23,16 @@
   };
 
   let isOpen = true;
+  let isResetting = false;
   let isWelcome = true;
-  const toggle = () => {
+
+  const toggleReset = () => {
+    isResetting = !isResetting;
+  };
+
+  const toggleSettings = () => {
     isOpen = !isOpen;
+    isResetting = false;
     if (isOpen) {
       closeCurrentUI();
     } else {
@@ -41,7 +48,7 @@
 
 <div class="actions">
   {#if !isOpen}
-    <button class="settings" on:click={toggle}>
+    <button class="settings" on:click={toggleSettings}>
       <svg viewBox="0 0 15 15">
         <path d="M1.5 1C0.671573 1 0 1.67157 0 2.5V12.5C0 13.3284 0.671573 14 1.5 14H13.5C14.3284 14 15 13.3284 15 12.5V4.5C15 3.67157 14.3284 3 13.5 3H7.70711L5.70711 1H1.5Z"/>
       </svg>
@@ -63,16 +70,16 @@
 </div>
 
 {#if isOpen}
-<Dialog close={toggle}>
+<Dialog close={toggleSettings}>
   <Heading>Unsatisfactory</Heading>
   <Grid>
     {#if isWelcome}
-      <Welcome play={toggle} />
+      <Welcome play={toggleSettings} />
     {:else}
       <Modules>
         <Module>
           <div slot="name">
-            Save <span class="last">(last: {formatter.format(Math.floor((lastSave.getTime() - Date.now()) / 1000 / 60), 'minutes')})</span>
+            Save <span class="info">(last: {formatter.format(Math.floor((lastSave.getTime() - Date.now()) / 1000 / 60), 'minutes')})</span>
           </div>
           <div>
             <button on:click={save}>
@@ -93,11 +100,25 @@
         </Module>
         <Module>
           <div slot="name">Danger Zone</div>
-          <div>
-            <button on:click={reset} class="reset">
-              Reset
-            </button>
-          </div>
+            {#if isResetting}
+              <div class="confirm">
+                <div class="info">Are you sure?</div>
+                <div class="buttons">
+                  <button on:click={toggleReset}>
+                    No
+                  </button>
+                  <button on:click={reset} class="reset">
+                    Yes
+                  </button>
+                </div>
+              </div>
+            {:else}
+              <div>
+                <button on:click={toggleReset} class="reset">
+                  Reset
+                </button>
+              </div>
+            {/if}
         </Module>
       </Modules>
     {/if}
@@ -133,11 +154,17 @@
   .settings > svg {
     stroke-width: 0.4;
   }
-  .last {
+  .info {
     color: #aaa;
+  }
+  .confirm {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
   }
   .buttons {
     display: flex;
+    align-items: center;
     gap: 0.25rem;
   }
   .reset {
