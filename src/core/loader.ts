@@ -13,15 +13,16 @@ import Smelters, { Smelter } from '../objects/smelters';
 import Walls from '../objects/walls';
 import Wires, { Wire } from '../objects/wires';
 
-const version = 6;
+const version = 7;
 
 type SerializedConnection = [number, number];
 type SerializedDirection = [number, number, number];
 type SerializedEnabled = 0 | 1;
+type SerializedItems = ([Item, number] | number)[];
 type SerializedPosition = [number, number, number];
 
 type Serialized = {
-  belts: [SerializedConnection, SerializedDirection, SerializedConnection, SerializedDirection][];
+  belts: [SerializedConnection, SerializedDirection, SerializedConnection, SerializedDirection, SerializedItems][];
   buffers: [SerializedPosition, number][];
   fabricators: [SerializedPosition, number, SerializedEnabled, number][];
   foundations: [SerializedPosition, number][];
@@ -35,6 +36,31 @@ type Serialized = {
   camera: [SerializedPosition, [number, number, number]];
   version: number;
 };
+
+const serializeItems = (items: Item[]) => items.reduce((items, item) => {
+  let last = items[items.length - 1];
+  const prevItem = Array.isArray(last) ? last[0] : last;
+  if (prevItem === item) {
+    if (!Array.isArray(last)) {
+      items[items.length - 1] = last = [last, 1];
+    }
+    last[1]++;
+  } else {
+    items.push(item);
+  }
+  return items;
+}, [] as SerializedItems);
+
+const deserializeItems = (items: SerializedItems) => items.reduce((items, item) => {
+  if (Array.isArray(item)) {
+    for (let i = 0; i < item[1]; i++) {
+      items.push(item[0]);
+    }
+  } else {
+    items.push(item);
+  }
+  return items;
+}, [] as Item[]);
 
 export const serialize = (
   belts: Belts, buffers: Buffers, fabricators: Fabricators, foundations: Foundations, generators: Generators, miners: Miners, poles: Poles, sinks: Sinks, smelters: Smelters, walls: Walls, wires: Wires,
@@ -90,6 +116,7 @@ export const serialize = (
       belt.from.direction.toArray(),
       serializeContainer(belt.to.container),
       belt.to.direction.toArray(),
+      serializeItems(belt.getItems()),
     ]) as Serialized['belts'],
     wires: (wires.children as Wire[]).map((wire) => [
       serializeContainer(wire.from),
@@ -163,12 +190,15 @@ export const deserialize = (
   serialized.walls.forEach(([position, rotation]) => (
     walls.create(aux.fromArray(position), rotation)
   ));
-  serialized.belts.forEach(([from, fromDirection, to, toDirection]) => (
-    belts.create(
+  serialized.belts.forEach(([from, fromDirection, to, toDirection, items]) => {
+    const belt = belts.create(
       { container: containers[from[0]][from[1]], direction: aux.fromArray(fromDirection) },
       { container: containers[to[0]][to[1]], direction: auxB.fromArray(toDirection) },
-    )
-  ));
+    );
+    if (items.length) {
+      belt.setItems(deserializeItems(items));
+    }
+  });
   serialized.wires.forEach(([from, to]) => (
     wires.create(
       containers[from[0]][from[1]] as PoweredContainer,
@@ -247,7 +277,7 @@ const migrations: Record<number, (serialized: Serialized) => Serialized> = {
     return {
       ...serialized,
       miners: [],
-      belts: serialized.belts.filter(([from, _fromDirection, to, _toDirection]) => from[0] !== 3 && to[0] !== 3),
+      belts: serialized.belts.filter(([from, _fromDirection, to]) => from[0] !== 3 && to[0] !== 3),
       wires: serialized.wires.filter(([from, to]) => from[0] !== 3 && to[0] !== 3),
       version: 4,
     };
@@ -278,9 +308,16 @@ const migrations: Record<number, (serialized: Serialized) => Serialized> = {
     return {
       ...serialized,
       sinks: [],
-      belts: serialized.belts.map(([from, fromDirection, to, toDirection]) => [remap(from), fromDirection, remap(to), toDirection]),
+      belts: serialized.belts.map(([from, fromDirection, to, toDirection]) => [remap(from), fromDirection, remap(to), toDirection, []]),
       wires: serialized.wires.map(([from, to]) => [remap(from), remap(to)]),
       version: 6,
+    };
+  },
+  [6]: (serialized: Serialized) => {
+    return {
+      ...serialized,
+      belts: serialized.belts.map(([from, fromDirection, to, toDirection, items]) => [from, fromDirection, to, toDirection, items || []]),
+      version: 7,
     };
   },
 };

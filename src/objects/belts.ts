@@ -121,6 +121,21 @@ export class Belt extends Mesh {
       }
     }
   }
+
+  getItems() {
+    const { slots } = this;
+    return slots.filter(({ item }) => item !== Item.none).map(({ item }) => item);
+  }
+
+  setItems(items: Item[]) {
+    const { slots } = this;
+    this.enabled = true;
+    items = items.slice(0, slots.length);
+    const gap = Math.floor(slots.length / items.length);
+    items.forEach((item, i) => {
+      slots[slots.length - 1 - i * gap].item = item;
+    });
+  }
 }
 
 class Belts extends Group {
