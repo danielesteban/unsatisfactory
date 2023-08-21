@@ -97,7 +97,7 @@ class Birds extends InstancedMesh {
   }
 
   private static readonly count: number = 32;
-  private static readonly radius: number = 64;
+  private static readonly radius: number = 96;
   private readonly anchor: Vector3;
   private readonly origins: BufferAttribute;
   private readonly targets: BufferAttribute;
@@ -135,6 +135,7 @@ class Birds extends InstancedMesh {
     for (let i = 0; i < Birds.count; i++) {
       this.resetBird(i);
     }
+    this.instanceMatrix.needsUpdate = true;
   }
 
   private static readonly auxObject: Group = new Group();
@@ -196,32 +197,35 @@ class Birds extends InstancedMesh {
     const tints = geometry.getAttribute('tint');
     const velocities = geometry.getAttribute('velocity');
     timing[i] = 0;
-    target.set(
-      anchor.x + (Math.random() * (radius * 2 + 1)) - radius,
-      radius * (0.25 + (Math.random() * 0.5)),
-      anchor.z + (Math.random() * (radius * 2 + 1)) - radius
+    target.setFromCylindricalCoords(
+      radius,
+      Math.random() * Math.PI * 2,
+      radius * (0.2 + (Math.random() * 0.5))
     );
+    target.x += anchor.x;
+    target.z += anchor.z;
     targets.setXYZ(i, target.x, target.y, target.z);
     if (origin) {
       bird.position.copy(origin);
     } else {
-      bird.position.set(
-        anchor.x + (Math.random() * (radius * 2 + 1)) - radius,
-        radius * (0.25 + (Math.random() * 0.5)),
-        anchor.z + (Math.random() * (radius * 2 + 1)) - radius
+      bird.position.setFromCylindricalCoords(
+        radius,
+        Math.random() * Math.PI * 2,
+        radius * (0.2 + (Math.random() * 0.5))
       );
+      bird.position.x += anchor.x;
+      bird.position.z += anchor.z;
       tints.setXYZ(i, Math.random(), Math.random(), Math.random());
       tints.needsUpdate = true;
-      velocities.setX(i, 0.1 + Math.random());
+      velocities.setX(i, 0.2 + Math.random() * 0.5);
       velocities.needsUpdate = true;
     }
     origins.setXYZ(i, bird.position.x, bird.position.y, bird.position.z);
     bird.lookAt(target);
-    const scale = 0.3 + ((1 - velocities.getX(i)) * 0.5);
+    const scale = 0.2 + ((1 - velocities.getX(i)) * 0.5);
     bird.scale.set(scale, scale, scale);
     bird.updateMatrix();
     this.setMatrixAt(i, bird.matrix);
-    this.instanceMatrix.needsUpdate = true;
   }
 }
 
