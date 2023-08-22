@@ -61,7 +61,7 @@
 
   .autosave {
     position: absolute;
-    top: 1rem;
+    bottom: 0.75rem;
     left: 0;
     background: rgba(0, 0, 0, .2);
     padding: 0.25rem 0;
