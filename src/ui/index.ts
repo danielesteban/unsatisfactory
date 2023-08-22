@@ -89,9 +89,13 @@ export const close = () => {
 };
 
 const compass = new CompassUI({ target });
-export const setCompass = (orientation: number) => {
+export const setCompass = (orientation: number, position: { x: number; z: number; }) => {
   orientation = Math.PI * 2 - (orientation - Math.floor(orientation/(Math.PI * 2)) * Math.PI * 2);
-  compass.$set({ orientation: Math.floor(orientation / Math.PI * 18000) / 100 });
+  compass.$set({
+    lat: Math.floor(position.z),
+    lon: Math.floor(position.x),
+    orientation: Math.floor(orientation / Math.PI * 18000) / 100,
+  });
 };
 
 const cursor = new CursorUI({ target });

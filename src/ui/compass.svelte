@@ -1,4 +1,6 @@
 <script lang="ts">
+  export let lat: number;
+  export let lon: number;
   export let orientation: number;
 
   let canvas: HTMLCanvasElement;
@@ -33,7 +35,7 @@
 
     {
       for (let i = 0; i < 2; i++) {
-        const x = i == 0 ? 12 : width - 12;
+        const x = i == 0 ? 4 : width - 4;
         const y = 33;
         const d = i == 0 ? 1 : -1;
         ctx.beginPath();
@@ -45,7 +47,7 @@
       }
     }
 
-    const padding = 32;
+    const padding = 20;
     const steps = 42;
     const step = (width - padding * 2) / steps;
     const stepDeg = 5;
@@ -91,7 +93,12 @@
 </script>
 
 <div class="compass">
+  <div class="info">
+    <div>{`${Math.abs(lat / 111).toFixed(2)}° ${lat < 0 ? 'N' : 'S'}`}</div>
+    <div>{`${Math.abs(lon / 111).toFixed(2)}° ${lon < 0 ? 'W' : 'E'}`}</div>
+  </div>
   <canvas bind:this={canvas} />
+  <div class="info" />
 </div>
 
 <style>
@@ -103,11 +110,23 @@
     background: rgba(0, 0, 0, 0.15);
     backdrop-filter: blur(0.5rem);
     border-radius: 0 0 0.5rem 0.5rem;
+    align-items: center;
     pointer-events: none;
     display: none;
   }
 
   :global(body.pointerlock) .compass {
-    display: block;
+    display: flex;
+  }
+
+  .info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 2.625rem;
+    font-size: 0.625rem;
+    line-height: 1rem;
   }
 </style>

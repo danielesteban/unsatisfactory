@@ -471,7 +471,7 @@ viewport.setAnimationLoop((buttons, delta) => {
   if (buttons.primary || buttons.secondary || buttons.tertiary || buttons.build || buttons.dismantle || buttons.interact) {
     handleInput(buttons, hit);
   }
-  setCompass(viewport.camera.rotation.y);
+  setCompass(viewport.camera.rotation.y, viewport.camera.position);
 });
 
 new Settings({
