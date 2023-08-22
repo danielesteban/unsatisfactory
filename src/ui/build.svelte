@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
-  import { Brush, names, set as setBrush } from '../core/brush';
+  import { Brush, names, groups, set as setBrush } from '../core/brush';
   import Hotbar from './stores/hotbar';
   import Dialog from './components/dialog.svelte';
   import Capture from './capture';
@@ -12,28 +12,9 @@
     close();
   };
 
-  const brushes = [
-    [
-      Brush.foundation,
-      Brush.ramp,
-      Brush.wall,
-    ],
-    [
-      Brush.fabricator,
-      Brush.miner,
-      Brush.smelter,
-    ],
-    [
-      Brush.belt,
-      Brush.buffer,
-      Brush.sink,
-    ],
-    [
-      Brush.generator,
-      Brush.pole,
-      Brush.wire,
-    ],
-  ].map((group) => group.map((brush) => ({ id: brush, name: names[brush], images: Capture(brush) })));
+  const brushes = groups.map((group) => (
+    group.map((brush) => ({ id: brush, name: names[brush], images: Capture(brush) }))
+  ));
 
   const filter = (search: string) => {
     if (!search) {

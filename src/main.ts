@@ -32,6 +32,7 @@ import Ghost from './objects/ghost';
 import Grass from './objects/grass';
 import Items from './objects/items';
 import Miners, { Miner } from './objects/miners';
+import Pillars from './objects/pillars';
 import Poles, { Pole } from './objects/poles';
 import Ramps from './objects/ramps';
 import Sinks, { Sink } from './objects/sinks';
@@ -54,6 +55,7 @@ const viewport = new Viewport();
   Generators.getMaterial(),
   ...Items.getMaterials(),
   Miners.getMaterial(),
+  Pillars.getMaterial(),
   Poles.getMaterial(),
   Ramps.getMaterial(),
   Sinks.getMaterial(),
@@ -91,6 +93,9 @@ viewport.scene.add(generators);
 
 const miners = new Miners(viewport.physics, viewport.sfx);
 viewport.scene.add(miners);
+
+const pillars = new Pillars(viewport.physics);
+viewport.scene.add(pillars);
 
 const poles = new Poles(viewport.physics);
 viewport.scene.add(poles);
@@ -232,6 +237,9 @@ const create = (intersection: Intersection) => {
       Achievements.complete('miner');
       return;
     }
+    case Brush.pillar:
+      pillars.create(snap(intersection), rotation);
+      return;
     case Brush.pole:
       poles.create(snap(intersection), rotation);
       return;
@@ -431,8 +439,8 @@ viewport.setAnimationLoop((buttons, delta) => {
 });
 
 const data = [
-  belts, buffers, fabricators, foundations, generators, miners, poles, ramps, sinks, smelters, walls, wires, viewport.camera,
-] as [Belts, Buffers, Fabricators, Foundations, Generators, Miners, Poles, Ramps, Sinks, Smelters, Walls, Wires, typeof viewport.camera];
+  belts, buffers, fabricators, foundations, generators, miners, pillars, poles, ramps, sinks, smelters, walls, wires, viewport.camera,
+] as [Belts, Buffers, Fabricators, Foundations, Generators, Miners, Pillars, Poles, Ramps, Sinks, Smelters, Walls, Wires, typeof viewport.camera];
 
 new Settings({
   props: {

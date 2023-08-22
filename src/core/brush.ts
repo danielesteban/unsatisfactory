@@ -14,6 +14,7 @@ import Fabricators, { Fabricator }  from '../objects/fabricators';
 import Foundations, { Foundation } from '../objects/foundations';
 import Generators, { Generator } from '../objects/generators';
 import Miners, { Miner } from '../objects/miners';
+import Pillars, { Pillar } from '../objects/pillars';
 import Poles, { Pole } from '../objects/poles';
 import Ramps, { Ramp } from '../objects/ramps';
 import Sinks, { Sink } from '../objects/sinks';
@@ -30,6 +31,7 @@ export enum Brush {
   foundation,
   generator,
   miner,
+  pillar,
   pole,
   ramp,
   sink,
@@ -85,6 +87,7 @@ export const names: Record<Brush, string> = {
   [Brush.foundation]: 'Foundation',
   [Brush.generator]: 'Generator',
   [Brush.miner]: 'Miner',
+  [Brush.pillar]: 'Pillar',
   [Brush.pole]: 'Pole',
   [Brush.ramp]: 'Ramp',
   [Brush.sink]: 'Sink',
@@ -92,6 +95,30 @@ export const names: Record<Brush, string> = {
   [Brush.wall]: 'Wall',
   [Brush.wire]: 'Wire',
 };
+
+export const groups = [
+  [
+    Brush.foundation,
+    Brush.pillar,
+    Brush.ramp,
+    Brush.wall,
+  ],
+  [
+    Brush.fabricator,
+    Brush.miner,
+    Brush.smelter,
+  ],
+  [
+    Brush.belt,
+    Brush.buffer,
+    Brush.sink,
+  ],
+  [
+    Brush.generator,
+    Brush.pole,
+    Brush.wire,
+  ],
+];
 
 export const getFromObject = (instance?: Instance | Belt | Wire) => {
   if (instance instanceof Belt) {
@@ -111,6 +138,9 @@ export const getFromObject = (instance?: Instance | Belt | Wire) => {
   }
   if (instance instanceof Miner) {
     return Brush.miner;
+  }
+  if (instance instanceof Pillar) {
+    return Brush.pillar;
   }
   if (instance instanceof Pole) {
     return Brush.pole;
@@ -145,6 +175,8 @@ export const getGeometry = (brush: Brush) => {
       return Generators.getGeometry();
     case Brush.miner:
       return Miners.getGeometry();
+    case Brush.pillar:
+      return Pillars.getGeometry();
     case Brush.pole:
       return Poles.getGeometry();
     case Brush.ramp:
@@ -174,6 +206,8 @@ export const getMaterial = (brush: Brush) => {
       return Generators.getMaterial();
     case Brush.miner:
       return Miners.getMaterial();
+    case Brush.pillar:
+      return Pillars.getMaterial();
     case Brush.pole:
       return Poles.getMaterial();
     case Brush.ramp:
@@ -213,6 +247,7 @@ const offsets = {
   [Brush.foundation]: new Vector3(2, 0.5, 2),
   [Brush.generator]: new Vector3(2, 6, 2),
   [Brush.miner]: new Vector3(1, 2, 1),
+  [Brush.pillar]: new Vector3(2, 2, 2),
   [Brush.pole]: new Vector3(0.5, 3, 0.5),
   [Brush.ramp]: new Vector3(2, 1, 2),
   [Brush.sink]: new Vector3(2, 2, 2),

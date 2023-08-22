@@ -118,7 +118,7 @@ const process = () => {
     if (brush === Brush.generator) {
       zoom *= 3.0;
     }
-    if (brush === Brush.pole) {
+    if (brush === Brush.pillar || brush === Brush.pole || brush === Brush.sink) {
       zoom += 0.5;
     }
     mesh.rotation.y = brush === Brush.generator ? Math.PI * 0.5 : 0;
