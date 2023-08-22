@@ -148,20 +148,21 @@
   }
   .group {
     display: grid;
-    grid-template-columns: repeat(auto-fill, 8rem);
+    grid-template-columns: repeat(auto-fill, 8.375rem);
     gap: 0.5rem;
   }
   .brush {
     position: relative;
-    width: 8rem;
-    height: 8rem;
+    width: 8.375rem;
+    height: 8.375rem;
     background: rgba(0, 0, 0, .2);
   }
   .brush > img {
     position: absolute;
     width: 6rem;
-    top: 1rem;
-    left: 1rem;
+    height: 6rem;
+    top: 1.1875rem;
+    left: 1.1875rem;
     pointer-events: none;
   }
   .brush > img:nth-child(2) {
