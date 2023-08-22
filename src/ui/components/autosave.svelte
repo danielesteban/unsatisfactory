@@ -1,7 +1,7 @@
 <script lang="ts">
   export let save: () => void;
 
-  const time = 10;
+  const countdown = 10;
   let count = 0;
   let timer = 0;
   let isCounting = false;
@@ -9,7 +9,7 @@
   const counter = () => {
     const now = performance.now();
     const elapsed = Math.floor((now - timer) / 1000);
-    if (elapsed >= time) {
+    if (elapsed >= countdown) {
       isCounting = false;
       hasSaved = true;
       save();
@@ -19,7 +19,7 @@
       return;
     }
     requestAnimationFrame(counter);
-    count = time - elapsed;
+    count = countdown - elapsed;
   };
   const autosave = () => {
     isCounting = true;
