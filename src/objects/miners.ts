@@ -11,8 +11,8 @@ import {
 } from 'three';
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
-import Instances from '../core/instances';
 import { PoweredContainer } from '../core/container';
+import Instances from '../core/instances';
 import Physics from '../core/physics';
 import SFX from '../core/sfx';
 import { Item, Mining } from './items';

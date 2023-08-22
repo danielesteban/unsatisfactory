@@ -14,8 +14,8 @@ import {
 } from 'three';
 import { mergeGeometries, mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { ADDITION, Brush, Evaluator } from 'three-bvh-csg';
-import Instances, { Instance } from '../core/instances';
 import { PoweredContainer } from '../core/container';
+import Instances, { Instance } from '../core/instances';
 import Physics from '../core/physics';
 import { loadTexture } from '../textures';
 import DiffuseMap from '../textures/rust_coarse_01_diff_1k.webp';
