@@ -98,7 +98,18 @@
     <div>{`${Math.abs(lon / 1000).toFixed(2)}° ${lon < 0 ? 'W' : 'E'}`}</div>
   </div>
   <canvas bind:this={canvas} />
-  <div class="info" />
+  <div class="info keys">
+    <div>
+      <div>
+        <div class="key">Q</div>
+        <div>Build</div>
+      </div>
+      <div>
+        <div class="key">F</div>
+        <div>Dismantle</div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <style>
@@ -124,9 +135,27 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 3rem;
+    width: 6rem;
     height: 2.625rem;
     font-size: 0.625rem;
     line-height: 1rem;
+  }
+
+  .keys > div > div {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .key {
+    display: inline-flex;
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 0.25rem;
+    background: rgba(0, 0, 0, 0.075);
+    align-items: center;
+    justify-content: center;
+    color: #eee;
+    font-size: 0.5625rem;
   }
 </style>
