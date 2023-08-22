@@ -1,4 +1,5 @@
 import './main.css';
+import { Base64 } from 'js-base64';
 import {
   Object3D,
   Quaternion,
@@ -474,11 +475,21 @@ viewport.setAnimationLoop((buttons, delta) => {
   setCompass(viewport.camera.rotation.y, viewport.camera.position);
 });
 
+const data = [
+  belts, buffers, fabricators, foundations, generators, miners, poles, ramps, sinks, smelters, walls, wires, viewport.camera,
+] as [Belts, Buffers, Fabricators, Foundations, Generators, Miners, Poles, Ramps, Sinks, Smelters, Walls, Wires, typeof viewport.camera];
+
 new Settings({
   props: {
     download: () => (
-      download(serialize(belts, buffers, fabricators, foundations, generators, miners, poles, ramps, sinks, smelters, walls, wires, viewport.camera))
+      download(serialize(...data))
     ),
+    link: () => {
+      const encoded = Base64.encode(JSON.stringify(serialize(...data)));
+      const url = new URL(location.href);
+      url.hash = '/load/' + encoded;
+      return url.href;
+    },
     load: async () => {
       let serialized;
       try {
@@ -496,7 +507,7 @@ new Settings({
     save: () => {
       localStorage.setItem(
         'autosave',
-        JSON.stringify(serialize(belts, buffers, fabricators, foundations, generators, miners, poles, ramps, sinks, smelters, walls, wires, viewport.camera))
+        JSON.stringify(serialize(...data))
       );
     },
     sfx: viewport.sfx,
@@ -505,18 +516,20 @@ new Settings({
 });
 
 {
-  const stored = localStorage.getItem('autosave');
+  let stored = localStorage.getItem('autosave');
+  if (location.hash.slice(2, 6) === 'load') {
+    try {
+      stored = Base64.decode(location.hash.slice(7));
+    } catch (e) {}
+    location.hash = '/';
+  }
   if (stored) {
     let serialized;
     try {
       serialized = JSON.parse(stored);
     } catch (e) {}
     if (serialized) {
-      deserialize(
-        serialized,
-        belts, buffers, fabricators, foundations, generators, miners, poles, ramps, sinks, smelters, walls, wires,
-        viewport.camera
-      );
+      deserialize(serialized, ...data);
     }
   }
 }

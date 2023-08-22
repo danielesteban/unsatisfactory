@@ -2,6 +2,7 @@
   import SFX from '../core/sfx';
   import { close as closeCurrentUI } from '.';
   import Autosave from './components/autosave.svelte';
+  import Clipboard from './components/clipboard.svelte';
   import Dialog from './components/dialog.svelte';
   import Grid from './components/grid.svelte';
   import Heading from './components/heading.svelte';
@@ -11,6 +12,7 @@
   import Welcome from './modules/welcome.svelte';
   
   export let download: () => void;
+  export let link: () => string;
   export let load: () => void;
   export let reset: () => void;
   export let save: () => void;
@@ -108,6 +110,12 @@
             <button on:click={load}>
               Import
             </button>
+          </div>
+        </Module>
+        <Module>
+          <div slot="name">Share</div>
+          <div class="buttons">
+            <Clipboard value={link} /> 
           </div>
         </Module>
         <Module>

@@ -8,6 +8,9 @@ dependencies:
   '@dimforge/rapier3d-compat':
     specifier: ^0.11.2
     version: 0.11.2
+  js-base64:
+    specifier: ^3.7.5
+    version: 3.7.5
   n8ao:
     specifier: ^1.6.8
     version: 1.6.8(postprocessing@6.32.2)(three@0.155.0)
@@ -824,6 +827,10 @@ packages:
     dependencies:
       '@types/estree': 1.0.1
     dev: true
+
+  /js-base64@3.7.5:
+    resolution: {integrity: sha512-3MEt5DTINKqfScXKfJFrRbxkrnk2AxPWGBL/ycjz4dK8iqiSJ06UxD8jh8xuh6p10TX4t2+7FsBYVxxQbMg+qA==}
+    dev: false
 
   /lil-gui@0.17.0:
     resolution: {integrity: sha512-MVBHmgY+uEbmJNApAaPbtvNh1RCAeMnKym82SBjtp5rODTYKWtM+MXHCifLe2H2Ti1HuBGBtK/5SyG4ShQ3pUQ==}
