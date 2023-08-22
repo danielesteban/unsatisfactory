@@ -10,7 +10,6 @@
   import Help from './modules/help.svelte';
   import Welcome from './modules/welcome.svelte';
   
-  export let lastSave: Date;
   export let download: () => void;
   export let load: () => void;
   export let reset: () => void;
@@ -44,10 +43,20 @@
     }
   };
 
+  let lastSave: Date = new Date();
+  const trackSave = () => {
+    lastSave = new Date();
+    save();
+  };
+
   const formatter = new Intl.RelativeTimeFormat('en', { style: 'short' });
+  const formattedTime = (date: Date) => {
+    const diff = Math.floor((date.getTime() - Date.now()) / 1000 / 60);
+    return formatter.format(diff, 'minutes');
+  };
 </script>
 
-<Autosave save={save} />
+<Autosave save={trackSave} />
 
 <div class="actions">
   {#if !isOpen}
@@ -82,10 +91,10 @@
       <Modules>
         <Module>
           <div slot="name">
-            Save <span class="info">(last: {formatter.format(Math.floor((lastSave.getTime() - Date.now()) / 1000 / 60), 'minutes')})</span>
+            Save <span class="info">(last: {formattedTime(lastSave)})</span>
           </div>
           <div>
-            <button on:click={save}>
+            <button on:click={trackSave}>
               Save
             </button>
           </div>

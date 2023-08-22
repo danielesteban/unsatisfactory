@@ -474,35 +474,8 @@ viewport.setAnimationLoop((buttons, delta) => {
   setCompass(viewport.camera.rotation.y);
 });
 
-const restore = () => {
-  const stored = localStorage.getItem('autosave');
-  if (!stored) {
-    return;
-  }
-  let serialized;
-  try {
-    serialized = JSON.parse(stored);
-  } catch (e) {
-    return;
-  }
-  deserialize(
-    serialized,
-    belts, buffers, fabricators, foundations, generators, miners, poles, ramps, sinks, smelters, walls, wires,
-    viewport.camera
-  );
-};
-
-const save = () => {
-  localStorage.setItem(
-    'autosave',
-    JSON.stringify(serialize(belts, buffers, fabricators, foundations, generators, miners, poles, ramps, sinks, smelters, walls, wires, viewport.camera))
-  );
-  settings.$set({ lastSave: new Date() });
-};
-
-const settings = new Settings({
+new Settings({
   props: {
-    lastSave: new Date(),
     download: () => (
       download(serialize(belts, buffers, fabricators, foundations, generators, miners, poles, ramps, sinks, smelters, walls, wires, viewport.camera))
     ),
@@ -520,12 +493,32 @@ const settings = new Settings({
       localStorage.clear();
       location.reload();
     },
-    save,
+    save: () => {
+      localStorage.setItem(
+        'autosave',
+        JSON.stringify(serialize(belts, buffers, fabricators, foundations, generators, miners, poles, ramps, sinks, smelters, walls, wires, viewport.camera))
+      );
+    },
     sfx: viewport.sfx,
   },
   target: document.getElementById('ui')!,
 });
 
-restore();
+{
+  const stored = localStorage.getItem('autosave');
+  if (stored) {
+    let serialized;
+    try {
+      serialized = JSON.parse(stored);
+    } catch (e) {}
+    if (serialized) {
+      deserialize(
+        serialized,
+        belts, buffers, fabricators, foundations, generators, miners, poles, ramps, sinks, smelters, walls, wires,
+        viewport.camera
+      );
+    }
+  }
+}
 birds.reset();
 terrain.update(viewport.camera.position, terrainRadius);
