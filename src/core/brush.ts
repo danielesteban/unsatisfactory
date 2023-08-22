@@ -272,10 +272,10 @@ export const snap = (intersection: Intersection) => {
     const brushOffset = offsets[brush];
     const offset = offsets[getFromObject(intersection.object)];
 
-    quaternion.setFromAxisAngle(Object3D.DEFAULT_UP, intersection.object.rotation);
+    quaternion.copy(Instance.getQuaternion(intersection.object));
     rotatedOffset.copy(offset).multiply(intersection.normal).applyQuaternion(quaternion);
-
     rotatedDirection.copy(intersection.normal).applyQuaternion(quaternion);
+
     quaternion.setFromAxisAngle(Object3D.DEFAULT_UP, -rotation);
     rotatedDirection.applyQuaternion(quaternion);
     quaternion.invert();

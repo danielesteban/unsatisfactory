@@ -7,7 +7,6 @@ import {
   MeshDepthMaterial,
   MeshStandardMaterial,
   Object3D,
-  Quaternion,
   RGBADepthPacking,
   Shader,
   SRGBColorSpace,
@@ -15,7 +14,7 @@ import {
 } from 'three';
 import { mergeGeometries, mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { ADDITION, Brush, Evaluator } from 'three-bvh-csg';
-import Instances from '../core/instances';
+import Instances, { Instance } from '../core/instances';
 import { PoweredContainer } from '../core/container';
 import Physics from '../core/physics';
 import { loadTexture } from '../textures';
@@ -34,17 +33,15 @@ export class Generator extends PoweredContainer {
     return this.enabled ? this.power : 0;
   }
   
-  private static aux: Vector3 = new Vector3();
-  private static auxRotation: Quaternion = new Quaternion();
-  private static wireConnectorOffset: Vector3 = new Vector3(-1, 0, 0);
+  private static readonly wireConnectorAux: Vector3 = new Vector3();
+  private static readonly wireConnectorOffset: Vector3 = new Vector3(-1, 0, 0);
   override getWireConnector(): Vector3 {
-    return this.position.clone()
-      .add(
-        Generator.aux.copy(Generator.wireConnectorOffset).applyQuaternion(
-          Generator.auxRotation.setFromAxisAngle(Object3D.DEFAULT_UP, this.rotation)
-        )
-      )
-      .addScaledVector(Object3D.DEFAULT_UP, -3.5);
+    return Generator.wireConnectorAux
+      .copy(Generator.wireConnectorOffset)
+      .applyQuaternion(Instance.getQuaternion(this))
+      .add(this.position)
+      .addScaledVector(Object3D.DEFAULT_UP, -3.5)
+      .clone();
   }
 }
 

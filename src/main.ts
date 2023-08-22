@@ -2,7 +2,6 @@ import './main.css';
 import { Base64 } from 'js-base64';
 import {
   Object3D,
-  Quaternion,
   Raycaster,
   Vector2,
   Vector3,
@@ -203,10 +202,8 @@ const create = (intersection: Intersection) => {
       }
       to.container = intersection.object as Container;
       to.direction.copy(intersection.normal);
-      quaternion.setFromAxisAngle(Object3D.DEFAULT_UP, from.container.rotation);
-      from.direction.applyQuaternion(quaternion);
-      quaternion.setFromAxisAngle(Object3D.DEFAULT_UP, to.container.rotation);
-      to.direction.applyQuaternion(quaternion);
+      from.direction.applyQuaternion(Instance.getQuaternion(from.container));
+      to.direction.applyQuaternion(Instance.getQuaternion(to.container));
       belts.create(from as Connector, to as Connector);
       return;
     case Brush.buffer:
@@ -404,7 +401,6 @@ const intersection: Intersection = {
   normal: new Vector3(),
   point: new Vector3(),
 };
-const quaternion = new Quaternion();
 const raycaster = new Raycaster();
 raycaster.far = viewport.camera.far;
 viewport.setAnimationLoop((buttons, delta) => {
@@ -421,8 +417,7 @@ viewport.setAnimationLoop((buttons, delta) => {
   if (physicsHit && (!vertexHit || intersection.distance < vertexHit.distance)) {
     hit = intersection;
     if (intersection.object && intersection.object instanceof Instance) {
-      quaternion.setFromAxisAngle(Object3D.DEFAULT_UP, -intersection.object.rotation);
-      intersection.normal.applyQuaternion(quaternion);
+      intersection.normal.applyQuaternion(Instance.getQuaternion(intersection.object, true));
     }
   } else if (vertexHit) {
     intersection.distance = vertexHit.distance;

@@ -25,7 +25,7 @@ export class Instance<Event extends BaseEvent = BaseEvent> extends EventDispatch
     this.position = position.clone();
     this.rotation = rotation;
   }
-  
+
   dispose() {
 
   }
@@ -36,6 +36,11 @@ export class Instance<Event extends BaseEvent = BaseEvent> extends EventDispatch
       position.toArray(),
       rotation,
     ] as any[];
+  }
+
+  private static quaternion: Quaternion = new Quaternion();
+  static getQuaternion(instance: Instance, inverse: boolean = false) {
+    return Instance.quaternion.setFromAxisAngle(Object3D.DEFAULT_UP, instance.rotation * (inverse ? -1 : 1));
   }
 }
 
@@ -55,10 +60,6 @@ class InstancesChunk extends InstancedMesh {
     this.count = 0;
   }
 
-  private static rotation: Quaternion = new Quaternion();
-  private static scale: Vector3 = new Vector3(1, 1, 1);
-  private static transform: Matrix4 = new Matrix4();
-
   addInstance(instance: Instance) {
     const { instances, maxInstanceCount } = this;
     instances.push(instance);
@@ -68,12 +69,7 @@ class InstancesChunk extends InstancedMesh {
       this.updateInstances();
     } else {
       this.count++;
-      InstancesChunk.transform.compose(
-        instance.position,
-        InstancesChunk.rotation.setFromAxisAngle(Object3D.DEFAULT_UP, instance.rotation),
-        InstancesChunk.scale
-      );
-      this.setMatrixAt(this.count - 1, InstancesChunk.transform);
+      this.setMatrixAt(this.count - 1, InstancesChunk.getTransform(instance));
       this.instanceMatrix.needsUpdate = true;
       this.computeBoundingSphere();
     }
@@ -94,17 +90,21 @@ class InstancesChunk extends InstancedMesh {
   private updateInstances() {
     const { instances } = this;
     this.count = instances.length;
-    instances.forEach(({ position, rotation }, i) => {
-      InstancesChunk.transform.setPosition(position);
-      InstancesChunk.transform.compose(
-        position,
-        InstancesChunk.rotation.setFromAxisAngle(Object3D.DEFAULT_UP, rotation),
-        InstancesChunk.scale
-      );
-      this.setMatrixAt(i, InstancesChunk.transform);
-    });
+    instances.forEach((instance, i) => (
+      this.setMatrixAt(i, InstancesChunk.getTransform(instance))
+    ));
     this.instanceMatrix.needsUpdate = true;
     this.computeBoundingSphere();
+  }
+
+  private static scale: Vector3 = new Vector3(1, 1, 1);
+  private static transform: Matrix4 = new Matrix4();
+  private static getTransform(instance: Instance) {
+    return InstancesChunk.transform.compose(
+      instance.position,
+      Instance.getQuaternion(instance),
+      InstancesChunk.scale
+    );
   }
 }
 
@@ -145,7 +145,6 @@ class Instances<InstanceType extends Instance> extends Group {
     return instances[index]!;
   }
 
-  private static rotation: Quaternion = new Quaternion();
   addInstance(instance: InstanceType) {
     const { chunks, instances, instanceChunks, model, physics } = this;
     let { chunk } = chunks.reduce<{ chunk: undefined | InstancesChunk; distance: number; }>((closest, chunk) => {
@@ -168,7 +167,7 @@ class Instances<InstanceType extends Instance> extends Group {
       instance,
       RAPIER.RigidBodyDesc.fixed()
         .setTranslation(instance.position.x, instance.position.y, instance.position.z)
-        .setRotation(Instances.rotation.setFromAxisAngle(Object3D.DEFAULT_UP, instance.rotation)),
+        .setRotation(Instance.getQuaternion(instance)),
       model.collider
     );
     return instance;

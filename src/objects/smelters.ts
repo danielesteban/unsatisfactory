@@ -5,13 +5,12 @@ import {
   CylinderGeometry,
   MeshStandardMaterial,
   Object3D,
-  Quaternion,
   SRGBColorSpace,
   Vector3,
 } from 'three';
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
-import Instances from '../core/instances';
+import Instances, { Instance } from '../core/instances';
 import Physics from '../core/physics';
 import SFX from '../core/sfx';
 import Transformer from '../core/transformer';
@@ -31,17 +30,15 @@ export class Smelter extends Transformer {
       .add(offset);
   }
 
-  private static aux: Vector3 = new Vector3();
-  private static auxRotation: Quaternion = new Quaternion();
-  private static wireConnectorOffset: Vector3 = new Vector3(1, 0, 0);
+  private static readonly wireConnectorAux: Vector3 = new Vector3();
+  private static readonly wireConnectorOffset: Vector3 = new Vector3(1, 0, 0);
   override getWireConnector(): Vector3 {
-    return this.position.clone()
-      .add(
-        Smelter.aux.copy(Smelter.wireConnectorOffset).applyQuaternion(
-          Smelter.auxRotation.setFromAxisAngle(Object3D.DEFAULT_UP, this.rotation)
-        )
-      )
-      .addScaledVector(Object3D.DEFAULT_UP, 2.5);
+    return Smelter.wireConnectorAux
+      .copy(Smelter.wireConnectorOffset)
+      .applyQuaternion(Instance.getQuaternion(this))
+      .add(this.position)
+      .addScaledVector(Object3D.DEFAULT_UP, 2.5)
+      .clone();
   }
 
   override process() {
