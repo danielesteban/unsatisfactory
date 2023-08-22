@@ -4,7 +4,6 @@ import {
   ExtrudeGeometry,
   Material,
   Mesh,
-  MeshBasicMaterial,
   MeshStandardMaterial,
   PerspectiveCamera,
   PMREMGenerator,
@@ -18,31 +17,50 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { N8AOPass } from 'n8ao';
 import { SMAAPass } from 'three/examples/jsm/postprocessing/SMAAPass.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
-
-import { Brush } from '../core/brush';
-import Buffers from '../objects/buffers';
+import { Brush, getGeometry, getMaterial } from '../core/brush';
 import Belts from '../objects/belts';
-import Fabricators from '../objects/fabricators';
-import Foundations from '../objects/foundations';
-import Generators from '../objects/generators';
-import Miners from '../objects/miners';
-import Poles from '../objects/poles';
-import Ramps from '../objects/ramps';
-import Sinks from '../objects/sinks';
-import Smelters from '../objects/smelters';
-import Walls from '../objects/walls';
-import Wires from '../objects/wires';
 
-let renderer: WebGLRenderer;
+const width = 256;
+const height = 256;
+
 let camera: PerspectiveCamera;
-let scene: Scene;
 let composer: EffectComposer;
-const setup = () => {
+let geometries: Partial<Record<Brush, BufferGeometry>>;
+let renderer: WebGLRenderer;
+let scene: Scene;
+
+const setupGeometries = () => {
+  if (geometries) {
+    return;
+  }
+  geometries = {
+    [Brush.belt]: (() => {
+      const geometry = new ExtrudeGeometry(Belts.getShape(), { bevelEnabled: false, depth: 4 });
+      geometry.translate(0, 0, -2);
+      geometry.rotateY(Math.PI * -0.5);
+      geometry.rotateX(Math.PI * 0.5);
+      return geometry;
+    })(),
+    [Brush.wire]: (() => {
+      const from = new Vector3(-2, -2, 0);
+      const to = new Vector3(2, 2, 0);
+      const offset = from.distanceTo(to) * 0.5;
+      const path = new CubicBezierCurve3(
+        from,
+        from.clone().addScaledVector(new Vector3(1, 0, 0), offset),
+        to.clone().addScaledVector(new Vector3(-1, 0, 0), offset),
+        to
+      );
+      const segments = Math.ceil(path.getLength() / 0.1);
+      return new TubeGeometry(path, segments, 0.0625, 4, false);
+    })(),
+  };
+};
+
+const setupRenderer = () => {
   if (renderer) {
     return;
   }
-  const width = 256;
-  const height = 256;
   renderer = new WebGLRenderer({
     preserveDrawingBuffer: true,
   });
@@ -63,82 +81,12 @@ const setup = () => {
 
 const queue: { brush: Brush; promises: ((capture: string[]) => void)[]; }[] = [];
 const process = () => {
-  setup();
   const queued = queue.shift();
   if (!queued) {
     return;
   }
   const { brush, promises } = queued;
-  let geometry: BufferGeometry;
-  let material: Material;
-  switch (brush) {
-    default:
-      geometry = new BufferGeometry();
-      material = new MeshBasicMaterial();
-      break;
-    case Brush.belt:
-      geometry = new ExtrudeGeometry(Belts.getShape(), { bevelEnabled: false, depth: 4 });
-      geometry.translate(0, 0, -2);
-      geometry.rotateY(Math.PI * -0.5);
-      geometry.rotateX(Math.PI * 0.5);
-      material = Belts.getMaterial();
-      break;
-    case Brush.buffer:
-      geometry = Buffers.getGeometry();
-      material = Buffers.getMaterial();
-      break;
-    case Brush.fabricator:
-      geometry = Fabricators.getGeometry();
-      material = Fabricators.getMaterial();
-      break;
-    case Brush.foundation:
-      geometry = Foundations.getGeometry();
-      material = Foundations.getMaterial();
-      break;
-    case Brush.generator:
-      geometry = Generators.getGeometry();
-      material = Generators.getMaterial();
-      break;
-    case Brush.miner:
-      geometry = Miners.getGeometry();
-      material = Miners.getMaterial();
-      break;
-    case Brush.pole:
-      geometry = Poles.getGeometry();
-      material = Poles.getMaterial();
-      break;
-    case Brush.ramp:
-      geometry = Ramps.getGeometry();
-      material = Ramps.getMaterial();
-      break;
-    case Brush.sink:
-      geometry = Sinks.getGeometry();
-      material = Sinks.getMaterial();
-      break;
-    case Brush.smelter:
-      geometry = Smelters.getGeometry();
-      material = Smelters.getMaterial();
-      break;
-    case Brush.wall:
-      geometry = Walls.getGeometry();
-      material = Walls.getMaterial();
-      break;
-    case Brush.wire: {
-      const from = new Vector3(-2, -2, 0);
-      const to = new Vector3(2, 2, 0);
-      const offset = from.distanceTo(to) * 0.5;
-      const path = new CubicBezierCurve3(
-        from,
-        from.clone().addScaledVector(new Vector3(1, 0, 0), offset),
-        to.clone().addScaledVector(new Vector3(-1, 0, 0), offset),
-        to
-      );
-      const segments = Math.ceil(path.getLength() / 0.1);
-      geometry = new TubeGeometry(path, segments, 0.0625, 4, false);
-      material = Wires.getMaterial();
-      break;
-    }
-  }
+  const material: Material = getMaterial(brush);
   if (
     (
       (material as MeshStandardMaterial).map
@@ -156,7 +104,12 @@ const process = () => {
     requestAnimationFrame(process);
     return;
   }
-  const mesh = new Mesh(geometry, material);
+  setupGeometries();
+  setupRenderer();
+  const mesh = new Mesh(
+    geometries[brush] || getGeometry(brush),
+    material
+  );
   scene.add(mesh);
   const capture = [6.5, 5.5].map((zoom) => {
     if (brush === Brush.belt || brush === Brush.buffer) {

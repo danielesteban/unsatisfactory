@@ -3,7 +3,7 @@ import {
   Object3D,
   Vector3,
 } from 'three';
-import { Instance } from './instances';
+import Instances, { Instance } from './instances';
 import { Belt } from '../objects/belts';
 import { Item } from '../objects/items';
 import { Wire } from '../objects/wires';
@@ -17,8 +17,8 @@ class Container<Events extends BaseEvent = BaseEvent> extends Instance<Events> {
   protected readonly items: Item[];
   protected outputBelt: number;
 
-  constructor(position: Vector3, rotation: number, capacity: number) {
-    super(position, rotation);
+  constructor(parent: Instances<Instance<Events>>, position: Vector3, rotation: number, capacity: number) {
+    super(parent, position, rotation);
     this.belts = { input: [], output: [] };
     this.capacity = capacity;
     this.items = [];
@@ -78,7 +78,7 @@ class Container<Events extends BaseEvent = BaseEvent> extends Instance<Events> {
   }
 };
 
-export class PoweredContainer<Events extends BaseEvent = BaseEvent> extends Container<
+type PoweredContainerEvents = (
   {
     type: "enabled";
     status: boolean;
@@ -87,7 +87,10 @@ export class PoweredContainer<Events extends BaseEvent = BaseEvent> extends Cont
     type: "powered";
     status: boolean;
   }
-  | Events
+);
+
+export class PoweredContainer<Events extends BaseEvent = BaseEvent> extends Container<
+  PoweredContainerEvents | Events
 > {
   protected connections: PoweredContainer[];
   protected readonly consumption: number;
@@ -96,8 +99,8 @@ export class PoweredContainer<Events extends BaseEvent = BaseEvent> extends Cont
   protected powered: boolean;
   protected wires: Wire[];
 
-  constructor(position: Vector3, rotation: number, capacity: number, consumption: number, maxConnections: number = 1) {
-    super(position, rotation, capacity);
+  constructor(parent: Instances<Instance<PoweredContainerEvents | Events>>, position: Vector3, rotation: number, capacity: number, consumption: number, maxConnections: number = 1) {
+    super(parent, position, rotation, capacity);
     this.connections = [];
     this.consumption = consumption;
     this.enabled = true;

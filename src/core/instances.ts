@@ -15,11 +15,13 @@ import {
 import Physics from './physics';
 
 export class Instance<Event extends BaseEvent = BaseEvent> extends EventDispatcher<Event> {
+  public readonly parent: Instances<Instance<Event>>;
   public readonly position: Vector3;
   public readonly rotation: number;
 
-  constructor(position: Vector3, rotation: number) {
+  constructor(parent: Instances<Instance<Event>>, position: Vector3, rotation: number) {
     super();
+    this.parent = parent;
     this.position = position.clone();
     this.rotation = rotation;
   }

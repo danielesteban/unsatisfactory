@@ -3,6 +3,7 @@ import {
   Vector3,
 } from 'three';
 import { PoweredContainer } from './container';
+import Instances from './instances';
 import SFX from './sfx';
 import { Belt } from '../objects/belts';
 import { Item, Recipe, Recipes } from '../objects/items';
@@ -19,8 +20,8 @@ class Transformer extends PoweredContainer<
   private sound?: PositionalAudio;
   private tick: number;
 
-  constructor(position: Vector3, rotation: number, recipe: Recipe, sfx: SFX) {
-    super(position, rotation, 0, 10);
+  constructor(parent: Instances<Transformer>, position: Vector3, rotation: number, recipe: Recipe, sfx: SFX) {
+    super(parent, position, rotation, 0, 10);
     this.counts = { input: 0, output: 0 };
     this.recipe = recipe;
     this.sfx = sfx;

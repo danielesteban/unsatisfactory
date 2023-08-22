@@ -19,8 +19,8 @@ import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.webp';
 import RoughnessMap from '../textures/rust_coarse_01_rough_1k.webp';
 
 export class Pole extends PoweredContainer {
-  constructor(position: Vector3, rotation: number) {
-    super(position, rotation, 0, 0, 4);
+  constructor(parent: Poles, position: Vector3, rotation: number) {
+    super(parent, position, rotation, 0, 0, 4);
   }
 
   override getWireConnector(): Vector3 {
@@ -85,7 +85,7 @@ class Poles extends Instances<Pole> {
   }
 
   create(position: Vector3, rotation: number) {
-    return super.addInstance(new Pole(position, rotation));
+    return super.addInstance(new Pole(this, position, rotation));
   }
 }
 

@@ -1,23 +1,25 @@
 import {
+  BufferGeometry,
+  MeshBasicMaterial,
   Object3D,
   Quaternion,
   Vector3,
 } from 'three';
 import { Instance } from './instances';
 import { Intersection } from './physics';
-import { Belt } from '../objects/belts';
-import { Buffer } from '../objects/buffers';
+import Belts, { Belt } from '../objects/belts';
+import Buffers, { Buffer } from '../objects/buffers';
 import Deposit from '../objects/deposit';
-import { Fabricator }  from '../objects/fabricators';
-import { Foundation } from '../objects/foundations';
-import { Generator } from '../objects/generators';
-import { Miner } from '../objects/miners';
-import { Pole } from '../objects/poles';
-import { Ramp } from '../objects/ramps';
-import { Sink } from '../objects/sinks';
-import { Smelter } from '../objects/smelters';
-import { Wall } from '../objects/walls';
-import { Wire } from '../objects/wires';
+import Fabricators, { Fabricator }  from '../objects/fabricators';
+import Foundations, { Foundation } from '../objects/foundations';
+import Generators, { Generator } from '../objects/generators';
+import Miners, { Miner } from '../objects/miners';
+import Poles, { Pole } from '../objects/poles';
+import Ramps, { Ramp } from '../objects/ramps';
+import Sinks, { Sink } from '../objects/sinks';
+import Smelters, { Smelter } from '../objects/smelters';
+import Walls, { Wall } from '../objects/walls';
+import Wires, { Wire } from '../objects/wires';
 
 export enum Brush {
   none,
@@ -129,6 +131,64 @@ export const getFromObject = (instance?: Instance | Belt | Wire) => {
     return Brush.wire;
   }
   return Brush.none;
+};
+
+export const getGeometry = (brush: Brush) => {
+  switch (brush) {
+    case Brush.buffer:
+      return Buffers.getGeometry();
+    case Brush.fabricator:
+      return Fabricators.getGeometry();
+    case Brush.foundation:
+      return Foundations.getGeometry();
+    case Brush.generator:
+      return Generators.getGeometry();
+    case Brush.miner:
+      return Miners.getGeometry();
+    case Brush.pole:
+      return Poles.getGeometry();
+    case Brush.ramp:
+      return Ramps.getGeometry();
+    case Brush.sink:
+      return Sinks.getGeometry();
+    case Brush.smelter:
+      return Smelters.getGeometry();
+    case Brush.wall:
+      return Walls.getGeometry();
+    default:
+      return new BufferGeometry();
+  }
+};
+
+export const getMaterial = (brush: Brush) => {
+  switch (brush) {
+    case Brush.belt:
+      return Belts.getMaterial();
+    case Brush.buffer:
+      return Buffers.getMaterial();
+    case Brush.fabricator:
+      return Fabricators.getMaterial();
+    case Brush.foundation:
+      return Foundations.getMaterial();
+    case Brush.generator:
+      return Generators.getMaterial();
+    case Brush.miner:
+      return Miners.getMaterial();
+    case Brush.pole:
+      return Poles.getMaterial();
+    case Brush.ramp:
+      return Ramps.getMaterial();
+    case Brush.sink:
+      return Sinks.getMaterial();
+    case Brush.smelter:
+      return Smelters.getMaterial();
+    case Brush.wall:
+      return Walls.getMaterial();
+    case Brush.wire:
+      return Wires.getMaterial();
+    default:
+      return new MeshBasicMaterial();
+  }
 };
 
 export const pick = (intersection: Intersection) => {

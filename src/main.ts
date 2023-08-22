@@ -7,29 +7,37 @@ import {
   Vector2,
   Vector3,
 } from 'three';
-import Viewport from './core/viewport';
-import { Brush, brush, pick, rotation, set as setBrush, snap } from './core/brush';
+import {
+  Brush,
+  brush,
+  rotation,
+  set as setBrush,
+  pick,
+  snap,
+  getGeometry as getBrushGeometry,
+} from './core/brush';
 import { download, load, serialize, deserialize } from './core/loader';
 import Container, { PoweredContainer, Connector } from './core/container';
 import { Instance } from './core/instances';
 import { Intersection } from './core/physics';
+import Viewport from './core/viewport';
 import Belts, { Belt } from './objects/belts';
 import Birds from './objects/birds';
 import Buffers, { Buffer } from './objects/buffers';
 import Deposit from './objects/deposit';
 import Fabricators, { Fabricator } from './objects/fabricators';
-import Foundations, { Foundation } from './objects/foundations';
+import Foundations from './objects/foundations';
 import Generators, { Generator } from './objects/generators';
 import Ghost from './objects/ghost';
 import Grass from './objects/grass';
 import Items from './objects/items';
 import Miners, { Miner } from './objects/miners';
 import Poles, { Pole } from './objects/poles';
-import Ramps, { Ramp } from './objects/ramps';
+import Ramps from './objects/ramps';
 import Sinks, { Sink } from './objects/sinks';
 import Smelters, { Smelter } from './objects/smelters';
 import Terrain from './objects/terrain';
-import Walls, { Wall } from './objects/walls';
+import Walls from './objects/walls';
 import Wires, { Wire } from './objects/wires';
 import UI, { setCompass, setTooltip } from './ui';
 import Achievements from './ui/stores/achievements';
@@ -263,27 +271,7 @@ const remove = (intersection: Intersection) => {
     if (instance instanceof PoweredContainer) {
       [...instance.getWires()].forEach((wire) => wires.remove(wire));
     }
-    if (instance instanceof Buffer) {
-      buffers.removeInstance(instance);
-    } else if (instance instanceof Fabricator) {
-      fabricators.removeInstance(instance);
-    } else if (instance instanceof Foundation) {
-      foundations.removeInstance(instance);
-    } else if (instance instanceof Generator) {
-      generators.removeInstance(instance);
-    } else if (instance instanceof Miner) {
-      miners.removeInstance(instance);
-    } else if (instance instanceof Pole) {
-      poles.removeInstance(instance);
-    } else if (instance instanceof Ramp) {
-      ramps.removeInstance(instance);
-    } else if (instance instanceof Sink) {
-      sinks.removeInstance(instance);
-    } else if (instance instanceof Smelter) {
-      smelters.removeInstance(instance);
-    } else if (instance instanceof Wall) {
-      walls.removeInstance(instance);
-    }
+    instance.parent.removeInstance(instance);
     return;
   }
   if (intersection.object instanceof Belt) {
@@ -342,41 +330,8 @@ const hover = (intersection?: Intersection) => {
     )
     && ![Brush.none, Brush.belt, Brush.dismantle, Brush.wire].includes(brush)
   ) {
-    let geometry;
-    switch (brush) {
-      case Brush.buffer:
-        geometry = Buffers.getGeometry();
-        break;
-      case Brush.fabricator:
-        geometry = Fabricators.getGeometry();
-        break;
-      case Brush.foundation:
-        geometry = Foundations.getGeometry();
-        break;
-      case Brush.generator:
-        geometry = Generators.getGeometry();
-        break;
-      case Brush.miner:
-        geometry = Miners.getGeometry();
-        break;
-      case Brush.pole:
-        geometry = Poles.getGeometry();
-        break;
-      case Brush.ramp:
-        geometry = Ramps.getGeometry();
-        break;
-      case Brush.sink:
-        geometry = Sinks.getGeometry();
-        break;
-      case Brush.smelter:
-        geometry = Smelters.getGeometry();
-        break;
-      case Brush.wall:
-        geometry = Walls.getGeometry();
-        break;
-    }
     const isValid = brush !== Brush.miner || intersection.object instanceof Deposit;
-    ghost.update(geometry!, snap(intersection), rotation, isValid);
+    ghost.update(getBrushGeometry(brush), snap(intersection), rotation, isValid);
     setTooltip(isValid ? 'build' : 'invalid');
     return;
   }

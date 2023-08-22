@@ -25,8 +25,8 @@ import RoughnessMap from '../textures/rust_coarse_01_rough_1k.webp';
 
 export class Generator extends PoweredContainer {
   private readonly power: number;
-  constructor(position: Vector3, rotation: number, power: number) {
-    super(position, rotation, 0, 0, 4);
+  constructor(parent: Generators, position: Vector3, rotation: number, power: number) {
+    super(parent, position, rotation, 0, 0, 4);
     this.power = power;
   }
 
@@ -218,7 +218,7 @@ class Generators extends Instances<Generator> {
   }
 
   create(position: Vector3, rotation: number, power: number = 100) {
-    return super.addInstance(new Generator(position, rotation, power));
+    return super.addInstance(new Generator(this, position, rotation, power));
   }
 }
 

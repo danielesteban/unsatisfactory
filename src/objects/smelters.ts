@@ -145,7 +145,7 @@ class Smelters extends Instances<Smelter> {
   create(position: Vector3, rotation: number, recipe?: Recipe) {
     const { sfx } = this;
     const instance = super.addInstance(
-      new Smelter(position, rotation, recipe || Recipes.find(({ transformer }) => transformer === ItemTransformer.smelter)!, sfx)
+      new Smelter(this, position, rotation, recipe || Recipes.find(({ transformer }) => transformer === ItemTransformer.smelter)!, sfx)
     );
     return instance;
   }

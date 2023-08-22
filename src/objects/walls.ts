@@ -84,7 +84,7 @@ class Walls extends Instances<Wall> {
   }
 
   create(position: Vector3, rotation: number) {
-    return super.addInstance(new Wall(position, rotation));
+    return super.addInstance(new Wall(this, position, rotation));
   }
 }
 

@@ -116,7 +116,7 @@ class Ramps extends Instances<Ramp> {
   }
 
   create(position: Vector3, rotation: number) {
-    return super.addInstance(new Ramp(position, rotation));
+    return super.addInstance(new Ramp(this, position, rotation));
   }
 }
 

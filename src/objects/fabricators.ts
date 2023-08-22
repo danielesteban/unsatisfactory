@@ -121,7 +121,7 @@ class Fabricators extends Instances<Fabricator> {
   create(position: Vector3, rotation: number, recipe?: Recipe) {
     const { sfx } = this;
     const instance = super.addInstance(
-      new Fabricator(position, rotation, recipe || Recipes.find(({ transformer }) => transformer === ItemTransformer.fabricator)!, sfx)
+      new Fabricator(this, position, rotation, recipe || Recipes.find(({ transformer }) => transformer === ItemTransformer.fabricator)!, sfx)
     );
     return instance;
   }

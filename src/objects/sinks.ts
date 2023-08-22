@@ -26,8 +26,9 @@ export class Sink extends PoweredContainer<
   }
 > {
   private points: number;
-  constructor(position: Vector3, rotation: number) {
-    super(position, rotation, 0, 100);
+
+  constructor(parent: Sinks, position: Vector3, rotation: number) {
+    super(parent, position, rotation, 0, 100);
     this.points = 0;
   }
 
@@ -136,7 +137,7 @@ class Sinks extends Instances<Sink> {
   }
 
   create(position: Vector3, rotation: number) {
-    return super.addInstance(new Sink(position, rotation));
+    return super.addInstance(new Sink(this, position, rotation));
   }
 }
 

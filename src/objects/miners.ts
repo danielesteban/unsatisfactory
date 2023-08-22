@@ -30,9 +30,9 @@ export class Miner extends PoweredContainer {
   private sound?: PositionalAudio;
   private tick: number;
 
-  constructor(position: Vector3, rotation: number, item: Item, purity: number, sfx: SFX) {
+  constructor(parent: Miners, position: Vector3, rotation: number, item: Item, purity: number, sfx: SFX) {
     const { consumption, rate } = Mining[item] || { consumption: 0, rate: 0 };
-    super(position, rotation, 0, consumption / purity);
+    super(parent, position, rotation, 0, consumption / purity);
     this.item = item;
     this.purity = purity;
     this.rate = rate * purity;
@@ -163,7 +163,7 @@ class Miners extends Instances<Miner> {
   create(position: Vector3, rotation: number, item: Item, purity: number) {
     const { sfx } = this;
     const instance = super.addInstance(
-      new Miner(position, rotation, item, purity, sfx)
+      new Miner(this, position, rotation, item, purity, sfx)
     );
     return instance;
   }

@@ -18,8 +18,8 @@ import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.webp';
 import RoughnessMap from '../textures/rust_coarse_01_rough_1k.webp';
 
 export class Buffer extends Container {
-  constructor(position: Vector3, rotation: number) {
-    super(position, rotation, 10);
+  constructor(parent: Buffers, position: Vector3, rotation: number) {
+    super(parent, position, rotation, 10);
   }
 
   setItems(data: Item[]) {
@@ -98,7 +98,7 @@ class Buffers extends Instances<Buffer> {
   }
 
   create(position: Vector3, rotation: number) {
-    return super.addInstance(new Buffer(position, rotation));
+    return super.addInstance(new Buffer(this, position, rotation));
   }
 }
 
