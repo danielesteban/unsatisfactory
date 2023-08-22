@@ -1,6 +1,7 @@
 <script lang="ts">
   import SFX from '../core/sfx';
   import { close as closeCurrentUI } from '.';
+  import Autosave from './components/autosave.svelte';
   import Dialog from './components/dialog.svelte';
   import Grid from './components/grid.svelte';
   import Heading from './components/heading.svelte';
@@ -45,6 +46,8 @@
 
   const formatter = new Intl.RelativeTimeFormat('en', { style: 'short' });
 </script>
+
+<Autosave save={save} />
 
 <div class="actions">
   {#if !isOpen}

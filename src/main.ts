@@ -527,6 +527,5 @@ const settings = new Settings({
 });
 
 restore();
-setInterval(save, 60000);
 birds.reset();
 terrain.update(viewport.camera.position, terrainRadius);
