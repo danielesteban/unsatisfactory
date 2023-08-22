@@ -485,9 +485,8 @@ new Settings({
       download(serialize(...data))
     ),
     link: () => {
-      const encoded = Base64.encode(JSON.stringify(serialize(...data)));
       const url = new URL(location.href);
-      url.hash = '/load/' + encoded;
+      url.hash = '/load/' + Base64.encode(JSON.stringify(serialize(...data)), true);
       return url.href;
     },
     load: async () => {
