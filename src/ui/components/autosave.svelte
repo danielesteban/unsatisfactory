@@ -26,7 +26,7 @@
     timer = performance.now();
     requestAnimationFrame(counter);
   };
-  setTimeout(autosave, 300000);
+  setInterval(autosave, 300000);
 </script>
 
 {#if isCounting || hasSaved}
