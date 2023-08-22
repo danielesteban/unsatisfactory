@@ -18,6 +18,13 @@ import DiffuseMap from '../textures/rust_coarse_01_diff_1k.webp';
 import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.webp';
 import RoughnessMap from '../textures/rust_coarse_01_rough_1k.webp';
 
+// @dani @hack @grievance
+// The poles aren't really containers.
+// Nor they can be powered.
+// But they need to be able to be wired up.
+// OOP inheritance has failed me once again.
+// I should have listened to the ECS evangelists.
+// I'm just too lazy to care for switching to composition at this stage.
 export class Pole extends PoweredContainer {
   constructor(parent: Poles, position: Vector3, rotation: number) {
     super(parent, position, rotation, 0, 0, 4);
