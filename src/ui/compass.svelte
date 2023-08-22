@@ -94,8 +94,8 @@
 
 <div class="compass">
   <div class="info">
-    <div>{`${Math.abs(lat / 111).toFixed(2)}° ${lat < 0 ? 'N' : 'S'}`}</div>
-    <div>{`${Math.abs(lon / 111).toFixed(2)}° ${lon < 0 ? 'W' : 'E'}`}</div>
+    <div>{`${Math.abs(lat / 1000).toFixed(2)}° ${lat < 0 ? 'N' : 'S'}`}</div>
+    <div>{`${Math.abs(lon / 1000).toFixed(2)}° ${lon < 0 ? 'W' : 'E'}`}</div>
   </div>
   <canvas bind:this={canvas} />
   <div class="info" />
