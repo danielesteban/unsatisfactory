@@ -1,16 +1,7 @@
-import { writable } from 'svelte/store';
+import { get, writable } from 'svelte/store';
 import { Brush } from '../../core/brush';
 
-const stored = localStorage.getItem('hotbar');
-let parsed: Brush[] | undefined;
-if (stored) {
-  try {
-    parsed = JSON.parse(stored) as Brush[];
-  } catch (e) {
-    parsed = undefined;
-  }
-}
-const { subscribe, update } = writable(parsed || Array.from({ length: 4 }, () => Brush.none));
+const { subscribe, set, update } = writable(Array.from({ length: 4 }, () => Brush.none));
 
 export default {
   subscribe,
@@ -29,9 +20,22 @@ export default {
         }
         slots[slot] = brush;
       }
-      slots = slots.slice(0, slots.reduce((m, b, i) => Math.max(m, b !== Brush.none ? i : 0), 3) + 1);
-      localStorage.setItem('hotbar', JSON.stringify(slots));
-      return slots;
+      const last = slots.findLastIndex((brush) => brush !== Brush.none);
+      return slots.slice(0, Math.max(last !== -1 ? (last + 1) : 0, 4));
     });
+  },
+  serialize() {
+    const slots = get({ subscribe });
+    const last = slots.findLastIndex((brush) => brush !== Brush.none);
+    return slots.slice(0, last !== -1 ? (last + 1) : 0);
+  },
+  deserialize(slots: Brush[]) {
+    if (slots.length < 4) {
+      slots = [
+        ...slots,
+        ...Array.from({ length: 4 - slots.length }, () => Brush.none),
+      ];
+    }
+    set(slots);
   },
 };

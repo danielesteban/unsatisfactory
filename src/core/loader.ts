@@ -1,6 +1,7 @@
 import { Base64 } from 'js-base64';
 import { deflateSync, inflateSync, strFromU8, strToU8 } from 'fflate';
 import { Camera, Vector3 } from 'three';
+import { Brush } from './brush';
 import Container, { PoweredContainer } from './container';
 import Belts, { Belt } from '../objects/belts';
 import Buffers, { Buffer } from '../objects/buffers';
@@ -17,8 +18,9 @@ import Smelters, { Smelter } from '../objects/smelters';
 import Walls from '../objects/walls';
 import Wires, { Wire } from '../objects/wires';
 import Achievements, { Achievement } from '../ui/stores/achievements';
+import Hotbar from '../ui/stores/hotbar';
 
-const version = 10;
+const version = 11;
 
 export type Objects = {
   belts: Belts;
@@ -56,7 +58,8 @@ type Serialized = {
   walls: [SerializedPosition, number][];
   wires: [SerializedConnection, SerializedConnection][];
   achievements: Achievement[];
-  camera: [SerializedPosition, [number, number, number]];
+  hotbar: Brush[];
+  view: [SerializedPosition, [number, number, number]];
   version: number;
 };
 
@@ -128,7 +131,8 @@ export const serialize = (
       serializeContainer(wire.to),
     ]) as Serialized['wires'],
     achievements: Achievements.serialize(),
-    camera: [camera.position.toArray(), camera.rotation.toArray().slice(0, 3)] as Serialized['camera'],
+    hotbar: Hotbar.serialize(),
+    view: [camera.position.toArray(), camera.rotation.toArray().slice(0, 3)] as Serialized['view'],
     version,
   };
 };
@@ -224,9 +228,10 @@ export const deserialize = (
     )
   ));
   Achievements.deserialize(serialized.achievements);
-  camera.position.fromArray(serialized.camera[0]);
+  Hotbar.deserialize(serialized.hotbar);
+  camera.position.fromArray(serialized.view[0]);
   camera.userData.targetPosition.copy(camera.position);
-  camera.rotation.fromArray(serialized.camera[1]);
+  camera.rotation.fromArray(serialized.view[1]);
   camera.userData.targetRotation.copy(camera.rotation);
   return true;
 };
@@ -317,11 +322,11 @@ const migrations: Record<number, (serialized: Serialized) => Serialized> = {
       ...serialized,
       camera: [
         [
-          serialized.camera[0][0],
-          serialized.camera[0][1] + 0.15,
-          serialized.camera[0][2],
+          (serialized as any).camera[0][0],
+          (serialized as any).camera[0][1] + 0.15,
+          (serialized as any).camera[0][2],
         ],
-        serialized.camera[1],
+        (serialized as any).camera[1],
       ],
     };
   },
@@ -384,4 +389,21 @@ const migrations: Record<number, (serialized: Serialized) => Serialized> = {
       achievements: (parsed || []).filter((id) => map[id]).map((id) => map[id]),
     };
   },
+  [10]: (serialized: Serialized) => {
+    const stored = localStorage.getItem('hotbar');
+    let parsed: Brush[] | undefined;
+    if (stored) {
+      try {
+        parsed = JSON.parse(stored) as Brush[];
+      } catch (e) {
+        parsed = undefined;
+      }
+    }
+    const { camera, ...rest } = serialized as (Serialized & { camera: Serialized['view']; });
+    return {
+      ...rest,
+      hotbar: (parsed || []),
+      view: camera,
+    };
+  }
 };
