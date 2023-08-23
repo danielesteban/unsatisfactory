@@ -1,14 +1,14 @@
 <script lang="ts">
-  import SFX from '../core/sfx';
-  import Autosave from './components/autosave.svelte';
-  import Clipboard from './components/clipboard.svelte';
-  import Dialog from './components/dialog.svelte';
-  import Grid from './components/grid.svelte';
-  import Heading from './components/heading.svelte';
-  import Modules from './components/modules.svelte';
-  import Module from './components/module.svelte';
-  import Help from './modules/help.svelte';
-  import Welcome from './modules/welcome.svelte';
+  import SFX from '../../core/sfx';
+  import Autosave from '../components/autosave.svelte';
+  import Clipboard from '../components/clipboard.svelte';
+  import Dialog from '../components/dialog.svelte';
+  import Grid from '../components/grid.svelte';
+  import Heading from '../components/heading.svelte';
+  import Modules from '../components/modules.svelte';
+  import Module from '../components/module.svelte';
+  import Help from '../modules/help.svelte';
+  import Welcome from '../modules/welcome.svelte';
   
   export let closeCurrentUI: () => void;
   export let download: () => void;

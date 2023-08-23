@@ -1,9 +1,9 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
-  import { Brush, names, groups, set as setBrush } from '../core/brush';
-  import Hotbar from './stores/hotbar';
-  import Dialog from './components/dialog.svelte';
-  import Capture from './capture';
+  import { Brush, names, groups, set as setBrush } from '../../core/brush';
+  import Hotbar from '../stores/hotbar';
+  import Dialog from '../components/dialog.svelte';
+  import Capture from '../capture';
 
   export let close: () => void;
 

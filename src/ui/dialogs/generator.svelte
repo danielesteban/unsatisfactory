@@ -1,12 +1,12 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
-  import Dialog from './components/dialog.svelte';
-  import Grid from './components/grid.svelte';
-  import Heading from './components/heading.svelte';
-  import Modules from './components/modules.svelte';
-  import Module from './components/module.svelte';
-  import Toggle from './modules/toggle.svelte';
-  import { Generator } from '../objects/generators';
+  import { Generator } from '../../objects/generators';
+  import Dialog from '../components/dialog.svelte';
+  import Grid from '../components/grid.svelte';
+  import Heading from '../components/heading.svelte';
+  import Modules from '../components/modules.svelte';
+  import Module from '../components/module.svelte';
+  import Toggle from '../modules/toggle.svelte';
 
   export let close: () => void;
   export let instance: Generator;

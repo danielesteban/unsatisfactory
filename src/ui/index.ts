@@ -12,16 +12,16 @@ import { Miner } from '../objects/miners';
 import { Sink } from '../objects/sinks';
 import { Smelter } from '../objects/smelters';
 import { Wire } from '../objects/wires';
-import AchievementsUI from './achievements.svelte';
-import BuildUI from './build.svelte';
-import CompassUI from './compass.svelte';
-import CursorUI from './cursor.svelte';
-import HotbarUI from './hotbar.svelte';
-import GeneratorUI from './generator.svelte';
-import MinerUI from './miner.svelte';
-import SinkUI from './sink.svelte';
-import SettingsUI from './settings.svelte';
-import TransformerUI from './transformer.svelte';
+import BuildUI from './dialogs/build.svelte';
+import GeneratorUI from './dialogs/generator.svelte';
+import MinerUI from './dialogs/miner.svelte';
+import SinkUI from './dialogs/sink.svelte';
+import SettingsUI from './dialogs/settings.svelte';
+import TransformerUI from './dialogs/transformer.svelte';
+import Achievements from './achievements.svelte';
+import Compass from './compass.svelte';
+import Cursor from './cursor.svelte';
+import Hotbar from './hotbar.svelte';
 
 let current: SvelteComponent | undefined = undefined;
 const target = document.getElementById('ui')!;
@@ -84,7 +84,7 @@ export default (type: 'build' | 'container', instance?: Instance) => {
   current = dialog;
 };
 
-const compass = new CompassUI({ target });
+const compass = new Compass({ target });
 export const setCompass = (orientation: number, position: { x: number; z: number; }) => {
   orientation = Math.PI * 2 - (orientation - Math.floor(orientation/(Math.PI * 2)) * Math.PI * 2);
   compass.$set({
@@ -94,7 +94,7 @@ export const setCompass = (orientation: number, position: { x: number; z: number
   });
 };
 
-const cursor = new CursorUI({ target });
+const cursor = new Cursor({ target });
 export const setTooltip = (
   action?: 'belt' | 'build' | 'configure' | 'dismantle' | 'invalid' | 'wire' | 'yield',
   instance?: Instance | Belt | Wire,
@@ -120,8 +120,8 @@ export const init = (
   objects: Objects,
   sfx: SFX,
 ) => {
-  new AchievementsUI({ target });
-  new HotbarUI({ target });  
+  new Achievements({ target });
+  new Hotbar({ target });  
   new SettingsUI({
     props: {
       closeCurrentUI: () => {
