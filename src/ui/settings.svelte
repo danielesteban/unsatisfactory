@@ -1,6 +1,5 @@
 <script lang="ts">
   import SFX from '../core/sfx';
-  import { close as closeCurrentUI } from '.';
   import Autosave from './components/autosave.svelte';
   import Clipboard from './components/clipboard.svelte';
   import Dialog from './components/dialog.svelte';
@@ -11,6 +10,7 @@
   import Help from './modules/help.svelte';
   import Welcome from './modules/welcome.svelte';
   
+  export let closeCurrentUI: () => void;
   export let download: () => void;
   export let link: () => string;
   export let load: () => void;

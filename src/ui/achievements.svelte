@@ -97,7 +97,7 @@
       ],
     },
   ];
-  const current = derived([completed], ([$completed]) => Achievements.find((achievement) => !$completed.includes(achievement.id)));
+  const current = derived([completed], ([$completed]) => Achievements.find((achievement) => !$completed.has(achievement.id)));
   let achievement: (typeof Achievements[0] & { completed: boolean; }) | undefined;
   let timer: number;
   current.subscribe((next) => {

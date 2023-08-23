@@ -15,7 +15,7 @@ import {
   snap,
   getGeometry as getBrushGeometry,
 } from './core/brush';
-import { download, load, serialize, deserialize } from './core/loader';
+import { Data, deserialize } from './core/loader';
 import Container, { PoweredContainer, Connector } from './core/container';
 import { Instance } from './core/instances';
 import { Intersection } from './core/physics';
@@ -39,9 +39,8 @@ import Smelters, { Smelter } from './objects/smelters';
 import Terrain from './objects/terrain';
 import Walls from './objects/walls';
 import Wires, { Wire } from './objects/wires';
-import UI, { setCompass, setTooltip } from './ui';
+import UI, { setCompass, setTooltip, init as initUI } from './ui';
 import Achievements, { Achievement } from './ui/stores/achievements';
-import Settings from './ui/settings.svelte';
 
 const viewport = new Viewport();
 
@@ -394,12 +393,9 @@ const hover = (intersection?: Intersection) => {
   setTooltip(undefined);
 };
 
-const data = [
+const data: Data = [
   belts, buffers, fabricators, foundations, generators, miners, pillars, poles, ramps, sinks, smelters, walls, wires,
   viewport.camera,
-] as [
-  Belts, Buffers, Fabricators, Foundations, Generators, Miners, Pillars, Poles, Ramps, Sinks, Smelters, Walls, Wires,
-  typeof viewport.camera
 ];
 
 {
@@ -416,45 +412,12 @@ const data = [
       serialized = JSON.parse(stored);
     } catch (e) {}
     if (serialized) {
-      deserialize(serialized, ...data);
+      deserialize(serialized, data);
     }
   }
 }
 
-new Settings({
-  props: {
-    download: () => (
-      download(serialize(...data))
-    ),
-    link: () => {
-      const url = new URL(location.href);
-      url.hash = '/load/' + Base64.encode(JSON.stringify(serialize(...data)), true);
-      return url.href;
-    },
-    load: async () => {
-      let serialized;
-      try {
-        serialized = await load();
-      } catch (e) {
-        return;
-      }
-      localStorage.setItem('autosave', JSON.stringify(serialized));
-      location.reload();
-    },
-    reset: () => {
-      localStorage.clear();
-      location.reload();
-    },
-    save: () => {
-      localStorage.setItem(
-        'autosave',
-        JSON.stringify(serialize(...data))
-      );
-    },
-    sfx: viewport.sfx,
-  },
-  target: document.getElementById('ui')!,
-});
+initUI(data, viewport.sfx);
 
 const terrainRadius = 8;
 const center = new Vector2();

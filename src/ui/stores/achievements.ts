@@ -11,27 +11,23 @@ export enum Achievement {
   points,
 }
 
-const map: Map<Achievement, boolean> = new Map();
-const { subscribe, set, update } = writable<Achievement[]>([]);
+let achievements: Set<Achievement> = new Set();
+const { subscribe, set } = writable<Set<Achievement>>(achievements);
 
 export default {
   subscribe,
   complete(achievement: Achievement) {
-    if (map.has(achievement)) {
+    if (achievements.has(achievement)) {
       return;
     }
-    map.set(achievement, true);
-    update((achievements) => ([
-      ...achievements,
-      ...(!achievements.includes(achievement) ? [achievement] : []),
-    ]));
+    achievements.add(achievement);
+    set(achievements);
   },
   serialize() {
-    return [...map.keys()];
+    return [...achievements];
   },
-  deserialize(achievements: Achievement[]) {
-    map.clear();
-    achievements.forEach((achievement) => map.set(achievement, true));
+  deserialize(serialized: Achievement[]) {
+    achievements = new Set(serialized);
     set(achievements);
   },
 };

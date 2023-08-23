@@ -1,6 +1,9 @@
+import { Base64 } from 'js-base64';
 import { SvelteComponent } from 'svelte';
 import { getFromObject } from '../core/brush';
 import { Instance } from '../core/instances';
+import { Data, download, load, serialize } from '../core/loader';
+import SFX from '../core/sfx';
 import { Belt } from '../objects/belts';
 import { Fabricator } from '../objects/fabricators';
 import { Generator } from '../objects/generators';
@@ -17,6 +20,7 @@ import HotbarUI from './hotbar.svelte';
 import GeneratorUI from './generator.svelte';
 import MinerUI from './miner.svelte';
 import SinkUI from './sink.svelte';
+import SettingsUI from './settings.svelte';
 import TransformerUI from './transformer.svelte';
 
 let current: SvelteComponent | undefined = undefined;
@@ -80,14 +84,6 @@ export default (type: 'build' | 'container', instance?: Instance) => {
   current = dialog;
 };
 
-export const close = () => {
-  if (!current) {
-    return;
-  }
-  current.$destroy();
-  current = undefined;
-};
-
 const compass = new CompassUI({ target });
 export const setCompass = (orientation: number, position: { x: number; z: number; }) => {
   orientation = Math.PI * 2 - (orientation - Math.floor(orientation/(Math.PI * 2)) * Math.PI * 2);
@@ -119,5 +115,51 @@ export const setTooltip = (
   });
 };
 
-new AchievementsUI({ target });
-new HotbarUI({ target });
+export const init = (
+  data: Data,
+  sfx: SFX,
+) => {
+  new SettingsUI({
+    props: {
+      closeCurrentUI: () => {
+        if (!current) {
+          return;
+        }
+        current.$destroy();
+        current = undefined;
+      },
+      download: () => (
+        download(serialize(data))
+      ),
+      link: () => {
+        const url = new URL(location.href);
+        url.hash = '/load/' + Base64.encode(JSON.stringify(serialize(data)), true);
+        return url.href;
+      },
+      load: async () => {
+        let serialized;
+        try {
+          serialized = await load();
+        } catch (e) {
+          return;
+        }
+        localStorage.setItem('autosave', JSON.stringify(serialized));
+        location.reload();
+      },
+      reset: () => {
+        localStorage.clear();
+        location.reload();
+      },
+      save: () => {
+        localStorage.setItem(
+          'autosave',
+          JSON.stringify(serialize(data))
+        );
+      },
+      sfx,
+    },
+    target: document.getElementById('ui')!,
+  });
+  new AchievementsUI({ target });
+  new HotbarUI({ target });  
+};
