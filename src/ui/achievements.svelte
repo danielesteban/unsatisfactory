@@ -1,10 +1,10 @@
 <script lang="ts">
   import { derived } from 'svelte/store';
-  import completed from './stores/achievements';
+  import completed, { Achievement } from './stores/achievements';
 
   const Achievements = [
     {
-      id: 'deposit',
+      id: Achievement.deposit,
       name: 'Find a Deposit',
       help: [
         'Resource deposits are scattered around the world.',
@@ -13,7 +13,7 @@
       ],
     },
     {
-      id: 'build',
+      id: Achievement.build,
       name: 'Open the build menu',
       help: [
         'Press [Q] to open the build menu.',
@@ -23,7 +23,7 @@
       ],
     },
     {
-      id: 'miner',
+      id: Achievement.miner,
       name: 'Build a Miner',
       help: [
         'Miners can only be placed on top of Deposits.',
@@ -33,7 +33,7 @@
       ],
     },
     {
-      id: 'generator',
+      id: Achievement.generator,
       name: 'Build a Generator',
       help: [
         'Miners and many other machines require power.',
@@ -42,7 +42,7 @@
       ],
     },
     {
-      id: 'power',
+      id: Achievement.power,
       name: 'Power the Miner',
       help: [
         'Select the Wire from the build menu [Q] and',
@@ -53,7 +53,7 @@
       ],
     },
     {
-      id: 'smelter',
+      id: Achievement.smelter,
       name: 'Smelt Ore into Ingots',
       help: [
         'Select the Smelter from the build menu [Q] and',
@@ -68,7 +68,7 @@
       ],
     },
     {
-      id: 'fabricator',
+      id: Achievement.fabricator,
       name: 'Fabricate a Cylinder',
       help: [
         'Select the Fabricator from the build menu [Q] and',
@@ -83,7 +83,7 @@
       ],
     },
     {
-      id: 'points',
+      id: Achievement.points,
       name: 'Get some points',
       help: [
         'Feeding items into the Sink will give you points.',

@@ -40,7 +40,7 @@ import Terrain from './objects/terrain';
 import Walls from './objects/walls';
 import Wires, { Wire } from './objects/wires';
 import UI, { setCompass, setTooltip } from './ui';
-import Achievements from './ui/stores/achievements';
+import Achievements, { Achievement } from './ui/stores/achievements';
 import Settings from './ui/settings.svelte';
 
 const viewport = new Viewport();
@@ -217,7 +217,7 @@ const create = (intersection: Intersection) => {
       return;
     case Brush.generator:
       generators.create(snap(intersection), rotation);
-      Achievements.complete('generator');
+      Achievements.complete(Achievement.generator);
       return;
     case Brush.miner: {
       if (!(intersection.object instanceof Deposit)) {
@@ -231,7 +231,7 @@ const create = (intersection: Intersection) => {
         }
       }
       miners.create(position, rotation, intersection.object.getItem(), intersection.object.getPurity());
-      Achievements.complete('miner');
+      Achievements.complete(Achievement.miner);
       return;
     }
     case Brush.pillar:
@@ -309,7 +309,7 @@ const handleInput = (
   if (build) {
     setBrush(Brush.none);
     UI('build');
-    Achievements.complete('build');
+    Achievements.complete(Achievement.build);
   }
   if (dismantle) {
     setBrush(brush === Brush.dismantle ? Brush.none : Brush.dismantle);
@@ -387,55 +387,39 @@ const hover = (intersection?: Intersection) => {
     && intersection?.object.getWorldPosition(aux).distanceToSquared(viewport.camera.position) <= interactionLimit
   ) {
     setTooltip('yield', undefined, undefined, intersection?.object.getItem(), intersection?.object.getPurity());
-    Achievements.complete('deposit');
+    Achievements.complete(Achievement.deposit);
     return;
   }
 
   setTooltip(undefined);
 };
 
-const terrainRadius = 8;
-const center = new Vector2();
-const intersection: Intersection = {
-  distance: 0,
-  normal: new Vector3(),
-  point: new Vector3(),
-};
-const raycaster = new Raycaster();
-raycaster.far = viewport.camera.far;
-viewport.setAnimationLoop((buttons, delta) => {
-  belts.step(delta);
-  birds.step(delta);
-  terrain.update(viewport.camera.position, terrainRadius);
-  raycaster.setFromCamera(center, viewport.camera);
-  // @dani @incomplete
-  // wires don't have physics colliders implemented yet,
-  // so.. keep using the threejs raycaster for those and merge them in.
-  const vertexHit = (brush === Brush.dismantle || buttons.tertiary) && raycaster.intersectObjects(wires.children, false)[0];
-  const physicsHit = viewport.physics.castRay(intersection, raycaster.ray.origin, raycaster.ray.direction, raycaster.far);
-  let hit;
-  if (physicsHit && (!vertexHit || intersection.distance < vertexHit.distance)) {
-    hit = intersection;
-    if (intersection.object && intersection.object instanceof Instance) {
-      intersection.normal.applyQuaternion(Instance.getQuaternion(intersection.object, true));
-    }
-  } else if (vertexHit) {
-    intersection.distance = vertexHit.distance;
-    intersection.normal.copy(vertexHit.face!.normal);
-    intersection.object = vertexHit.object;
-    intersection.point.copy(vertexHit.point);
-    hit = intersection;
-  }
-  hover(hit);
-  if (buttons.primary || buttons.secondary || buttons.tertiary || buttons.build || buttons.dismantle || buttons.interact) {
-    handleInput(buttons, hit);
-  }
-  setCompass(viewport.camera.rotation.y, viewport.camera.position);
-});
-
 const data = [
-  belts, buffers, fabricators, foundations, generators, miners, pillars, poles, ramps, sinks, smelters, walls, wires, viewport.camera,
-] as [Belts, Buffers, Fabricators, Foundations, Generators, Miners, Pillars, Poles, Ramps, Sinks, Smelters, Walls, Wires, typeof viewport.camera];
+  belts, buffers, fabricators, foundations, generators, miners, pillars, poles, ramps, sinks, smelters, walls, wires,
+  viewport.camera,
+] as [
+  Belts, Buffers, Fabricators, Foundations, Generators, Miners, Pillars, Poles, Ramps, Sinks, Smelters, Walls, Wires,
+  typeof viewport.camera
+];
+
+{
+  let stored = localStorage.getItem('autosave');
+  if (location.hash.slice(2, 6) === 'load') {
+    try {
+      stored = Base64.decode(location.hash.slice(7));
+    } catch (e) {}
+    location.hash = '/';
+  }
+  if (stored) {
+    let serialized;
+    try {
+      serialized = JSON.parse(stored);
+    } catch (e) {}
+    if (serialized) {
+      deserialize(serialized, ...data);
+    }
+  }
+}
 
 new Settings({
   props: {
@@ -472,23 +456,45 @@ new Settings({
   target: document.getElementById('ui')!,
 });
 
-{
-  let stored = localStorage.getItem('autosave');
-  if (location.hash.slice(2, 6) === 'load') {
-    try {
-      stored = Base64.decode(location.hash.slice(7));
-    } catch (e) {}
-    location.hash = '/';
-  }
-  if (stored) {
-    let serialized;
-    try {
-      serialized = JSON.parse(stored);
-    } catch (e) {}
-    if (serialized) {
-      deserialize(serialized, ...data);
-    }
-  }
-}
+const terrainRadius = 8;
+const center = new Vector2();
+const intersection: Intersection = {
+  distance: 0,
+  normal: new Vector3(),
+  point: new Vector3(),
+};
+const raycaster = new Raycaster();
+raycaster.far = viewport.camera.far;
+
 birds.reset();
 terrain.update(viewport.camera.position, terrainRadius);
+
+viewport.setAnimationLoop((buttons, delta) => {
+  belts.step(delta);
+  birds.step(delta);
+  terrain.update(viewport.camera.position, terrainRadius);
+  raycaster.setFromCamera(center, viewport.camera);
+  // @dani @incomplete
+  // wires don't have physics colliders implemented yet,
+  // so.. keep using the threejs raycaster for those and merge them in.
+  const vertexHit = (brush === Brush.dismantle || buttons.tertiary) && raycaster.intersectObjects(wires.children, false)[0];
+  const physicsHit = viewport.physics.castRay(intersection, raycaster.ray.origin, raycaster.ray.direction, raycaster.far);
+  let hit;
+  if (physicsHit && (!vertexHit || intersection.distance < vertexHit.distance)) {
+    hit = intersection;
+    if (intersection.object && intersection.object instanceof Instance) {
+      intersection.normal.applyQuaternion(Instance.getQuaternion(intersection.object, true));
+    }
+  } else if (vertexHit) {
+    intersection.distance = vertexHit.distance;
+    intersection.normal.copy(vertexHit.face!.normal);
+    intersection.object = vertexHit.object;
+    intersection.point.copy(vertexHit.point);
+    hit = intersection;
+  }
+  hover(hit);
+  if (buttons.primary || buttons.secondary || buttons.tertiary || buttons.build || buttons.dismantle || buttons.interact) {
+    handleInput(buttons, hit);
+  }
+  setCompass(viewport.camera.rotation.y, viewport.camera.position);
+});

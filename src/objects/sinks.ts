@@ -17,7 +17,7 @@ import { loadTexture } from '../textures';
 import DiffuseMap from '../textures/rust_coarse_01_diff_1k.webp';
 import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.webp';
 import RoughnessMap from '../textures/rust_coarse_01_rough_1k.webp';
-import Achievements from '../ui/stores/achievements';
+import Achievements, { Achievement } from '../ui/stores/achievements';
 
 export class Sink extends PoweredContainer<
   {
@@ -40,7 +40,7 @@ export class Sink extends PoweredContainer<
     this.setPoints(
       this.points + (Sinking[item] || 1)
     );
-    Achievements.complete('points');
+    Achievements.complete(Achievement.points);
   }
 
   override output() {

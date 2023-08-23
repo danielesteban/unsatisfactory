@@ -1,34 +1,37 @@
 import { writable } from 'svelte/store';
 
-const stored = localStorage.getItem('achievements');
-let parsed: string[] | undefined;
-if (stored) {
-  try {
-    parsed = JSON.parse(stored) as string[];
-  } catch (e) {
-    parsed = undefined;
-  }
+export enum Achievement {
+  deposit = 1,
+  build,
+  miner,
+  generator,
+  power,
+  smelter,
+  fabricator,
+  points,
 }
-parsed = parsed || [];
-const { subscribe, update } = writable(parsed);
 
-const map: Map<string, boolean> = new Map();
-parsed.forEach((id) => map.set(id, true));
+const map: Map<Achievement, boolean> = new Map();
+const { subscribe, set, update } = writable<Achievement[]>([]);
 
 export default {
   subscribe,
-  complete(achievement: string) {
+  complete(achievement: Achievement) {
     if (map.has(achievement)) {
       return;
     }
     map.set(achievement, true);
-    update((achievements) => {
-      achievements = [...achievements];
-      if (!achievements.includes(achievement)) {
-        achievements.push(achievement);
-      }
-      localStorage.setItem('achievements', JSON.stringify(achievements));
-      return achievements;
-    });
+    update((achievements) => ([
+      ...achievements,
+      ...(!achievements.includes(achievement) ? [achievement] : []),
+    ]));
+  },
+  serialize() {
+    return [...map.keys()];
+  },
+  deserialize(achievements: Achievement[]) {
+    map.clear();
+    achievements.forEach((achievement) => map.set(achievement, true));
+    set(achievements);
   },
 };

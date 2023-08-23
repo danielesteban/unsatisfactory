@@ -20,7 +20,7 @@ import { loadTexture } from '../textures';
 import DiffuseMap from '../textures/rust_coarse_01_diff_1k.webp';
 import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.webp';
 import RoughnessMap from '../textures/rust_coarse_01_rough_1k.webp';
-import Achievements from '../ui/stores/achievements';
+import Achievements, { Achievement } from '../ui/stores/achievements';
 
 export class Miner extends PoweredContainer {
   private readonly item: Item;
@@ -61,7 +61,7 @@ export class Miner extends PoweredContainer {
   override setPowered(status: boolean) {
     super.setPowered(status);
     if (status) {
-      Achievements.complete('power');
+      Achievements.complete(Achievement.power);
     }
   }
 

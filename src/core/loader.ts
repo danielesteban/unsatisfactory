@@ -14,8 +14,9 @@ import Sinks, { Sink } from '../objects/sinks';
 import Smelters, { Smelter } from '../objects/smelters';
 import Walls from '../objects/walls';
 import Wires, { Wire } from '../objects/wires';
+import Achievements, { Achievement } from '../ui/stores/achievements';
 
-const version = 9;
+const version = 10;
 
 type SerializedConnection = [number, number];
 type SerializedDirection = [number, number, number];
@@ -36,6 +37,7 @@ type Serialized = {
   smelters: [SerializedPosition, number, SerializedEnabled, number][];
   walls: [SerializedPosition, number][];
   wires: [SerializedConnection, SerializedConnection][];
+  achievements: Achievement[];
   camera: [SerializedPosition, [number, number, number]];
   version: number;
 };
@@ -105,6 +107,7 @@ export const serialize = (
       serializeContainer(wire.from),
       serializeContainer(wire.to),
     ]) as Serialized['wires'],
+    achievements: Achievements.serialize(),
     camera: [camera.position.toArray(), camera.rotation.toArray().slice(0, 3)] as Serialized['camera'],
     version,
   };
@@ -198,6 +201,7 @@ export const deserialize = (
       containers[to[0]][to[1]] as PoweredContainer,
     )
   ));
+  Achievements.deserialize(serialized.achievements);
   camera.position.fromArray(serialized.camera[0]);
   camera.userData.targetPosition.copy(camera.position);
   camera.rotation.fromArray(serialized.camera[1]);
@@ -319,6 +323,31 @@ const migrations: Record<number, (serialized: Serialized) => Serialized> = {
     return {
       ...serialized,
       pillars: [],
+    };
+  },
+  [9]: (serialized: Serialized) => {
+    const stored = localStorage.getItem('achievements');
+    let parsed: string[] | undefined;
+    if (stored) {
+      try {
+        parsed = JSON.parse(stored) as string[];
+      } catch (e) {
+        parsed = undefined;
+      }
+    }
+    const map: Record<string, Achievement> = {
+      'deposit': Achievement.deposit,
+      'build': Achievement.build,
+      'miner': Achievement.miner,
+      'generator': Achievement.generator,
+      'power': Achievement.power,
+      'smelter': Achievement.smelter,
+      'fabricator': Achievement.fabricator,
+      'points': Achievement.points,
+    };
+    return {
+      ...serialized,
+      achievements: (parsed || []).filter((id) => map[id]).map((id) => map[id]),
     };
   },
 };
