@@ -15,9 +15,10 @@ import {
   snap,
   getGeometry as getBrushGeometry,
 } from './core/brush';
-import { deserialize, Objects } from './core/loader';
 import Container, { PoweredContainer, Connector } from './core/container';
+import { Buttons } from './core/controls';
 import { Instance } from './core/instances';
+import { deserialize, Objects } from './core/loader';
 import { Intersection } from './core/physics';
 import Viewport from './core/viewport';
 import Belts, { Belt } from './objects/belts';
@@ -296,7 +297,7 @@ const remove = (intersection: Intersection) => {
 };
 
 const handleInput = (
-  { primary, secondary, tertiary, build, dismantle, interact }: { primary: boolean; secondary: boolean; tertiary: boolean; build: boolean; dismantle: boolean; interact: boolean; },
+  { primary, secondary, tertiary, build, dismantle, interact }: Buttons,
   intersection?: Intersection
 ) => {
   const hasFrom = from.container !== undefined;
@@ -399,29 +400,6 @@ const hover = (intersection?: Intersection) => {
   setTooltip(undefined);
 };
 
-{
-  let stored = localStorage.getItem('autosave');
-  if (location.hash.slice(2, 6) === 'load') {
-    try {
-      stored = Base64.decode(location.hash.slice(7));
-    } catch (e) {}
-    location.hash = '/';
-  }
-  if (stored) {
-    let serialized;
-    try {
-      serialized = JSON.parse(stored);
-    } catch (e) {}
-    if (serialized) {
-      deserialize(serialized, viewport.camera, objects);
-    }
-  }
-
-  birds.reset();
-  terrain.update(viewport.camera.position, terrainRadius);
-  initUI(viewport.camera, objects, viewport.sfx);
-}
-
 const center = new Vector2();
 const intersection: Intersection = {
   distance: 0,
@@ -430,7 +408,7 @@ const intersection: Intersection = {
 };
 const raycaster = new Raycaster();
 raycaster.far = viewport.camera.far;
-viewport.setAnimationLoop((buttons, delta) => {
+const animate = (buttons: Buttons, delta: number) => {
   belts.step(delta);
   birds.step(delta);
   terrain.update(viewport.camera.position, terrainRadius);
@@ -458,4 +436,30 @@ viewport.setAnimationLoop((buttons, delta) => {
     handleInput(buttons, hit);
   }
   setCompass(viewport.camera.rotation.y, viewport.camera.position);
-});
+};
+
+{
+  let stored;
+  if (location.hash.slice(2, 6) === 'load') {
+    try {
+      stored = Base64.decode(location.hash.slice(7));
+    } catch (e) {}
+    location.hash = '/';
+  }
+  stored = stored || localStorage.getItem('autosave');
+  if (stored) {
+    let serialized;
+    try {
+      serialized = JSON.parse(stored);
+    } catch (e) {}
+    if (serialized) {
+      deserialize(serialized, viewport.camera, objects);
+    }
+  }
+
+  birds.reset();
+  terrain.update(viewport.camera.position, terrainRadius);
+  initUI(viewport.camera, objects, viewport.sfx);
+  viewport.physics.init();
+  viewport.setAnimationLoop(animate);
+}

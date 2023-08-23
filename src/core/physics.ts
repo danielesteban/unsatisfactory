@@ -17,6 +17,8 @@ export type Intersection = {
 };
 
 class Physics {
+  private hasLoaded: boolean;
+  private isReady: boolean;
   private bodies: WeakMap<any, RAPIER.RigidBody> = new WeakMap();
   private bodyQueue: Map<any, { body: RAPIER.RigidBodyDesc; collider: RAPIER.ColliderDesc | RAPIER.ColliderDesc[]; }> = new Map();
   private colliders: WeakMap<any, RAPIER.Collider> = new WeakMap();
@@ -26,19 +28,36 @@ class Physics {
   private dynamicBodyQueue: Map<any, { body: RAPIER.RigidBodyDesc; collider: RAPIER.ColliderDesc; update: (body: RAPIER.RigidBody) => void; }> = new Map();
   private world?: RAPIER.World;
 
-  constructor(gravity: { x: number; y: number; z: number; } = { x: 0.0, y: -10, z: 0.0 }) {
+  constructor() {
+    this.hasLoaded = false;
+    this.isReady = false;
     RAPIER.init().then(() => {
-      this.world = new RAPIER.World(gravity);
-      this.colliderQueue.forEach((collider, ref) => this.addCollider(ref, collider));
-      this.colliderQueue.clear();
-      this.bodyQueue.forEach(({ body, collider }, ref) => this.addBody(ref, body, collider));
-      this.bodyQueue.clear();
-      this.dynamicBodyQueue.forEach(({ body, collider, update }, ref) => this.addDynamicBody(ref, body, collider, update));
-      this.dynamicBodyQueue.clear();
-      this.controllerQueue.forEach((resolve) => resolve());
-      this.controllerQueue.length = 0;
-      this.step(0);
+      this.hasLoaded = true;
+      if (this.isReady) {
+        this.init();
+      }
     });
+  }
+
+  init() {
+    const { hasLoaded } = this;
+    if (!hasLoaded) {
+      this.isReady = true;
+      return;
+    }
+    if (this.world) {
+      throw new Error();
+    }
+    this.world = new RAPIER.World(new RAPIER.Vector3(0, -10, 0));
+    this.colliderQueue.forEach((collider, ref) => this.addCollider(ref, collider));
+    this.colliderQueue.clear();
+    this.bodyQueue.forEach(({ body, collider }, ref) => this.addBody(ref, body, collider));
+    this.bodyQueue.clear();
+    this.dynamicBodyQueue.forEach(({ body, collider, update }, ref) => this.addDynamicBody(ref, body, collider, update));
+    this.dynamicBodyQueue.clear();
+    this.controllerQueue.forEach((resolve) => resolve());
+    this.controllerQueue.length = 0;
+    this.step(0);
   }
 
   step(delta: number) {
