@@ -42,6 +42,9 @@ import Wires, { Wire } from './objects/wires';
 import UI, { setCompass, setTooltip, init as initUI } from './ui';
 import Achievements, { Achievement } from './ui/stores/achievements';
 
+const terrainRadius = 8;
+const interactionRadiusSquared = 12 ** 2;
+
 const viewport = new Viewport();
 
 [
@@ -119,6 +122,11 @@ viewport.scene.add(birds);
 const ghost = new Ghost();
 viewport.scene.add(ghost);
 
+const data: Data = [
+  belts, buffers, fabricators, foundations, generators, miners, pillars, poles, ramps, sinks, smelters, walls, wires,
+  viewport.camera,
+];
+
 const from: Omit<Connector, 'container'> & { container: Container | PoweredContainer | undefined; } = {
   container: undefined,
   direction: new Vector3(),
@@ -147,7 +155,6 @@ const canBelt = (intersection: Intersection) => (
   && (!from.container || from.container !== intersection.object)
 );
 
-const interactionLimit = 12 ** 2;
 const canInteract = (intersection: Intersection) => {
   if (
     !(
@@ -160,7 +167,7 @@ const canInteract = (intersection: Intersection) => {
   ) {
     return false;
   }
-  return intersection.object.position.distanceToSquared(viewport.camera.position) <= interactionLimit;
+  return intersection.object.position.distanceToSquared(viewport.camera.position) <= interactionRadiusSquared;
 };
 
 const canWire = (intersection: Intersection) => {
@@ -383,7 +390,7 @@ const hover = (intersection?: Intersection) => {
   if (
     brush === Brush.none
     && intersection?.object instanceof Deposit
-    && intersection?.object.getWorldPosition(aux).distanceToSquared(viewport.camera.position) <= interactionLimit
+    && intersection?.object.getWorldPosition(aux).distanceToSquared(viewport.camera.position) <= interactionRadiusSquared
   ) {
     setTooltip('yield', undefined, undefined, intersection?.object.getItem(), intersection?.object.getPurity());
     Achievements.complete(Achievement.deposit);
@@ -392,11 +399,6 @@ const hover = (intersection?: Intersection) => {
 
   setTooltip(undefined);
 };
-
-const data: Data = [
-  belts, buffers, fabricators, foundations, generators, miners, pillars, poles, ramps, sinks, smelters, walls, wires,
-  viewport.camera,
-];
 
 {
   let stored = localStorage.getItem('autosave');
@@ -415,11 +417,12 @@ const data: Data = [
       deserialize(serialized, data);
     }
   }
+
+  birds.reset();
+  terrain.update(viewport.camera.position, terrainRadius);
+  initUI(data, viewport.sfx);
 }
 
-initUI(data, viewport.sfx);
-
-const terrainRadius = 8;
 const center = new Vector2();
 const intersection: Intersection = {
   distance: 0,
@@ -428,10 +431,6 @@ const intersection: Intersection = {
 };
 const raycaster = new Raycaster();
 raycaster.far = viewport.camera.far;
-
-birds.reset();
-terrain.update(viewport.camera.position, terrainRadius);
-
 viewport.setAnimationLoop((buttons, delta) => {
   belts.step(delta);
   birds.step(delta);
