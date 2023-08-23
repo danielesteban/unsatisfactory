@@ -121,6 +121,8 @@ export const init = (
   objects: Objects,
   sfx: SFX,
 ) => {
+  new AchievementsUI({ target });
+  new HotbarUI({ target });  
   new SettingsUI({
     props: {
       closeCurrentUI: () => {
@@ -162,6 +164,4 @@ export const init = (
     },
     target: document.getElementById('ui')!,
   });
-  new AchievementsUI({ target });
-  new HotbarUI({ target });  
 };
