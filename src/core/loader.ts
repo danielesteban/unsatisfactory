@@ -1,3 +1,5 @@
+import { Base64 } from 'js-base64';
+import { deflateSync, inflateSync, strFromU8, strToU8 } from 'fflate';
 import { Camera, Vector3 } from 'three';
 import Container, { PoweredContainer } from './container';
 import Belts, { Belt } from '../objects/belts';
@@ -228,6 +230,18 @@ export const deserialize = (
   camera.userData.targetRotation.copy(camera.rotation);
   return true;
 };
+
+export const decode = (encoded: string) => {
+  let decoded;
+  try {
+    decoded = strFromU8(inflateSync(Base64.toUint8Array(encoded)));
+  } catch (e) {}
+  return decoded;
+};
+
+export const encode = (decoded: string) => (
+  Base64.fromUint8Array(deflateSync(strToU8(decoded)), true)
+);
 
 export const load = () => new Promise<Serialized>((resolve, reject) => {
   const loader = document.createElement('input');

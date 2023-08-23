@@ -1,5 +1,4 @@
 import './main.css';
-import { Base64 } from 'js-base64';
 import {
   Object3D,
   Raycaster,
@@ -18,7 +17,7 @@ import {
 import Container, { PoweredContainer, Connector } from './core/container';
 import { Buttons } from './core/controls';
 import { Instance } from './core/instances';
-import { deserialize, Objects } from './core/loader';
+import { decode, deserialize, Objects } from './core/loader';
 import { Intersection } from './core/physics';
 import Viewport from './core/viewport';
 import Belts, { Belt } from './objects/belts';
@@ -441,9 +440,7 @@ const animate = (buttons: Buttons, delta: number) => {
 {
   let stored;
   if (location.hash.slice(2, 6) === 'load') {
-    try {
-      stored = Base64.decode(location.hash.slice(7));
-    } catch (e) {}
+    stored = decode(location.hash.slice(7));
     location.hash = '/';
   }
   stored = stored || localStorage.getItem('autosave');

@@ -1,9 +1,8 @@
-import { Base64 } from 'js-base64';
 import { SvelteComponent } from 'svelte';
 import { Camera } from 'three';
 import { getFromObject } from '../core/brush';
 import { Instance } from '../core/instances';
-import { download, load, serialize, Objects } from '../core/loader';
+import { download, encode, load, serialize, Objects } from '../core/loader';
 import SFX from '../core/sfx';
 import { Belt } from '../objects/belts';
 import { Fabricator } from '../objects/fabricators';
@@ -136,8 +135,9 @@ export const init = (
         download(serialize(camera, objects))
       ),
       link: () => {
+        const encoded = encode(JSON.stringify(serialize(camera, objects)));
         const url = new URL(location.href);
-        url.hash = '/load/' + Base64.encode(JSON.stringify(serialize(camera, objects)), true);
+        url.hash = '/load/' + encoded;
         return url.href;
       },
       load: async () => {
