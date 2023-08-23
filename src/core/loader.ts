@@ -18,10 +18,21 @@ import Achievements, { Achievement } from '../ui/stores/achievements';
 
 const version = 10;
 
-export type Data = [
-  Belts, Buffers, Fabricators, Foundations, Generators, Miners, Pillars, Poles, Ramps, Sinks, Smelters, Walls, Wires,
-  Camera
-];
+export type Objects = {
+  belts: Belts;
+  buffers: Buffers;
+  fabricators: Fabricators;
+  foundations: Foundations;
+  generators: Generators;
+  miners: Miners;
+  pillars: Pillars;
+  poles: Poles;
+  ramps: Ramps;
+  sinks: Sinks;
+  smelters: Smelters;
+  walls: Walls;
+  wires: Wires;
+};
 
 type SerializedConnection = [number, number];
 type SerializedDirection = [number, number, number];
@@ -47,10 +58,12 @@ type Serialized = {
   version: number;
 };
 
-export const serialize = ([
-  belts, buffers, fabricators, foundations, generators, miners, pillars, poles, ramps, sinks, smelters, walls, wires,
-  camera
-]: Data): Serialized => {
+export const serialize = (
+  camera: Camera,
+  {
+    belts, buffers, fabricators, foundations, generators, miners, pillars, poles, ramps, sinks, smelters, walls, wires,
+  }: Objects
+): Serialized => {
   const containers = new WeakMap<Container, number>();
   const serializeInstances = (instances: Buffers | Fabricators | Foundations | Generators | Miners | Pillars | Poles | Ramps | Sinks | Smelters | Walls) => (
     Array.from({ length: instances.getCount() }, (_v, i) => {
@@ -120,10 +133,10 @@ export const serialize = ([
 
 export const deserialize = (
   serialized: Serialized,
-  [
+  camera: Camera,
+  {
     belts, buffers, fabricators, foundations, generators, miners, pillars, poles, ramps, sinks, smelters, walls, wires,
-    camera
-  ]: Data
+  }: Objects
 ) => {
   serialized = migrate(serialized);
   if (serialized.version !== version) {

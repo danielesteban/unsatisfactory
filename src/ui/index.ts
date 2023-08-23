@@ -1,8 +1,9 @@
 import { Base64 } from 'js-base64';
 import { SvelteComponent } from 'svelte';
+import { Camera } from 'three';
 import { getFromObject } from '../core/brush';
 import { Instance } from '../core/instances';
-import { Data, download, load, serialize } from '../core/loader';
+import { download, load, serialize, Objects } from '../core/loader';
 import SFX from '../core/sfx';
 import { Belt } from '../objects/belts';
 import { Fabricator } from '../objects/fabricators';
@@ -116,7 +117,8 @@ export const setTooltip = (
 };
 
 export const init = (
-  data: Data,
+  camera: Camera,
+  objects: Objects,
   sfx: SFX,
 ) => {
   new SettingsUI({
@@ -129,11 +131,11 @@ export const init = (
         current = undefined;
       },
       download: () => (
-        download(serialize(data))
+        download(serialize(camera, objects))
       ),
       link: () => {
         const url = new URL(location.href);
-        url.hash = '/load/' + Base64.encode(JSON.stringify(serialize(data)), true);
+        url.hash = '/load/' + Base64.encode(JSON.stringify(serialize(camera, objects)), true);
         return url.href;
       },
       load: async () => {
@@ -153,7 +155,7 @@ export const init = (
       save: () => {
         localStorage.setItem(
           'autosave',
-          JSON.stringify(serialize(data))
+          JSON.stringify(serialize(camera, objects))
         );
       },
       sfx,

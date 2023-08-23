@@ -15,7 +15,7 @@ import {
   snap,
   getGeometry as getBrushGeometry,
 } from './core/brush';
-import { Data, deserialize } from './core/loader';
+import { deserialize, Objects } from './core/loader';
 import Container, { PoweredContainer, Connector } from './core/container';
 import { Instance } from './core/instances';
 import { Intersection } from './core/physics';
@@ -122,10 +122,9 @@ viewport.scene.add(birds);
 const ghost = new Ghost();
 viewport.scene.add(ghost);
 
-const data: Data = [
+const objects: Objects = {
   belts, buffers, fabricators, foundations, generators, miners, pillars, poles, ramps, sinks, smelters, walls, wires,
-  viewport.camera,
-];
+};
 
 const from: Omit<Connector, 'container'> & { container: Container | PoweredContainer | undefined; } = {
   container: undefined,
@@ -414,13 +413,13 @@ const hover = (intersection?: Intersection) => {
       serialized = JSON.parse(stored);
     } catch (e) {}
     if (serialized) {
-      deserialize(serialized, data);
+      deserialize(serialized, viewport.camera, objects);
     }
   }
 
   birds.reset();
   terrain.update(viewport.camera.position, terrainRadius);
-  initUI(data, viewport.sfx);
+  initUI(viewport.camera, objects, viewport.sfx);
 }
 
 const center = new Vector2();
