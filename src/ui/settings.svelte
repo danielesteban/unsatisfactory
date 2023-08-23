@@ -45,6 +45,10 @@
     }
   };
 
+  const toggleWelcome = () => {
+    isWelcome = !isWelcome;
+  };
+
   let lastSave: Date = new Date();
   const trackSave = () => {
     lastSave = new Date();
@@ -61,8 +65,8 @@
 <Autosave save={trackSave} />
 
 <div class="actions">
-  {#if !isOpen}
-    <button class="settings" on:click={toggleSettings}>
+  {#if !isOpen || isWelcome}
+    <button class="settings" on:click={isWelcome ? toggleWelcome : toggleSettings}>
       <svg viewBox="0 0 15 15">
         <path d="M1.5 1C0.671573 1 0 1.67157 0 2.5V12.5C0 13.3284 0.671573 14 1.5 14H13.5C14.3284 14 15 13.3284 15 12.5V4.5C15 3.67157 14.3284 3 13.5 3H7.70711L5.70711 1H1.5Z"/>
       </svg>
