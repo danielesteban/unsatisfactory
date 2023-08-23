@@ -151,14 +151,11 @@ export const init = (
         location.reload();
       },
       reset: () => {
-        localStorage.clear();
+        localStorage.removeItem('autosave');
         location.reload();
       },
       save: () => {
-        localStorage.setItem(
-          'autosave',
-          JSON.stringify(serialize(camera, objects))
-        );
+        localStorage.setItem('autosave', JSON.stringify(serialize(camera, objects)));
       },
       sfx,
     },
