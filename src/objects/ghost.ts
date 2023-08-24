@@ -5,9 +5,10 @@ import {
   Shader,
   Vector3,
 } from 'three';
+import { Brush, getGeometry as getBrushGeometry } from '../core/brush';
 import { PoweredContainer } from '../core/container';
-import Belts, { Connection } from '../objects/belts';
-import Wires from '../objects/wires';
+import Belts, { Connection } from './belts';
+import Wires from './wires';
 
 class Ghost extends Mesh {
   private static material: MeshStandardMaterial | undefined;
@@ -52,9 +53,9 @@ class Ghost extends Mesh {
     this.rotation.set(0, 0, 0);
     this.update(isValid);
   }
-  
-  setBrush(geometry: BufferGeometry, position: Vector3, rotation: number, isValid: boolean) {
-    this.setGeometry(geometry);
+
+  setBrush(brush: Brush, position: Vector3, rotation: number, isValid: boolean) {
+    this.setGeometry(getBrushGeometry(brush));
     this.position.copy(position);
     this.rotation.y = rotation;
     this.update(isValid);

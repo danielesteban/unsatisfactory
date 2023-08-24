@@ -11,7 +11,6 @@ import {
   set as setBrush,
   pick,
   snap,
-  getGeometry as getBrushGeometry,
 } from './core/brush';
 import Container, { PoweredContainer } from './core/container';
 import { Buttons } from './core/controls';
@@ -363,7 +362,7 @@ const hover = (intersection?: Intersection) => {
     && ![Brush.none, Brush.belt, Brush.dismantle, Brush.wire].includes(brush)
   ) {
     const isValid = brush !== Brush.miner || intersection.object instanceof Deposit;
-    ghost.setBrush(getBrushGeometry(brush), snap(intersection), rotation, isValid);
+    ghost.setBrush(brush, snap(intersection), rotation, isValid);
     setTooltip(isValid ? 'build' : 'invalid');
     return;
   }
