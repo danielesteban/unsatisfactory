@@ -10,6 +10,7 @@ export type Controller = {
 };
 
 export type Intersection = {
+  connector: number | false;
   distance: number;
   normal: Vector3;
   object?: any;

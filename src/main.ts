@@ -1,6 +1,5 @@
 import './main.css';
 import {
-  Object3D,
   Raycaster,
   Vector2,
   Vector3,
@@ -14,7 +13,7 @@ import {
   snap,
   getGeometry as getBrushGeometry,
 } from './core/brush';
-import Container, { PoweredContainer, Connector } from './core/container';
+import Container, { PoweredContainer } from './core/container';
 import { Buttons } from './core/controls';
 import { Instance } from './core/instances';
 import { decode, deserialize, Objects } from './core/loader';
@@ -23,6 +22,7 @@ import Viewport from './core/viewport';
 import Belts, { Belt } from './objects/belts';
 import Birds from './objects/birds';
 import Buffers, { Buffer } from './objects/buffers';
+import Combinators, { Combinator } from './objects/combinators';
 import Deposit from './objects/deposit';
 import Fabricators, { Fabricator } from './objects/fabricators';
 import Foundations from './objects/foundations';
@@ -50,6 +50,7 @@ const viewport = new Viewport();
 [
   Belts.getMaterial(),
   Buffers.getMaterial(),
+  Combinators.getMaterial(),
   Deposit.getMaterial(),
   Fabricators.getMaterial(),
   Foundations.getMaterial(),
@@ -82,6 +83,9 @@ viewport.scene.add(belts);
 
 const buffers = new Buffers(viewport.physics);
 viewport.scene.add(buffers);
+
+const combinators = new Combinators(viewport.physics, viewport.sfx);
+viewport.scene.add(combinators);
 
 const fabricators = new Fabricators(viewport.physics, viewport.sfx);
 viewport.scene.add(fabricators);
@@ -123,41 +127,34 @@ const ghost = new Ghost();
 viewport.scene.add(ghost);
 
 const objects: Objects = {
-  belts, buffers, fabricators, foundations, generators, miners, pillars, poles, ramps, sinks, smelters, walls, wires,
+  belts, buffers, combinators, fabricators, foundations, generators, miners, pillars, poles, ramps, sinks, smelters, walls, wires,
 };
 
-const from: Omit<Connector, 'container'> & { container: Container | PoweredContainer | undefined; } = {
+const connection: { container: Container | PoweredContainer | undefined; connector: number; } = {
   container: undefined,
-  direction: new Vector3(),
-};
-const to: Omit<Connector, 'container'> & { container: Container | PoweredContainer | undefined; } = {
-  container: undefined,
-  direction: new Vector3(),
+  connector: 0,
 };
 
 const canBelt = (intersection: Intersection) => (
   (
     intersection.object instanceof Buffer
+    || intersection.object instanceof Combinator
     || intersection.object instanceof Fabricator
     || intersection.object instanceof Miner
     || intersection.object instanceof Sink
     || intersection.object instanceof Smelter
   )
-  && Math.abs(intersection.normal.dot(Object3D.DEFAULT_UP)) < 0.001
-  && !(
-    (
-      intersection.object instanceof Fabricator
-      || intersection.object instanceof Smelter
-    )
-    && Math.abs(intersection.normal.dot(worldNorth)) > 0.001
-  )
-  && (!from.container || from.container !== intersection.object)
+  // @dani @incomplete
+  // Once Container.belts starts having info about the new connectors,
+  // A check should happen here to enforce a single belt per connector.
+  && (!connection.container || connection.container !== intersection.object)
 );
 
 const canInteract = (intersection: Intersection) => {
   if (
     !(
-      intersection.object instanceof Fabricator
+      intersection.object instanceof Combinator
+      || intersection.object instanceof Fabricator
       || intersection.object instanceof Generator
       || intersection.object instanceof Miner
       || intersection.object instanceof Sink
@@ -172,7 +169,8 @@ const canInteract = (intersection: Intersection) => {
 const canWire = (intersection: Intersection) => {
   if (
     !(
-      intersection.object instanceof Fabricator
+      intersection.object instanceof Combinator
+      || intersection.object instanceof Fabricator
       || intersection.object instanceof Generator
       || intersection.object instanceof Miner
       || intersection.object instanceof Pole
@@ -182,10 +180,9 @@ const canWire = (intersection: Intersection) => {
   ) {
     return false;
   }
-  return intersection.object.canWire(from.container as PoweredContainer);
+  return intersection.object.canWire(connection.container as PoweredContainer);
 };
 
-const worldNorth = new Vector3(0, 0, -1);
 const create = (intersection: Intersection) => {
   if (
     brush === Brush.none
@@ -197,22 +194,24 @@ const create = (intersection: Intersection) => {
   }
   switch (brush) {
     case Brush.belt:
-      if (!canBelt(intersection)) {
+      if (intersection.connector === false) {
         return 'nope';
       }
-      if (!from.container) {
-        from.container = intersection.object as Container;
-        from.direction.copy(intersection.normal);
+      if (!connection.container) {
+        connection.container = intersection.object;
+        connection.connector = intersection.connector;
         return 'tap';
       }
-      to.container = intersection.object as Container;
-      to.direction.copy(intersection.normal);
-      from.direction.applyQuaternion(Instance.getQuaternion(from.container));
-      to.direction.applyQuaternion(Instance.getQuaternion(to.container));
-      belts.create(from as Connector, to as Connector);
+      belts.create(
+        connection as { container: Container; connector: number },
+        { container: intersection.object, connector: intersection.connector }
+      );
       return;
     case Brush.buffer:
       buffers.create(snap(intersection), rotation);
+      return;
+    case Brush.combinator:
+      combinators.create(snap(intersection), rotation);
       return;
     case Brush.fabricator:
       fabricators.create(snap(intersection), rotation);
@@ -261,12 +260,11 @@ const create = (intersection: Intersection) => {
       if (!canWire(intersection)) {
         return 'nope';
       }
-      if (!from.container) {
-        from.container = intersection.object as Container;
+      if (!connection.container) {
+        connection.container = intersection.object;
         return 'tap';
       }
-      to.container = intersection.object as Container;
-      wires.create(from.container as PoweredContainer, to.container as PoweredContainer);
+      wires.create(connection.container as PoweredContainer, intersection.object);
       return 'wire';
   }
 };
@@ -299,7 +297,7 @@ const handleInput = (
   { primary, secondary, tertiary, build, dismantle, interact }: Buttons,
   intersection?: Intersection
 ) => {
-  const hasFrom = from.container !== undefined;
+  const hasConnection = connection.container !== undefined;
   if (primary && intersection && brush !== Brush.none && brush !== Brush.dismantle) {
     const sound = create(intersection) || 'build';
     viewport.sfx.playAt(sound, intersection.point, 0, sound === 'nope' ? 0 : Math.random() * (sound === 'wire' ? 100 : 600));
@@ -325,13 +323,15 @@ const handleInput = (
       UI('container', intersection.object as Instance);
     }
   }
-  if (hasFrom) {
-    from.container = undefined;
+  if (hasConnection) {
+    connection.container = undefined;
   }
 };
 
 const aux = new Vector3();
 const hover = (intersection?: Intersection) => {
+  ghost.visible = false;
+
   if (
     intersection
     && !(
@@ -341,11 +341,10 @@ const hover = (intersection?: Intersection) => {
     && ![Brush.none, Brush.belt, Brush.dismantle, Brush.wire].includes(brush)
   ) {
     const isValid = brush !== Brush.miner || intersection.object instanceof Deposit;
-    ghost.update(getBrushGeometry(brush), snap(intersection), rotation, isValid);
+    ghost.setBrush(getBrushGeometry(brush), snap(intersection), rotation, isValid);
     setTooltip(isValid ? 'build' : 'invalid');
     return;
   }
-  ghost.visible = false;
 
   if (
     intersection?.object
@@ -363,17 +362,20 @@ const hover = (intersection?: Intersection) => {
   if (
     intersection?.object
     && (
-      (brush === Brush.belt && canBelt(intersection))
+      (brush === Brush.belt && intersection.connector !== false)
       || (brush === Brush.wire && canWire(intersection))
     )
   ) {
-    setTooltip(brush === Brush.belt ? 'belt' : 'wire', intersection.object as Instance, from.container);
+    if (brush === Brush.belt && intersection.connector !== false) {
+      const connector = (intersection.object as Container).getConnector(intersection.connector);
+      ghost.setConnector(connector, true);
+    }
+    setTooltip(brush === Brush.belt ? 'belt' : 'wire', intersection.object as Instance, connection.container);
     return;
   } else if (
-    from.container
-    && (brush === Brush.belt || brush === Brush.wire)
+    (brush === Brush.belt || brush === Brush.wire) && connection.container
   ) {
-    setTooltip(brush === Brush.belt ? 'belt' : 'wire', from.container);
+    setTooltip(brush === Brush.belt ? 'belt' : 'wire', connection.container);
     return;
   }
 
@@ -401,6 +403,7 @@ const hover = (intersection?: Intersection) => {
 
 const center = new Vector2();
 const intersection: Intersection = {
+  connector: false,
   distance: 0,
   normal: new Vector3(),
   point: new Vector3(),
@@ -420,16 +423,18 @@ const animate = (buttons: Buttons, delta: number) => {
   let hit;
   if (physicsHit && (!vertexHit || intersection.distance < vertexHit.distance)) {
     hit = intersection;
-    if (intersection.object && intersection.object instanceof Instance) {
-      intersection.normal.applyQuaternion(Instance.getQuaternion(intersection.object, true));
-    }
   } else if (vertexHit) {
     intersection.distance = vertexHit.distance;
-    intersection.normal.copy(vertexHit.face!.normal);
     intersection.object = vertexHit.object;
     intersection.point.copy(vertexHit.point);
     hit = intersection;
   }
+  intersection.connector = (
+    brush === Brush.belt
+    && intersection?.object
+    && canBelt(intersection)
+    && intersection.object.intersectConnector(raycaster, intersection.distance)
+  );
   hover(hit);
   if (buttons.primary || buttons.secondary || buttons.tertiary || buttons.build || buttons.dismantle || buttons.interact) {
     handleInput(buttons, hit);

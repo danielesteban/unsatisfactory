@@ -4,6 +4,7 @@ import {
   Curve,
   CylinderGeometry,
   DynamicDrawUsage,
+  IcosahedronGeometry,
   InstancedMesh,
   Group,
   Material,
@@ -15,6 +16,8 @@ import {
   TetrahedronGeometry,
   Vector3,
 } from 'three';
+import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 import { loadTexture } from '../textures';
 import RockDiffuseMap from '../textures/rock_boulder_dry_diff_1k.webp';
 import RockNormalMap from '../textures/rock_boulder_dry_nor_gl_1k.webp';
@@ -29,10 +32,12 @@ export enum Item {
   cylinder,
   ingot,
   ore,
+  artifact,
 }
 
 export const ItemName = {
   [Item.none]: 'None',
+  [Item.artifact]: 'Artifact',
   [Item.box]: 'Box',
   [Item.cylinder]: 'Cylinder',
   [Item.ingot]: 'Ingot',
@@ -44,18 +49,20 @@ export const Mining: Partial<Record<Item, { consumption: number; rate: number; }
 };
 
 export const Sinking: Partial<Record<Item, number>> = {
+  [Item.artifact]: 32,
   [Item.box]: 4,
   [Item.cylinder]: 8,
   [Item.ingot]: 2,
 };
 
 export enum Transformer {
+  combinator,
   fabricator,
   smelter,
 }
 
 export type Recipe = {
-  input: { item: Item; count: number; };
+  input: { item: Item; count: number; }[];
   output: { item: Item; count: number; };
   rate: number;
   transformer: Transformer;
@@ -63,10 +70,10 @@ export type Recipe = {
 
 export const Recipes: Recipe[] = [
   {
-    input: {
+    input: [{
       item: Item.ore,
       count: 1,
-    },
+    }],
     output: {
       item: Item.ingot,
       count: 1,
@@ -75,10 +82,10 @@ export const Recipes: Recipe[] = [
     transformer: Transformer.smelter,
   },
   {
-    input: {
+    input: [{
       item: Item.ingot,
       count: 1,
-    },
+    }],
     output: {
       item: Item.cylinder,
       count: 1,
@@ -87,17 +94,35 @@ export const Recipes: Recipe[] = [
     transformer: Transformer.fabricator,
   },
   {
-    input: {
+    input: [{
       item: Item.ingot,
       count: 1,
-    },
+    }],
     output: {
       item: Item.box,
       count: 2,
     },
     rate: 10,
     transformer: Transformer.fabricator,
-  }
+  },
+  {
+    input: [
+      {
+        item: Item.cylinder,
+        count: 3,
+      },
+      {
+        item: Item.box,
+        count: 3,
+      }
+    ],
+    output: {
+      item: Item.artifact,
+      count: 1,
+    },
+    rate: 15,
+    transformer: Transformer.combinator,
+  },
 ];
 
 export type SerializedItems = ([Item, number] | number)[];
@@ -163,6 +188,12 @@ class InstancedItems extends InstancedMesh {
 class Items extends Group {
   private static geometries: Record<Exclude<Item, Item.none>, BufferGeometry> | undefined;
   private static setupGeometries() {
+    const csgEvaluator = new Evaluator();
+    let brush = new Brush(new BoxGeometry(0.25, 0.25, 0.25));
+    brush = csgEvaluator.evaluate(brush, new Brush(new IcosahedronGeometry(0.15, 2)), SUBTRACTION);
+    const artifact = mergeVertices(brush.geometry);
+    artifact.translate(0, 0.125, 0);
+    artifact.computeBoundingSphere();
     const box = new BoxGeometry(0.25, 0.25, 0.25);
     box.translate(0, 0.125, 0);
     box.computeBoundingSphere();
@@ -177,6 +208,7 @@ class Items extends Group {
     ore.translate(0, 0.2, 0);
     ore.computeBoundingSphere();
     Items.geometries = {
+      [Item.artifact]: artifact,
       [Item.box]: box,
       [Item.cylinder]: cylinder,
       [Item.ingot]: ingot,
@@ -208,6 +240,7 @@ class Items extends Group {
       rock.envMapIntensity = rock.roughness = 0.7;
       const rust = getMaterial(RustDiffuseMap, RustNormalMap, RustRoughnessMap);
       Items.materials = {
+        [Item.artifact]: processed,
         [Item.box]: processed,
         [Item.cylinder]: processed,
         [Item.ingot]: rust,
@@ -246,6 +279,7 @@ class Items extends Group {
     this.updateMatrixWorld();
     this.matrixAutoUpdate = false;
     this.instances = {
+      [Item.artifact]: undefined,
       [Item.box]: undefined,
       [Item.cylinder]: undefined,
       [Item.ingot]: undefined,

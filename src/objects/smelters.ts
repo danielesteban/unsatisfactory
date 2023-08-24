@@ -10,11 +10,12 @@ import {
 } from 'three';
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
+import { Connectors } from '../core/container';
 import Instances, { Instance } from '../core/instances';
 import Physics from '../core/physics';
 import SFX from '../core/sfx';
 import Transformer from '../core/transformer';
-import { Recipe, Recipes, Transformer as ItemTransformer } from './items';
+import { Recipes, Transformer as ItemTransformer } from './items';
 import { loadTexture } from '../textures';
 import DiffuseMap from '../textures/rust_coarse_01_diff_1k.webp';
 import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.webp';
@@ -22,23 +23,17 @@ import RoughnessMap from '../textures/rust_coarse_01_rough_1k.webp';
 import Achievements, { Achievement } from '../ui/stores/achievements';
 
 export class Smelter extends Transformer {
-  private static connectorOffset: Vector3 = new Vector3(0, -1, 0);
-  override getConnector(direction: Vector3, offset: Vector3) {
-    return this.position.clone()
-      .add(Smelter.connectorOffset)
-      .addScaledVector(direction, 1.5)
-      .add(offset);
+  private static readonly defaultRecipe = Recipes.find(({ transformer }) => transformer === ItemTransformer.smelter)!;
+  constructor(parent: Smelters, connectors: Connectors, position: Vector3, rotation: number, sfx: SFX) {
+    super(parent, connectors, position, rotation, 10, Smelter.defaultRecipe, sfx);
   }
 
-  private static readonly wireConnectorAux: Vector3 = new Vector3();
   private static readonly wireConnectorOffset: Vector3 = new Vector3(1, 0, 0);
-  override getWireConnector(): Vector3 {
-    return Smelter.wireConnectorAux
-      .copy(Smelter.wireConnectorOffset)
+  override getWireConnector() {
+    return Smelter.wireConnectorOffset.clone()
       .applyQuaternion(Instance.getQuaternion(this))
       .add(this.position)
-      .addScaledVector(Object3D.DEFAULT_UP, 2.5)
-      .clone();
+      .addScaledVector(Object3D.DEFAULT_UP, 2.5);
   }
 
   override process() {
@@ -49,6 +44,11 @@ export class Smelter extends Transformer {
     return hasOutput;
   }
 }
+
+const connectors = [
+  { position: new Vector3(2, -1, 0), rotation: Math.PI * 0.5 },
+  { position: new Vector3(-2, -1, 0), rotation: Math.PI * -0.5 },
+];
 
 class Smelters extends Instances<Smelter> {
   private static collider: RAPIER.ColliderDesc[] | undefined;
@@ -62,6 +62,14 @@ class Smelters extends Instances<Smelter> {
       ];
     }
     return Smelters.collider;
+  }
+  
+  private static connectors: Connectors | undefined;
+  static getConnectors() {
+    if (!Smelters.connectors) {
+      Smelters.connectors = new Connectors(connectors);
+    }
+    return Smelters.connectors;
   }
 
   private static geometry: BufferGeometry | undefined;
@@ -139,10 +147,10 @@ class Smelters extends Instances<Smelter> {
     this.sfx = sfx;
   }
 
-  create(position: Vector3, rotation: number, recipe?: Recipe) {
+  create(position: Vector3, rotation: number) {
     const { sfx } = this;
     const instance = super.addInstance(
-      new Smelter(this, position, rotation, recipe || Recipes.find(({ transformer }) => transformer === ItemTransformer.smelter)!, sfx)
+      new Smelter(this, Smelters.getConnectors(), position, rotation, sfx)
     );
     return instance;
   }

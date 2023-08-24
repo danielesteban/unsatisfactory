@@ -16,6 +16,7 @@
   export let instance: Transformer;
 
   const name = {
+    [ItemTrasformer.combinator]: 'Combinator',
     [ItemTrasformer.fabricator]: 'Fabricator',
     [ItemTrasformer.smelter]: 'Smelter',
   }[transformer];
@@ -54,8 +55,6 @@
           >
             {#each recipes as recipe, index}
               <option value={index}>
-                {ItemName[recipe.input.item]}
-                ⇾
                 {ItemName[recipe.output.item]}
               </option>
             {/each}
@@ -64,15 +63,13 @@
       </Module>
       <Production
         name="Input"
-        item={recipe.input.item}
+        items={recipe.input}
         rate={recipe.rate}
-        count={recipe.input.count}
       />
       <Production
         name="Output"
-        item={recipe.output.item}
+        items={recipe.output}
         rate={recipe.rate}
-        count={recipe.output.count}
       />
     </Modules>
   </Grid>

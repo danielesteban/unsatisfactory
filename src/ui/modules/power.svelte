@@ -35,11 +35,14 @@
 <Module>
   <div slot="name">Power Consumption</div>
   <div>
-    {consumption}MW <span class="status"> ∙ {status}</span>
+    <span class="consumption">{consumption}</span> MW <span class="status"> ∙ {status}</span>
   </div>
 </Module>
 
 <style>
+  .consumption {
+    font-weight: 600;
+  }
   .status {
     color: #999;
   }

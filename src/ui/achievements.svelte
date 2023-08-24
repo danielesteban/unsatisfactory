@@ -83,6 +83,24 @@
       ],
     },
     {
+      id: Achievement.combinator,
+      name: 'Advanced manufacturing',
+      help: [
+        'Select the Combinator from the build menu [Q] and',
+        'Click over the terrain (or a foundation) to place it on top.',
+        '',
+        "You'll need to build a production line for Boxes.",
+        'Similar to the one you just built for Cylinders.',
+        '',
+        'Then, belt both production lines into the Combinator.',
+        '',
+        'Remember to wire the Combinator so it gets powered.',
+        'You may need additonal Generators for this.',
+        '',
+        'Finally, belt the other side of the Combinator into a Buffer.',
+      ],
+    },
+    {
       id: Achievement.points,
       name: 'Get some points',
       help: [
@@ -94,6 +112,7 @@
         'Then belt the output of a Smelter or Fabricator into the Sink.',
         '',
         'Remember to wire the Sink so it gets powered.',
+        'You may need additonal Generators for this.',
       ],
     },
   ];

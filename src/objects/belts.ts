@@ -13,13 +13,18 @@ import {
   Vector3,
 } from 'three';
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { Connector } from '../core/container';
+import Container from '../core/container';
 import Physics from '../core/physics';
 import Items, { Item } from './items';
 import { loadTexture } from '../textures';
 import DiffuseMap from '../textures/green_metal_rust_diff_1k.webp';
 import NormalMap from '../textures/green_metal_rust_nor_gl_1k.webp';
 import RoughnessMap from '../textures/green_metal_rust_rough_1k.webp';
+
+type Connector = {
+  container: Container;
+  connector: number;
+};
 
 export class Belt extends Mesh {
   public readonly from: Connector;
@@ -31,14 +36,24 @@ export class Belt extends Mesh {
 
   private static readonly offset: Vector3 = new Vector3(0, -0.5, 0);
   constructor(material: Material, shape: Shape, from: Connector, to: Connector) {
-    const fromConnector = from.container.getConnector(from.direction, Belt.offset);
-    const toConnector = to.container.getConnector(to.direction, Belt.offset);
-    const offset = fromConnector.distanceTo(toConnector) * 0.3;
+    const fromConnector = from.container.getConnector(from.connector);
+    const fromDirection = fromConnector.getWorldDirection(new Vector3());
+    const fromPosition = fromConnector
+      .getWorldPosition(new Vector3())
+      .addScaledVector(fromDirection, -0.5)
+      .add(Belt.offset);
+    const toConnector = to.container.getConnector(to.connector);
+    const toDirection = toConnector.getWorldDirection(new Vector3());
+    const toPosition = toConnector
+      .getWorldPosition(new Vector3())
+      .addScaledVector(toDirection, -0.5)
+      .add(Belt.offset);
+    const offset = fromPosition.distanceTo(toPosition) * 0.3;
     const path = new CubicBezierCurve3(
-      fromConnector,
-      fromConnector.clone().addScaledVector(from.direction, offset),
-      toConnector.clone().addScaledVector(to.direction, offset),
-      toConnector
+      fromPosition,
+      fromPosition.clone().addScaledVector(fromDirection, offset),
+      toPosition.clone().addScaledVector(toDirection, offset),
+      toPosition
     );
     {
       // @dani @hack
@@ -64,8 +79,8 @@ export class Belt extends Mesh {
     this.castShadow = this.receiveShadow = true;
     this.updateMatrixWorld();
     this.matrixAutoUpdate = false;
-    this.from = { container: from.container, direction: from.direction.clone() };
-    this.to = { container: to.container, direction: to.direction.clone() };
+    this.from = { container: from.container, connector: from.connector };
+    this.to = { container: to.container, connector: to.connector };
     this.enabled = true;
     this.slots = Array.from({ length: Math.ceil(path.getLength() / 0.5) }, () => ({ item: Item.none, locked: false }));
     this.items = new Items(this.slots.length, path);

@@ -10,6 +10,7 @@ import { Intersection } from './physics';
 import Belts, { Belt } from '../objects/belts';
 import Buffers, { Buffer } from '../objects/buffers';
 import Deposit from '../objects/deposit';
+import Combinators, { Combinator }  from '../objects/combinators';
 import Fabricators, { Fabricator }  from '../objects/fabricators';
 import Foundations, { Foundation } from '../objects/foundations';
 import Generators, { Generator } from '../objects/generators';
@@ -26,6 +27,7 @@ export enum Brush {
   none,
   belt,
   buffer,
+  combinator,
   dismantle,
   fabricator,
   foundation,
@@ -83,6 +85,7 @@ export const names: Record<Brush, string> = {
   [Brush.belt]: 'Belt',
   [Brush.buffer]: 'Buffer',
   [Brush.dismantle]: 'Dismantle',
+  [Brush.combinator]: 'Combinator',
   [Brush.fabricator]: 'Fabricator',
   [Brush.foundation]: 'Foundation',
   [Brush.generator]: 'Generator',
@@ -104,9 +107,10 @@ export const groups = [
     Brush.wall,
   ],
   [
-    Brush.fabricator,
     Brush.miner,
     Brush.smelter,
+    Brush.fabricator,
+    Brush.combinator,
   ],
   [
     Brush.belt,
@@ -126,6 +130,9 @@ export const getFromObject = (instance?: Instance | Belt | Wire) => {
   }
   if (instance instanceof Buffer) {
     return Brush.buffer;
+  }
+  if (instance instanceof Combinator) {
+    return Brush.combinator;
   }
   if (instance instanceof Fabricator) {
     return Brush.fabricator;
@@ -167,6 +174,8 @@ export const getGeometry = (brush: Brush) => {
   switch (brush) {
     case Brush.buffer:
       return Buffers.getGeometry();
+    case Brush.combinator:
+      return Combinators.getGeometry();
     case Brush.fabricator:
       return Fabricators.getGeometry();
     case Brush.foundation:
@@ -198,6 +207,8 @@ export const getMaterial = (brush: Brush) => {
       return Belts.getMaterial();
     case Brush.buffer:
       return Buffers.getMaterial();
+    case Brush.combinator:
+      return Combinators.getMaterial();
     case Brush.fabricator:
       return Fabricators.getMaterial();
     case Brush.foundation:
@@ -242,6 +253,7 @@ const offsets = {
   [Brush.none]: new Vector3(),
   [Brush.belt]: new Vector3(),
   [Brush.buffer]: new Vector3(1, 1, 1),
+  [Brush.combinator]: new Vector3(2, 2, 2),
   [Brush.dismantle]: new Vector3(),
   [Brush.fabricator]: new Vector3(2, 2, 1),
   [Brush.foundation]: new Vector3(2, 0.5, 2),
@@ -261,6 +273,7 @@ const terrainOffsets = (Object.keys(offsets) as any as Brush[]).reduce((terrainO
 }, {} as Record<Brush, Vector3>);
 
 const quaternion = new Quaternion();
+const objectNormal = new Vector3();
 const rotatedDirection = new Vector3();
 const rotatedOffset = new Vector3();
 const rotatedBrushOffset = new Vector3();
@@ -272,14 +285,11 @@ export const snap = (intersection: Intersection) => {
     const brushOffset = offsets[brush];
     const offset = offsets[getFromObject(intersection.object)];
 
-    quaternion.copy(Instance.getQuaternion(intersection.object));
-    rotatedOffset.copy(offset).multiply(intersection.normal).applyQuaternion(quaternion);
-    rotatedDirection.copy(intersection.normal).applyQuaternion(quaternion);
+    objectNormal.copy(intersection.normal).applyQuaternion(Instance.getQuaternion(intersection.object, true));
+    rotatedOffset.copy(offset).multiply(objectNormal).applyQuaternion(Instance.getQuaternion(intersection.object));
 
-    quaternion.setFromAxisAngle(Object3D.DEFAULT_UP, -rotation);
-    rotatedDirection.applyQuaternion(quaternion);
-    quaternion.invert();
-    rotatedBrushOffset.copy(brushOffset).multiply(rotatedDirection).applyQuaternion(quaternion);
+    rotatedDirection.copy(intersection.normal).applyQuaternion(quaternion.setFromAxisAngle(Object3D.DEFAULT_UP, -rotation));
+    rotatedBrushOffset.copy(brushOffset).multiply(rotatedDirection).applyQuaternion(quaternion.setFromAxisAngle(Object3D.DEFAULT_UP, rotation));
 
     return intersection.object.position.clone()
       .add(rotatedOffset)

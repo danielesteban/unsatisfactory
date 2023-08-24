@@ -8,6 +8,7 @@ export enum Achievement {
   power,
   smelter,
   fabricator,
+  combinator,
   points,
 }
 

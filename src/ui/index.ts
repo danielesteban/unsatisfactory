@@ -3,8 +3,10 @@ import { Camera } from 'three';
 import { getFromObject } from '../core/brush';
 import { Instance } from '../core/instances';
 import { download, encode, load, serialize, Objects } from '../core/loader';
+import Transformer from '../core/transformer';
 import SFX from '../core/sfx';
 import { Belt } from '../objects/belts';
+import { Combinator } from '../objects/combinators';
 import { Fabricator } from '../objects/fabricators';
 import { Generator } from '../objects/generators';
 import { Item, Transformer as ItemTransformer } from '../objects/items';
@@ -48,33 +50,37 @@ export default (type: 'build' | 'container', instance?: Instance) => {
       });
       break;
     case 'container': {
-      if (instance instanceof Fabricator) {
+      let transformer;
+      if (instance instanceof Combinator) {
+        transformer = ItemTransformer.combinator;
+      } else if (instance instanceof Fabricator) {
+        transformer = ItemTransformer.fabricator;
+      } else if (instance instanceof Smelter) {
+        transformer = ItemTransformer.smelter;
+      }
+      if (transformer !== undefined) {
         dialog = new TransformerUI({
-          props: { close, instance, transformer: ItemTransformer.fabricator },
+          props: {
+            close,
+            instance: instance as Transformer,
+            transformer,
+          },
           target,
         });
-      }
-      if (instance instanceof Generator) {
+        break;
+      } else if (instance instanceof Generator) {
         dialog = new GeneratorUI({
           props: { close, instance },
           target,
         });
-      }
-      if (instance instanceof Miner) {
+      } else if (instance instanceof Miner) {
         dialog = new MinerUI({
           props: { close, instance },
           target,
         });
-      }
-      if (instance instanceof Sink) {
+      } else if (instance instanceof Sink) {
         dialog = new SinkUI({
           props: { close, instance },
-          target,
-        });
-      }
-      if (instance instanceof Smelter) {
-        dialog = new TransformerUI({
-          props: { close, instance, transformer: ItemTransformer.smelter },
           target,
         });
       }

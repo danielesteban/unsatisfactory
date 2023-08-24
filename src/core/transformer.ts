@@ -2,7 +2,7 @@ import {
   PositionalAudio,
   Vector3,
 } from 'three';
-import { PoweredContainer } from './container';
+import { Connectors, PoweredContainer } from './container';
 import Instances from './instances';
 import SFX from './sfx';
 import { Belt } from '../objects/belts';
@@ -14,15 +14,21 @@ class Transformer extends PoweredContainer<
     data: Recipe;
   }
 > {
-  private readonly counts: { input: 0, output: 0 };
+  private readonly counts: { input: Partial<Record<Item, number>>, output: number };
   private recipe: Recipe;
   private readonly sfx: SFX;
   private sound?: PositionalAudio;
   private tick: number;
 
-  constructor(parent: Instances<Transformer>, position: Vector3, rotation: number, recipe: Recipe, sfx: SFX) {
-    super(parent, position, rotation, 0, 10);
-    this.counts = { input: 0, output: 0 };
+  constructor(parent: Instances<Transformer>, connectors: Connectors, position: Vector3, rotation: number, consumption: number, recipe: Recipe, sfx: SFX) {
+    super(parent, connectors, position, rotation, 0, consumption);
+    this.counts = {
+      input: recipe.input.reduce<Transformer["counts"]["input"]>((counts, { item }) => {
+        counts[item] = 0;
+        return counts;
+      }, {}),
+      output: 0,
+    };
     this.recipe = recipe;
     this.sfx = sfx;
     this.tick = 0;
@@ -36,12 +42,12 @@ class Transformer extends PoweredContainer<
 
   override canInput(item: Item) {
     const { counts, enabled, recipe } = this;
-    return enabled && item === recipe.input.item && counts.input < recipe.input.count;
+    return enabled && !!recipe.input.find((input) => input.item === item && counts.input[item]! < input.count);
   }
 
-  override input() {
+  override input(item: Item) {
     const { counts } = this;
-    counts.input++;
+    counts.input[item]!++;
   }
 
   override getOutput() {
@@ -63,7 +69,7 @@ class Transformer extends PoweredContainer<
     if (
       !enabled
       || !powered
-      || counts.input < recipe.input.count
+      || !!recipe.input.find(({ item, count }) => counts.input[item]! < count)
       || ++this.tick < recipe.rate
     ) {
       return false;
@@ -72,7 +78,9 @@ class Transformer extends PoweredContainer<
     if (!this.sound?.isPlaying) {
       this.sound = sfx.playAt('machine', position, Math.random() * 0.1, (Math.random() - 0.5) * 1200);
     }
-    counts.input -= recipe.input.count;
+    recipe.input.forEach(({ item, count }) => {
+      counts.input[item]! -= count;
+    });
     counts.output += recipe.output.count;
     return true;
   }
@@ -82,7 +90,10 @@ class Transformer extends PoweredContainer<
   }
 
   setRecipe(recipe: Recipe) {
-    this.counts.input = 0;
+    this.counts.input = recipe.input.reduce<Transformer["counts"]["input"]>((counts, { item }) => {
+      counts[item] = 0;
+      return counts;
+    }, {}),
     this.counts.output = 0;
     this.recipe = recipe;
     this.tick = 0;

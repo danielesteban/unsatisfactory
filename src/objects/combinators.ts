@@ -21,51 +21,64 @@ import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.webp';
 import RoughnessMap from '../textures/rust_coarse_01_rough_1k.webp';
 import Achievements, { Achievement } from '../ui/stores/achievements';
 
-export class Fabricator extends Transformer {
-  private static readonly defaultRecipe = Recipes.find(({ transformer }) => transformer === ItemTransformer.fabricator)!;
-  constructor(parent: Fabricators, connectors: Connectors, position: Vector3, rotation: number, sfx: SFX) {
-    super(parent, connectors, position, rotation, 10, Fabricator.defaultRecipe, sfx);
+export class Combinator extends Transformer {
+  private static readonly defaultRecipe = Recipes.find(({ transformer }) => transformer === ItemTransformer.combinator)!;
+  constructor(parent: Combinators, connectors: Connectors, position: Vector3, rotation: number, sfx: SFX) {
+    super(parent, connectors, position, rotation, 20, Combinator.defaultRecipe, sfx);
   }
 
   override process() {
     const hasOutput = super.process();
     if (hasOutput) {
-      Achievements.complete(Achievement.fabricator);
+      Achievements.complete(Achievement.combinator);
     }
     return hasOutput;
   }
 }
 
 const connectors = [
-  { position: new Vector3(2, -1, 0), rotation: Math.PI * 0.5 },
-  { position: new Vector3(-2, -1, 0), rotation: Math.PI * -0.5 },
+  { position: new Vector3(2, -1, -1), rotation: Math.PI * 0.5 },
+  { position: new Vector3(2, -1, 1), rotation: Math.PI * 0.5 },
+  { position: new Vector3(-2, 0, 0), rotation: Math.PI * -0.5 },
 ];
 
-class Fabricators extends Instances<Fabricator> {
-  private static collider: RAPIER.ColliderDesc | undefined;
+class Combinators extends Instances<Combinator> {
+  private static collider: RAPIER.ColliderDesc[] | undefined;
   static getCollider() {
-    if (!Fabricators.collider) {
-      Fabricators.collider = RAPIER.ColliderDesc.cuboid(2, 2, 1);
+    if (!Combinators.collider) {
+      Combinators.collider = [
+        RAPIER.ColliderDesc.cuboid(2, 1, 2)
+          .setTranslation(0, -1, 0),
+        RAPIER.ColliderDesc.cuboid(2, 1, 1)
+          .setTranslation(0, 1, 0),
+      ];
     }
-    return Fabricators.collider;
+    return Combinators.collider;
   }
-  
+
   private static connectors: Connectors | undefined;
   static getConnectors() {
-    if (!Fabricators.connectors) {
-      Fabricators.connectors = new Connectors(connectors);
+    if (!Combinators.connectors) {
+      Combinators.connectors = new Connectors(connectors);
     }
-    return Fabricators.connectors;
+    return Combinators.connectors;
   }
 
   private static geometry: BufferGeometry | undefined;
   static getGeometry() {
-    if (!Fabricators.geometry) {
+    if (!Combinators.geometry) {
       const csgEvaluator = new Evaluator();
-      const base = new Brush(new BoxGeometry(4, 4, 2));
+      const base = new Brush(new BoxGeometry(4, 4, 4));
       const opening = new Brush(new BoxGeometry(1.5, 1.5, 0.5));
-      const stripe = new Brush(new BoxGeometry(0.25, 3.5, 0.25));
-      let brush: Brush = base;
+      const carving = new Brush(new BoxGeometry(4, 4, 2));
+      const stripe = new Brush(new BoxGeometry(3.5, 0.25, 0.25));
+      let brush = base;
+      carving.position.set(0, 2, -2);
+      carving.updateMatrixWorld();
+      brush = csgEvaluator.evaluate(brush, carving, SUBTRACTION);
+      carving.position.set(0, 2, 2);
+      carving.updateMatrixWorld();
+      brush = csgEvaluator.evaluate(brush, carving, SUBTRACTION);
       connectors.forEach(({ position, rotation }) => {
         opening.position.copy(position);
         opening.rotation.y = rotation;
@@ -73,12 +86,12 @@ class Fabricators extends Instances<Fabricator> {
         brush = csgEvaluator.evaluate(brush, opening, SUBTRACTION);
       });
       ([
-        new Vector3(0, 0, 0.875),
-        new Vector3(0, 0, -0.875),
+        new Vector3(0, -1, 1.875),
+        new Vector3(0, -1, -1.875),
       ]).forEach((position) => {
         for (let i = 0; i < 2; i ++) {
           stripe.position.copy(position);
-          stripe.position.x += 0.625 * (i == 0 ? 1 : -1);
+          stripe.position.y += 0.625 * (i == 0 ? 1 : -1);
           stripe.updateMatrixWorld();
           brush = csgEvaluator.evaluate(brush, stripe, SUBTRACTION);
         }
@@ -91,15 +104,15 @@ class Fabricators extends Instances<Fabricator> {
       connector.position.copy(pole.position).add(new Vector3(0, 0.375, 0));
       connector.updateMatrixWorld();
       brush = csgEvaluator.evaluate(brush, connector, ADDITION);
-      Fabricators.geometry = mergeVertices(brush.geometry);
-      Fabricators.geometry.computeBoundingSphere();
+      Combinators.geometry = mergeVertices(brush.geometry);
+      Combinators.geometry.computeBoundingSphere();
     }
-    return Fabricators.geometry;
+    return Combinators.geometry;
   }
 
   private static material: MeshStandardMaterial | undefined;
   static getMaterial() {
-    if (!Fabricators.material) {
+    if (!Combinators.material) {
       const material = new MeshStandardMaterial({
         map: loadTexture(DiffuseMap),
         normalMap: loadTexture(NormalMap),
@@ -107,9 +120,9 @@ class Fabricators extends Instances<Fabricator> {
       });
       material.map!.anisotropy = 16;
       material.map!.colorSpace = SRGBColorSpace;
-      Fabricators.material = material;
+      Combinators.material = material;
     }
-    return Fabricators.material;
+    return Combinators.material;
   }
 
   private readonly sfx: SFX;
@@ -117,9 +130,9 @@ class Fabricators extends Instances<Fabricator> {
   constructor(physics: Physics, sfx: SFX) {
     super(
       {
-        collider: Fabricators.getCollider(),
-        geometry: Fabricators.getGeometry(),
-        material: Fabricators.getMaterial(),
+        collider: Combinators.getCollider(),
+        geometry: Combinators.getGeometry(),
+        material: Combinators.getMaterial(),
       },
       physics
     );
@@ -129,10 +142,10 @@ class Fabricators extends Instances<Fabricator> {
   create(position: Vector3, rotation: number) {
     const { sfx } = this;
     const instance = super.addInstance(
-      new Fabricator(this, Fabricators.getConnectors(), position, rotation, sfx)
+      new Combinator(this, Combinators.getConnectors(), position, rotation, sfx)
     );
     return instance;
   }
 }
 
-export default Fabricators;
+export default Combinators;

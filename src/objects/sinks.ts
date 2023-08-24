@@ -9,7 +9,7 @@ import {
 } from 'three';
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
-import { PoweredContainer } from '../core/container';
+import { Connectors, PoweredContainer } from '../core/container';
 import Instances from '../core/instances';
 import Physics from '../core/physics';
 import { Item, Sinking } from './items';
@@ -27,8 +27,8 @@ export class Sink extends PoweredContainer<
 > {
   private points: number;
 
-  constructor(parent: Sinks, position: Vector3, rotation: number) {
-    super(parent, position, rotation, 0, 100);
+  constructor(parent: Sinks, connectors: Connectors, position: Vector3, rotation: number) {
+    super(parent, connectors, position, rotation, 0, 100);
     this.points = 0;
   }
 
@@ -45,10 +45,6 @@ export class Sink extends PoweredContainer<
 
   override output() {
     return Item.none;
-  }
-
-  override getConnector(direction: Vector3, offset: Vector3) {
-    return this.position.clone().addScaledVector(direction, 1.5).add(offset);
   }
 
   getPoints() {
@@ -69,30 +65,40 @@ export class Sink extends PoweredContainer<
   }
 }
 
+const connectors = [
+  { position: new Vector3(0, 0, 1.875) },
+  { position: new Vector3(0, 0, -1.875), rotation: Math.PI * -1 },
+  { position: new Vector3(1.875, 0, 0), rotation: Math.PI * 0.5 },
+  { position: new Vector3(-1.875, 0, 0), rotation: Math.PI * -0.5 },
+];
+
 class Sinks extends Instances<Sink> {
   private static collider: RAPIER.ColliderDesc | undefined;
   static getCollider() {
     if (!Sinks.collider) {
-      Sinks.collider = RAPIER.ColliderDesc.cuboid(2, 2, 2);
+      Sinks.collider = RAPIER.ColliderDesc.cylinder(2, 2);
     }
     return Sinks.collider;
+  }
+
+  private static connectors: Connectors | undefined;
+  static getConnectors() {
+    if (!Sinks.connectors) {
+      Sinks.connectors = new Connectors(connectors);
+    }
+    return Sinks.connectors;
   }
 
   private static geometry: BufferGeometry | undefined;
   static getGeometry() {
     if (!Sinks.geometry) {
       const csgEvaluator = new Evaluator();
-      const base = new Brush(new BoxGeometry(4, 4, 4));
+      const base = new Brush(new CylinderGeometry(2, 2, 4));
       const opening = new Brush(new BoxGeometry(1.5, 1.5, 0.5));
       let brush: Brush = base;
-      ([
-        [new Vector3(0, 0, 2), 0],
-        [new Vector3(0, 0, -2), 0],
-        [new Vector3(2, 0, 0), Math.PI * 0.5],
-        [new Vector3(-2, 0, 0), Math.PI * 0.5],
-      ] as [Vector3, number][]).forEach(([position, rotation]) => {
+      connectors.forEach(({ position, rotation }) => {
         opening.position.copy(position);
-        opening.rotation.y = rotation;
+        opening.rotation.y = rotation || 0;
         opening.updateMatrixWorld();
         brush = csgEvaluator.evaluate(brush, opening, SUBTRACTION);
       });
@@ -137,7 +143,7 @@ class Sinks extends Instances<Sink> {
   }
 
   create(position: Vector3, rotation: number) {
-    return super.addInstance(new Sink(this, position, rotation));
+    return super.addInstance(new Sink(this, Sinks.getConnectors(), position, rotation));
   }
 }
 

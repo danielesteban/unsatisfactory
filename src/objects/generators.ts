@@ -14,7 +14,7 @@ import {
 } from 'three';
 import { mergeGeometries, mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { ADDITION, Brush, Evaluator } from 'three-bvh-csg';
-import { PoweredContainer } from '../core/container';
+import { Connectors, PoweredContainer } from '../core/container';
 import Instances, { Instance } from '../core/instances';
 import Physics from '../core/physics';
 import { loadTexture } from '../textures';
@@ -24,8 +24,8 @@ import RoughnessMap from '../textures/rust_coarse_01_rough_1k.webp';
 
 export class Generator extends PoweredContainer {
   private readonly power: number;
-  constructor(parent: Generators, position: Vector3, rotation: number, power: number) {
-    super(parent, position, rotation, 0, 0, 4);
+  constructor(parent: Generators, connectors: Connectors, position: Vector3, rotation: number, power: number) {
+    super(parent, connectors, position, rotation, 0, 0, 4);
     this.power = power;
   }
 
@@ -33,15 +33,12 @@ export class Generator extends PoweredContainer {
     return this.enabled ? this.power : 0;
   }
   
-  private static readonly wireConnectorAux: Vector3 = new Vector3();
   private static readonly wireConnectorOffset: Vector3 = new Vector3(-1, 0, 0);
-  override getWireConnector(): Vector3 {
-    return Generator.wireConnectorAux
-      .copy(Generator.wireConnectorOffset)
+  override getWireConnector() {
+    return Generator.wireConnectorOffset.clone()
       .applyQuaternion(Instance.getQuaternion(this))
       .add(this.position)
-      .addScaledVector(Object3D.DEFAULT_UP, -3.5)
-      .clone();
+      .addScaledVector(Object3D.DEFAULT_UP, -3.5);
   }
 }
 
@@ -57,6 +54,14 @@ class Generators extends Instances<Generator> {
       ];
     }
     return Generators.collider;
+  }
+
+  private static connectors: Connectors | undefined;
+  static getConnectors() {
+    if (!Generators.connectors) {
+      Generators.connectors = new Connectors([]);
+    }
+    return Generators.connectors;
   }
 
   private static geometry: BufferGeometry | undefined;
@@ -100,7 +105,6 @@ class Generators extends Instances<Generator> {
     }
     return Generators.geometry;
   }
-  
 
   private static readonly animationChunk = /* glsl */`
   vec3 boneOffset = vec3(0, 0, 0);
@@ -215,7 +219,7 @@ class Generators extends Instances<Generator> {
   }
 
   create(position: Vector3, rotation: number, power: number = 100) {
-    return super.addInstance(new Generator(this, position, rotation, power));
+    return super.addInstance(new Generator(this, Generators.getConnectors(), position, rotation, power));
   }
 }
 

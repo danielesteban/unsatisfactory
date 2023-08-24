@@ -31,9 +31,15 @@
       <Module>
         <div slot="name">Power Generation</div>
         <div>
-          {power}MW
+          <span class="power">{power}</span> MW
         </div>
       </Module>
     </Modules>
   </Grid>
 </Dialog>
+
+<style>
+  .power {
+    font-weight: 600;
+  }
+</style>

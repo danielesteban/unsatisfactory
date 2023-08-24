@@ -10,7 +10,7 @@ import {
 } from 'three';
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { ADDITION, Brush, Evaluator } from 'three-bvh-csg';
-import { PoweredContainer } from '../core/container';
+import { Connectors, PoweredContainer } from '../core/container';
 import Instances from '../core/instances';
 import Physics from '../core/physics';
 import { loadTexture } from '../textures';
@@ -26,12 +26,13 @@ import RoughnessMap from '../textures/rust_coarse_01_rough_1k.webp';
 // I should have listened to the ECS evangelists.
 // I'm just too lazy to care for switching to composition at this stage.
 export class Pole extends PoweredContainer {
-  constructor(parent: Poles, position: Vector3, rotation: number) {
-    super(parent, position, rotation, 0, 0, 4);
+  constructor(parent: Poles, connectors: Connectors, position: Vector3, rotation: number) {
+    super(parent, connectors, position, rotation, 0, 0, 4);
   }
 
-  override getWireConnector(): Vector3 {
-    return this.position.clone().addScaledVector(Object3D.DEFAULT_UP, 2.75);
+  override getWireConnector() {
+    return this.position.clone()
+      .addScaledVector(Object3D.DEFAULT_UP, 2.75);
   }
 }
 
@@ -42,6 +43,14 @@ class Poles extends Instances<Pole> {
       Poles.collider = RAPIER.ColliderDesc.cuboid(0.25, 3, 0.25);
     }
     return Poles.collider;
+  }
+
+  private static connectors: Connectors | undefined;
+  static getConnectors() {
+    if (!Poles.connectors) {
+      Poles.connectors = new Connectors([]);
+    }
+    return Poles.connectors;
   }
 
   private static geometry: BufferGeometry | undefined;
@@ -92,7 +101,7 @@ class Poles extends Instances<Pole> {
   }
 
   create(position: Vector3, rotation: number) {
-    return super.addInstance(new Pole(this, position, rotation));
+    return super.addInstance(new Pole(this, Poles.getConnectors(), position, rotation));
   }
 }
 

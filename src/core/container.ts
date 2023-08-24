@@ -1,6 +1,11 @@
 import {
   BaseEvent,
+  BoxGeometry,
+  BufferGeometry,
+  Group,
+  Mesh,
   Object3D,
+  Raycaster,
   Vector3,
 } from 'three';
 import Instances, { Instance } from './instances';
@@ -8,19 +13,50 @@ import { Belt } from '../objects/belts';
 import { Item } from '../objects/items';
 import { Wire } from '../objects/wires';
 
+export class Connectors extends Group {
+  private static defaultGeometry: BufferGeometry | undefined;
+
+  static getDefaultGeometry() {
+    if (!Connectors.defaultGeometry) {
+      Connectors.defaultGeometry = new BoxGeometry(1.5, 1.5, 0.5);
+      Connectors.defaultGeometry.computeBoundingSphere();
+    }
+    return Connectors.defaultGeometry;
+  }
+
+  constructor(connectors: { geometry?: BufferGeometry; position: Vector3; rotation?: number; }[]) {
+    super();
+    connectors.forEach(({ geometry, position, rotation }) => {
+      const connector = new Mesh(geometry || Connectors.getDefaultGeometry());
+      connector.position.copy(position);
+      connector.rotation.y = rotation || 0;
+      connector.updateMatrix();
+      connector.matrixAutoUpdate = false;
+      this.add(connector);
+    });
+  }
+}
+
 class Container<Events extends BaseEvent = BaseEvent> extends Instance<Events> {
+  // @dani @incomplete
+  // Merge this legacy belts business together with the new connectors
+  // This will finally prevent connecting several belts to the same connector
+  // And other stuff like setting a connector to be input/output only.
+  protected readonly connectors: Connectors;
   protected readonly belts: {
     input: Belt[];
     output: Belt[];
   };
-  protected readonly capacity: number;
-  protected readonly items: Item[];
   protected outputBelt: number;
 
-  constructor(parent: Instances<Instance<Events>>, position: Vector3, rotation: number, capacity: number) {
+  protected readonly capacity: number;
+  protected readonly items: Item[];
+
+  constructor(parent: Instances<Instance<Events>>, connectors: Connectors, position: Vector3, rotation: number, capacity: number) {
     super(parent, position, rotation);
     this.belts = { input: [], output: [] };
     this.capacity = capacity;
+    this.connectors = connectors;
     this.items = [];
     this.outputBelt = 0;
   }
@@ -56,8 +92,28 @@ class Container<Events extends BaseEvent = BaseEvent> extends Instance<Events> {
     return output;
   }
 
-  getConnector(direction: Vector3, offset: Vector3) {
-    return this.position.clone().addScaledVector(direction, 0.5).add(offset);
+  protected getConnectors() {
+    const { connectors, position, rotation } = this;
+    connectors.position.copy(position);
+    connectors.rotation.y = rotation;
+    connectors.updateMatrixWorld();
+    return connectors;
+  }
+
+  intersectConnector(raycaster: Raycaster, maxDistance: number = Infinity) {
+    const connectors = this.getConnectors();
+    const { far } = raycaster;
+    raycaster.far = maxDistance;
+    const hit = raycaster.intersectObject(connectors)[0];
+    raycaster.far = far;
+    if (hit) {
+      return connectors.children.indexOf(hit.object);
+    }
+    return false;
+  }
+
+  getConnector(index: number) {
+    return this.getConnectors().children[index] as Mesh;
   }
 
   getBelts() {
@@ -99,8 +155,8 @@ export class PoweredContainer<Events extends BaseEvent = BaseEvent> extends Cont
   protected powered: boolean;
   protected wires: Wire[];
 
-  constructor(parent: Instances<Instance<PoweredContainerEvents | Events>>, position: Vector3, rotation: number, capacity: number, consumption: number, maxConnections: number = 1) {
-    super(parent, position, rotation, capacity);
+  constructor(parent: Instances<Instance<PoweredContainerEvents | Events>>, connectors: Connectors, position: Vector3, rotation: number, capacity: number, consumption: number, maxConnections: number = 1) {
+    super(parent, connectors, position, rotation, capacity);
     this.connections = [];
     this.consumption = consumption;
     this.enabled = true;
@@ -113,8 +169,9 @@ export class PoweredContainer<Events extends BaseEvent = BaseEvent> extends Cont
     return this.enabled && super.canInput(item);
   }
 
-  getWireConnector(): Vector3 {
-    return this.position.clone().addScaledVector(Object3D.DEFAULT_UP, 2.5);
+  getWireConnector() {
+    return this.position.clone()
+      .addScaledVector(Object3D.DEFAULT_UP, 2.5);
   }
 
   getConsumption() {
@@ -184,10 +241,5 @@ export class PoweredContainer<Events extends BaseEvent = BaseEvent> extends Cont
     ];
   }
 }
-
-export type Connector = {
-  container: Container;
-  direction: Vector3;
-};
 
 export default Container;

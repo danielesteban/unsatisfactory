@@ -8,7 +8,7 @@ import {
 } from 'three';
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
-import Container from '../core/container';
+import Container, { Connectors } from '../core/container';
 import Instances from '../core/instances';
 import Physics from '../core/physics';
 import { Item, serializeItems } from './items';
@@ -18,8 +18,8 @@ import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.webp';
 import RoughnessMap from '../textures/rust_coarse_01_rough_1k.webp';
 
 export class Buffer extends Container {
-  constructor(parent: Buffers, position: Vector3, rotation: number) {
-    super(parent, position, rotation, 10);
+  constructor(parent: Buffers, connectors: Connectors, position: Vector3, rotation: number) {
+    super(parent, connectors, position, rotation, 10);
   }
 
   setItems(data: Item[]) {
@@ -38,6 +38,13 @@ export class Buffer extends Container {
   }
 }
 
+const connectors = [
+  { position: new Vector3(0, 0, 1) },
+  { position: new Vector3(0, 0, -1), rotation: Math.PI * -1 },
+  { position: new Vector3(1, 0, 0), rotation: Math.PI * 0.5 },
+  { position: new Vector3(-1, 0, 0), rotation: Math.PI * -0.5 },
+];
+
 class Buffers extends Instances<Buffer> {
   private static collider: RAPIER.ColliderDesc | undefined;
   static getCollider() {
@@ -47,6 +54,14 @@ class Buffers extends Instances<Buffer> {
     return Buffers.collider;
   }
 
+  private static connectors: Connectors | undefined;
+  static getConnectors() {
+    if (!Buffers.connectors) {
+      Buffers.connectors = new Connectors(connectors);
+    }
+    return Buffers.connectors;
+  }
+
   private static geometry: BufferGeometry | undefined;
   static getGeometry() {
     if (!Buffers.geometry) {
@@ -54,14 +69,9 @@ class Buffers extends Instances<Buffer> {
       const base = new Brush(new BoxGeometry(2, 2, 2));
       const opening = new Brush(new BoxGeometry(1.5, 1.5, 0.5));
       let brush: Brush = base;
-      ([
-        [new Vector3(0, 0, 1), 0],
-        [new Vector3(0, 0, -1), 0],
-        [new Vector3(1, 0, 0), Math.PI * 0.5],
-        [new Vector3(-1, 0, 0), Math.PI * 0.5],
-      ] as [Vector3, number][]).forEach(([position, rotation]) => {
+      connectors.forEach(({ position, rotation }) => {
         opening.position.copy(position);
-        opening.rotation.y = rotation;
+        opening.rotation.y = rotation || 0;
         opening.updateMatrixWorld();
         brush = csgEvaluator.evaluate(brush, opening, SUBTRACTION);
       });
@@ -98,7 +108,7 @@ class Buffers extends Instances<Buffer> {
   }
 
   create(position: Vector3, rotation: number) {
-    return super.addInstance(new Buffer(this, position, rotation));
+    return super.addInstance(new Buffer(this, Buffers.getConnectors(), position, rotation));
   }
 }
 

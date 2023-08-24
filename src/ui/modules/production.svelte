@@ -3,19 +3,30 @@
   import { Item, ItemName } from '../../objects/items';
 
   export let name: string;
-  export let item: Item;
+  export let items: { item: Item; count: number;} | { item: Item; count: number;}[];
   export let rate: number;
-  export let count: number = 1;
 </script>
 
 <Module>
   <div slot="name">{name}</div>
-  <div>
-    {60 * (5 / rate) * count} {ItemName[item]} <span class="rate">/ min</span>
+  <div class="items">
+    {#each Array.isArray(items) ? items : [items] as { item, count } (item)}
+      <div>
+        <span class="count">{60 * (5 / rate) * count}</span> {ItemName[item]} <span class="rate">/ min</span>
+      </div>
+    {/each}
   </div>
 </Module>
 
 <style>
+  .items {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  .count {
+    font-weight: 600;
+  }
   .rate {
     color: #999;
   }

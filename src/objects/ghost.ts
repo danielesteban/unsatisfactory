@@ -43,10 +43,21 @@ class Ghost extends Mesh {
     this.visible = false;
   }
 
-  update(geometry: BufferGeometry, position: Vector3, rotation: number, isValid: boolean) {
+  setBrush(geometry: BufferGeometry, position: Vector3, rotation: number, isValid: boolean) {
     this.geometry = geometry;
     this.position.copy(position);
     this.rotation.y = rotation;
+    this.update(isValid);
+  }
+
+  setConnector(connector: Mesh, isValid: boolean) {
+    this.geometry = connector.geometry;
+    connector.getWorldPosition(this.position);
+    connector.getWorldQuaternion(this.quaternion);
+    this.update(isValid);
+  }
+
+  private update(isValid: boolean) {
     (this.material as MeshStandardMaterial).color.setHex(isValid ? 0x555599 : 0x995555);
     this.updateMatrix();
     this.visible = true;

@@ -57,7 +57,8 @@ select {
   line-height: inherit;
   color: inherit;
   background: rgba(0, 0, 0, .5);
-  border-radius: 0.75rem;
+  border-radius: 0.5rem;
+  width: 100%;
   cursor: pointer;
 }
 

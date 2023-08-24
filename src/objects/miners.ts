@@ -11,7 +11,7 @@ import {
 } from 'three';
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
-import { PoweredContainer } from '../core/container';
+import { Connectors, PoweredContainer } from '../core/container';
 import Instances from '../core/instances';
 import Physics from '../core/physics';
 import SFX from '../core/sfx';
@@ -30,9 +30,9 @@ export class Miner extends PoweredContainer {
   private sound?: PositionalAudio;
   private tick: number;
 
-  constructor(parent: Miners, position: Vector3, rotation: number, item: Item, purity: number, sfx: SFX) {
+  constructor(parent: Miners, connectors: Connectors, position: Vector3, rotation: number, item: Item, purity: number, sfx: SFX) {
     const { consumption, rate } = Mining[item] || { consumption: 0, rate: 0 };
-    super(parent, position, rotation, 0, consumption / purity);
+    super(parent, connectors, position, rotation, 0, consumption / purity);
     this.item = item;
     this.purity = purity;
     this.rate = rate * purity;
@@ -87,6 +87,13 @@ export class Miner extends PoweredContainer {
   }
 }
 
+const connectors = [
+  { position: new Vector3(0, 0, 1) },
+  { position: new Vector3(0, 0, -1), rotation: Math.PI * -1 },
+  { position: new Vector3(1, 0, 0), rotation: Math.PI * 0.5 },
+  { position: new Vector3(-1, 0, 0), rotation: Math.PI * -0.5 },
+];
+
 class Miners extends Instances<Miner> {
   private static collider: RAPIER.ColliderDesc | undefined;
   static getCollider() {
@@ -94,6 +101,14 @@ class Miners extends Instances<Miner> {
       Miners.collider = RAPIER.ColliderDesc.cuboid(1, 2, 1);
     }
     return Miners.collider;
+  }
+
+  private static connectors: Connectors | undefined;
+  static getConnectors() {
+    if (!Miners.connectors) {
+      Miners.connectors = new Connectors(connectors);
+    }
+    return Miners.connectors;
   }
 
   private static geometry: BufferGeometry | undefined;
@@ -106,14 +121,9 @@ class Miners extends Instances<Miner> {
       drill.geometry.rotateX(Math.PI);
       drill.geometry.translate(0, -2.5, 0);
       let brush = csgEvaluator.evaluate(base, drill, ADDITION);
-      ([
-        [new Vector3(0, 0, 1), 0],
-        [new Vector3(0, 0, -1), 0],
-        [new Vector3(1, 0, 0), Math.PI * 0.5],
-        [new Vector3(-1, 0, 0), Math.PI * 0.5],
-      ] as [Vector3, number][]).forEach(([position, rotation]) => {
+      connectors.forEach(({ position, rotation }) => {
         opening.position.copy(position);
-        opening.rotation.y = rotation;
+        opening.rotation.y = rotation || 0;
         opening.updateMatrixWorld();
         brush = csgEvaluator.evaluate(brush, opening, SUBTRACTION);
       });
@@ -163,7 +173,7 @@ class Miners extends Instances<Miner> {
   create(position: Vector3, rotation: number, item: Item, purity: number) {
     const { sfx } = this;
     const instance = super.addInstance(
-      new Miner(this, position, rotation, item, purity, sfx)
+      new Miner(this, Miners.getConnectors(), position, rotation, item, purity, sfx)
     );
     return instance;
   }
