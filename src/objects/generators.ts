@@ -22,11 +22,28 @@ import DiffuseMap from '../textures/rust_coarse_01_diff_1k.webp';
 import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.webp';
 import RoughnessMap from '../textures/rust_coarse_01_rough_1k.webp';
 
-export class Generator extends PoweredContainer {
+export class Generator extends PoweredContainer<
+  {
+    type: 'available';
+    power: number;
+  }
+> {
+  private available: number;
   private readonly power: number;
+
   constructor(parent: Generators, connectors: Connectors, position: Vector3, rotation: number, power: number) {
     super(parent, connectors, position, rotation, 0, 0, 4);
+    this.available = power;
     this.power = power;
+  }
+
+  getAvailable() {
+    return this.available;
+  }
+
+  setAvailable(power: number) {
+    this.available = power;
+    this.dispatchEvent({ type: 'available', power });
   }
 
   getPower() {

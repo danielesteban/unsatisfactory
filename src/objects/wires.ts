@@ -160,6 +160,7 @@ class Wires extends Group {
         })
       );
       flow(generator.getConnections());
+      generator.setAvailable(available);
     });
   }
 }

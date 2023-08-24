@@ -11,14 +11,20 @@
   export let close: () => void;
   export let instance: Generator;
 
+  let available = instance.getAvailable();
   let power = instance.getPower();
+  const onAvailable = ({ power }: { power: number }) => {
+    available = power;
+  };
   const onEnabled = () => {
     power = instance.getPower();
   };
+  instance.addEventListener('available', onAvailable);
   instance.addEventListener('enabled', onEnabled);
-  onDestroy(() => (
-    instance.removeEventListener('enabled', onEnabled)
-  ));
+  onDestroy(() => {
+    instance.removeEventListener('available', onAvailable);
+    instance.removeEventListener('enabled', onEnabled);
+  });
 </script>
 
 <Dialog close={close}>
@@ -29,9 +35,15 @@
     </Modules>
     <Modules>
       <Module>
-        <div slot="name">Power Generation</div>
+        <div slot="name">Power generation</div>
         <div>
           <span class="power">{power}</span> MW
+        </div>
+      </Module>
+      <Module>
+        <div slot="name">Available power</div>
+        <div>
+          <span class="power">{available}</span> MW
         </div>
       </Module>
     </Modules>
