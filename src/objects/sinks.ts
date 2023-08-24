@@ -28,7 +28,7 @@ export class Sink extends PoweredContainer<
   private points: number;
 
   constructor(parent: Sinks, connectors: Connectors, position: Vector3, rotation: number) {
-    super(parent, connectors, position, rotation, 0, 100);
+    super(parent, connectors, position, rotation, 100);
     this.points = 0;
   }
 
@@ -41,10 +41,6 @@ export class Sink extends PoweredContainer<
       this.points + (Sinking[item] || 1)
     );
     Achievements.complete(Achievement.points);
-  }
-
-  override output() {
-    return Item.none;
   }
 
   getPoints() {

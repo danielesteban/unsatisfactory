@@ -15,6 +15,7 @@ import { Connectors, PoweredContainer } from '../core/container';
 import Instances from '../core/instances';
 import Physics from '../core/physics';
 import SFX from '../core/sfx';
+import { Belt } from './belts';
 import { Item, Mining } from './items';
 import { loadTexture } from '../textures';
 import DiffuseMap from '../textures/rust_coarse_01_diff_1k.webp';
@@ -25,18 +26,22 @@ import Achievements, { Achievement } from '../ui/stores/achievements';
 export class Miner extends PoweredContainer {
   private readonly item: Item;
   private readonly purity: number;
-  private rate: number;
+  private readonly rate: number;
   private readonly sfx: SFX;
   private sound?: PositionalAudio;
+  private count: number;
+  private outputBelt: number;
   private tick: number;
 
   constructor(parent: Miners, connectors: Connectors, position: Vector3, rotation: number, item: Item, purity: number, sfx: SFX) {
     const { consumption, rate } = Mining[item] || { consumption: 0, rate: 0 };
-    super(parent, connectors, position, rotation, 0, consumption / purity);
+    super(parent, connectors, position, rotation, consumption / purity);
     this.item = item;
     this.purity = purity;
     this.rate = rate * purity;
     this.sfx = sfx;
+    this.count = 0;
+    this.outputBelt = 0;
     this.tick = 0;
   }
 
@@ -65,16 +70,47 @@ export class Miner extends PoweredContainer {
     }
   }
 
-  override output() {
-    const { enabled, item, position, powered, rate, sfx } = this;
-    if (!enabled || !powered || ++this.tick < rate) {
-      return Item.none;
+  private getOutput() {
+    const { count, item } = this;
+    if (count > 0) {
+      this.count--;
+      return item;
+    }
+    return Item.none;
+  }
+
+  override output(belt: Belt) {
+    const { belts: { output: belts }, outputBelt } = this;
+    this.process();
+    if (belts.length <= 1) {
+      return this.getOutput();
+    }
+    const output = (
+      outputBelt < belts.length
+      && belts[outputBelt] !== belt
+      && belts[outputBelt].isEnabled()
+    ) ? Item.none : this.getOutput();
+    if (output !== Item.none) {
+      this.outputBelt = (belts.indexOf(belt) + 1) % belts.length;
+    }
+    return output;
+  }
+
+  private process() {
+    const { belts: { output: belts }, enabled, position, powered, rate, sfx } = this;
+    if (
+      !enabled
+      || !powered
+      || (this.tick += (1 / belts.length)) < rate
+    ) {
+      return false;
     }
     this.tick = 0;
     if (!this.sound?.isPlaying) {
       this.sound = sfx.playAt('machine', position, Math.random() * 0.1, (Math.random() - 0.5) * 1200);
     }
-    return item;
+    this.count++;
+    return true;
   }
 
   override serialize() {

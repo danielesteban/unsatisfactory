@@ -5,7 +5,6 @@ import {
 import { Connectors, PoweredContainer } from './container';
 import Instances from './instances';
 import SFX from './sfx';
-import { Belt } from '../objects/belts';
 import { Item, Recipe, Recipes } from '../objects/items';
 
 class Transformer extends PoweredContainer<
@@ -21,7 +20,7 @@ class Transformer extends PoweredContainer<
   private tick: number;
 
   constructor(parent: Instances<Transformer>, connectors: Connectors, position: Vector3, rotation: number, consumption: number, recipe: Recipe, sfx: SFX) {
-    super(parent, connectors, position, rotation, 0, consumption);
+    super(parent, connectors, position, rotation, consumption);
     this.counts = {
       input: recipe.input.reduce<Transformer["counts"]["input"]>((counts, { item }) => {
         counts[item] = 0;
@@ -50,18 +49,14 @@ class Transformer extends PoweredContainer<
     counts.input[item]!++;
   }
 
-  override getOutput() {
+  override output() {
     const { counts, recipe } = this;
+    this.process();
     if (counts.output > 0) {
       counts.output--;
       return recipe.output.item;
     }
     return Item.none;
-  }
-
-  override output(belt: Belt) {
-    this.process();
-    return super.output(belt);
   }
 
   protected process() {

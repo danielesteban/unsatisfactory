@@ -43,49 +43,24 @@ class Container<Events extends BaseEvent = BaseEvent> extends Instance<Events> {
     input: Belt[];
     output: Belt[];
   };
-  protected readonly capacity: number;
   protected readonly connectors: Connectors;
-  protected readonly items: Item[];
-  protected outputBelt: number;
 
-  constructor(parent: Instances<Instance<Events>>, connectors: Connectors, position: Vector3, rotation: number, capacity: number) {
+  constructor(parent: Instances<Instance<Events>>, connectors: Connectors, position: Vector3, rotation: number) {
     super(parent, position, rotation);
     this.belts = { input: [], output: [] };
-    this.capacity = capacity;
     this.connectors = connectors;
-    this.items = [];
-    this.outputBelt = 0;
   }
 
   canInput(_item: Item) {
-    const { capacity, items } = this;
-    return items.length < capacity;
+    return false;
   }
 
-  input(item: Item) {
-    const { items } = this;
-    items.unshift(item);
+  input(_item: Item) {
+
   }
 
-  protected getOutput() {
-    const { items } = this;
-    return items.pop() || Item.none;
-  }
-
-  output(belt: Belt) {
-    const { belts: { output: belts }, outputBelt } = this;
-    if (belts.length <= 1) {
-      return this.getOutput();
-    }
-    const output = (
-      outputBelt < belts.length
-      && belts[outputBelt] !== belt
-      && belts[outputBelt].isEnabled()
-    ) ? Item.none : this.getOutput();
-    if (output !== Item.none) {
-      this.outputBelt = (belts.indexOf(belt) + 1) % belts.length;
-    }
-    return output;
+  output(_belt: Belt) {
+    return Item.none;
   }
 
   protected getConnectors() {
@@ -162,18 +137,14 @@ export class PoweredContainer<Events extends BaseEvent = BaseEvent> extends Cont
   protected powered: boolean;
   protected wires: Wire[];
 
-  constructor(parent: Instances<Instance<PoweredContainerEvents | Events>>, connectors: Connectors, position: Vector3, rotation: number, capacity: number, consumption: number, maxConnections: number = 1) {
-    super(parent, connectors, position, rotation, capacity);
+  constructor(parent: Instances<Instance<PoweredContainerEvents | Events>>, connectors: Connectors, position: Vector3, rotation: number, consumption: number, maxConnections: number = 1) {
+    super(parent, connectors, position, rotation);
     this.connections = [];
     this.consumption = consumption;
     this.enabled = true;
     this.maxConnections = maxConnections;
     this.powered = false;
     this.wires = [];
-  }
-
-  override canInput(item: Item) {
-    return this.enabled && super.canInput(item);
   }
 
   getWireConnector() {

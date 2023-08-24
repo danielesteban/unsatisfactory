@@ -27,7 +27,7 @@ import RoughnessMap from '../textures/rust_coarse_01_rough_1k.webp';
 // I'm just too lazy to care for switching to composition at this stage.
 export class Pole extends PoweredContainer {
   constructor(parent: Poles, connectors: Connectors, position: Vector3, rotation: number) {
-    super(parent, connectors, position, rotation, 0, 0, 4);
+    super(parent, connectors, position, rotation, 0, 4);
   }
 
   override getWireConnector() {

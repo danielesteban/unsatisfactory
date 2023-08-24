@@ -32,7 +32,7 @@ export class Generator extends PoweredContainer<
   private readonly power: number;
 
   constructor(parent: Generators, connectors: Connectors, position: Vector3, rotation: number, power: number) {
-    super(parent, connectors, position, rotation, 0, 0, 4);
+    super(parent, connectors, position, rotation, 0, 4);
     this.available = power;
     this.power = power;
   }
