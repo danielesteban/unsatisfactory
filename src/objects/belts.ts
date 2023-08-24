@@ -70,10 +70,15 @@ export class Belt extends Mesh {
     return this.enabled;
   }
 
+  hasOutput() {
+    const { slots } = this;
+    return slots[slots.length - 1].item !== Item.none;
+  }
+
   step() {
     const { from, to, slots } = this;
     const output = slots[slots.length - 1];
-    if (output.item !== Item.none && to.container.canInput(output.item)) {
+    if (output.item !== Item.none && to.container.canInput(output.item, this)) {
       to.container.input(output.item);
       output.item = Item.none;
       this.enabled = true;

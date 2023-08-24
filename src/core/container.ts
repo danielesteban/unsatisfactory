@@ -51,7 +51,7 @@ class Container<Events extends BaseEvent = BaseEvent> extends Instance<Events> {
     this.connectors = connectors;
   }
 
-  canInput(_item: Item) {
+  canInput(_item: Item, _belt: Belt) {
     return false;
   }
 

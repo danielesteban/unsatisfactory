@@ -19,19 +19,35 @@ import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.webp';
 import RoughnessMap from '../textures/rust_coarse_01_rough_1k.webp';
 
 export class Buffer extends Container {
-  private static readonly capacity: number = 10;
+  private static readonly capacity: number = 4;
   private readonly items: Item[];
+  private inputBelt: number;
   private outputBelt: number;
 
   constructor(parent: Buffers, connectors: Connectors, position: Vector3, rotation: number) {
     super(parent, connectors, position, rotation);
     this.items = [];
+    this.inputBelt = 0;
     this.outputBelt = 0;
   }
 
-  override canInput(_item: Item) {
-    const { items } = this;
-    return items.length < Buffer.capacity;
+  override canInput(_item: Item, belt: Belt) {
+    const { belts: { input: belts }, inputBelt, items } = this;
+    const canInput = items.length < Buffer.capacity;
+    if (belts.length <= 1) {
+      return canInput;
+    }
+    if (
+      inputBelt < belts.length
+      && belts[inputBelt] !== belt
+      && belts[inputBelt].hasOutput()
+    ) {
+      return false;
+    }
+    if (canInput) {
+      this.inputBelt = (belts.indexOf(belt) + 1) % belts.length;
+    }
+    return canInput;
   }
 
   override input(item: Item) {
@@ -49,11 +65,14 @@ export class Buffer extends Container {
     if (belts.length <= 1) {
       return this.getOutput();
     }
-    const output = (
+    if (
       outputBelt < belts.length
       && belts[outputBelt] !== belt
       && belts[outputBelt].isEnabled()
-    ) ? Item.none : this.getOutput();
+    ) {
+      return Item.none;
+    }
+    const output = this.getOutput();
     if (output !== Item.none) {
       this.outputBelt = (belts.indexOf(belt) + 1) % belts.length;
     }
@@ -62,9 +81,8 @@ export class Buffer extends Container {
 
   setItems(data: Item[]) {
     const { items } = this;
-    data.slice(0, Buffer.capacity - items.length).forEach((item) => (
-      items.push(item)
-    ));
+    items.length = 0;
+    items.push(...data.slice(0, Buffer.capacity));
   }
 
   override serialize() {

@@ -85,11 +85,14 @@ export class Miner extends PoweredContainer {
     if (belts.length <= 1) {
       return this.getOutput();
     }
-    const output = (
+    if (
       outputBelt < belts.length
       && belts[outputBelt] !== belt
       && belts[outputBelt].isEnabled()
-    ) ? Item.none : this.getOutput();
+    ) {
+      return Item.none;
+    }
+    const output = this.getOutput();
     if (output !== Item.none) {
       this.outputBelt = (belts.indexOf(belt) + 1) % belts.length;
     }
