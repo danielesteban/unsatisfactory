@@ -142,7 +142,7 @@ class Wires extends Group {
     });
     grid.generators.forEach((generator) => {
       let available = generator.getPower();
-      const visited = new Set<PoweredContainer>([generator]);
+      const visited = new WeakSet<PoweredContainer>([generator]);
       const flow = (connections: PoweredContainer[]) => (
         connections.forEach((container) => {
           if (visited.has(container)) {
