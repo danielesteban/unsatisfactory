@@ -19,7 +19,7 @@ import { Instance } from './core/instances';
 import { decode, deserialize, Objects } from './core/loader';
 import { Intersection } from './core/physics';
 import Viewport from './core/viewport';
-import Belts, { Belt } from './objects/belts';
+import Belts, { Belt, Connection } from './objects/belts';
 import Birds from './objects/birds';
 import Buffers, { Buffer } from './objects/buffers';
 import Combinators, { Combinator } from './objects/combinators';
@@ -203,7 +203,7 @@ const create = (intersection: Intersection) => {
         return 'tap';
       }
       belts.create(
-        connection as { container: Container; connector: number },
+        connection as Connection,
         { container: intersection.object, connector: intersection.connector }
       );
       return;
@@ -331,6 +331,29 @@ const handleInput = (
 const aux = new Vector3();
 const hover = (intersection?: Intersection) => {
   ghost.visible = false;
+  
+  if (
+    intersection?.object
+    && (brush === Brush.belt && intersection.connector !== false)
+  ) {
+    const connector = (intersection.object as Container).getConnector(intersection.connector);
+    if (connection.container) {
+      ghost.setBelt(connection as Connection, { container: intersection.object, connector: intersection.connector }, true);
+    } else {
+      ghost.setConnector(connector, true);
+    }
+    setTooltip('belt', intersection.object as Instance, connection.container);
+    return;
+  }
+
+  if (
+    brush === Brush.belt
+    && connection.container
+  ) {
+    ghost.setConnector(connection.container.getConnector(connection.connector), true);
+    setTooltip('belt', connection.container);
+    return;
+  }
 
   if (
     intersection
@@ -343,6 +366,15 @@ const hover = (intersection?: Intersection) => {
     const isValid = brush !== Brush.miner || intersection.object instanceof Deposit;
     ghost.setBrush(getBrushGeometry(brush), snap(intersection), rotation, isValid);
     setTooltip(isValid ? 'build' : 'invalid');
+    return;
+  }
+
+  if (
+    brush === Brush.none
+    && intersection?.object
+    && canInteract(intersection)
+  ) {
+    setTooltip('configure', intersection.object as Instance);
     return;
   }
 
@@ -360,41 +392,25 @@ const hover = (intersection?: Intersection) => {
   }
 
   if (
-    intersection?.object
-    && (
-      (brush === Brush.belt && intersection.connector !== false)
-      || (brush === Brush.wire && canWire(intersection))
-    )
-  ) {
-    if (brush === Brush.belt && intersection.connector !== false) {
-      const connector = (intersection.object as Container).getConnector(intersection.connector);
-      ghost.setConnector(connector, true);
-    }
-    setTooltip(brush === Brush.belt ? 'belt' : 'wire', intersection.object as Instance, connection.container);
-    return;
-  } else if (
-    (brush === Brush.belt || brush === Brush.wire) && connection.container
-  ) {
-    setTooltip(brush === Brush.belt ? 'belt' : 'wire', connection.container);
-    return;
-  }
-
-  if (
-    brush === Brush.none
-    && intersection?.object
-    && canInteract(intersection)
-  ) {
-    setTooltip('configure', intersection.object as Instance);
-    return;
-  }
-
-  if (
     brush === Brush.none
     && intersection?.object instanceof Deposit
     && intersection?.object.getWorldPosition(aux).distanceToSquared(viewport.camera.position) <= interactionRadiusSquared
   ) {
     setTooltip('yield', undefined, undefined, intersection?.object.getItem(), intersection?.object.getPurity());
     Achievements.complete(Achievement.deposit);
+    return;
+  }
+
+  if (
+    intersection?.object
+    && (brush === Brush.wire && canWire(intersection))
+  ) {
+    setTooltip('wire', intersection.object as Instance, connection.container);
+    return;
+  } else if (
+    brush === Brush.wire && connection.container
+  ) {
+    setTooltip('wire', connection.container);
     return;
   }
 

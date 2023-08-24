@@ -1,6 +1,8 @@
 import RAPIER from '@dimforge/rapier3d-compat';
 import {
+  BufferGeometry,
   CubicBezierCurve3,
+  Curve,
   ExtrudeGeometry,
   Group,
   Material,
@@ -21,70 +23,30 @@ import DiffuseMap from '../textures/green_metal_rust_diff_1k.webp';
 import NormalMap from '../textures/green_metal_rust_nor_gl_1k.webp';
 import RoughnessMap from '../textures/green_metal_rust_rough_1k.webp';
 
-type Connector = {
+export type Connection = {
   container: Container;
   connector: number;
 };
 
 export class Belt extends Mesh {
-  public readonly from: Connector;
-  public readonly to: Connector;
+  public readonly from: Connection;
+  public readonly to: Connection;
 
   private enabled: boolean;
   private readonly items: Items;
   private readonly slots: { item: Item; locked: boolean; }[];
 
-  private static readonly offset: Vector3 = new Vector3(0, -0.5, 0);
-  constructor(material: Material, shape: Shape, from: Connector, to: Connector) {
-    const fromConnector = from.container.getConnector(from.connector);
-    const fromDirection = fromConnector.getWorldDirection(new Vector3());
-    const fromPosition = fromConnector
-      .getWorldPosition(new Vector3())
-      .addScaledVector(fromDirection, -0.5)
-      .add(Belt.offset);
-    const toConnector = to.container.getConnector(to.connector);
-    const toDirection = toConnector.getWorldDirection(new Vector3());
-    const toPosition = toConnector
-      .getWorldPosition(new Vector3())
-      .addScaledVector(toDirection, -0.5)
-      .add(Belt.offset);
-    const offset = fromPosition.distanceTo(toPosition) * 0.3;
-    const path = new CubicBezierCurve3(
-      fromPosition,
-      fromPosition.clone().addScaledVector(fromDirection, offset),
-      toPosition.clone().addScaledVector(toDirection, offset),
-      toPosition
-    );
-    {
-      // @dani @hack
-      // this is prolly wrong but it seems to work at preventing weird horizontal extrusions
-      const { normals, binormals } = path.computeFrenetFrames(1, false);
-      if (Math.abs(normals[0].dot(Object3D.DEFAULT_UP)) < Math.abs(binormals[0].dot(Object3D.DEFAULT_UP))) {
-        const flipBinormals = binormals[0].dot(Object3D.DEFAULT_UP) > 0;
-        const compute = path.computeFrenetFrames.bind(path);
-        path.computeFrenetFrames = (steps: number, closed: boolean) => {
-          const { normals, binormals, tangents } = compute(steps, closed);
-          if (flipBinormals) {
-            binormals.forEach((n) => n.negate());
-          } else {
-            normals.forEach((n) => n.negate());
-          }
-          return { normals: binormals, binormals: normals, tangents };
-        };
-      }
-    }
-    const segments = Math.ceil(path.getLength() / 0.1);
-    const geometry = mergeVertices(new ExtrudeGeometry(shape, { extrudePath: path, steps: segments }));
-    super(geometry, material);
+  constructor({ geometry, path }: { geometry: BufferGeometry, path: Curve<Vector3> }, material: Material, from: Connection, to: Connection) {
+    super(mergeVertices(geometry), material);
     this.castShadow = this.receiveShadow = true;
     this.updateMatrixWorld();
     this.matrixAutoUpdate = false;
-    this.from = { container: from.container, connector: from.connector };
-    this.to = { container: to.container, connector: to.connector };
     this.enabled = true;
     this.slots = Array.from({ length: Math.ceil(path.getLength() / 0.5) }, () => ({ item: Item.none, locked: false }));
     this.items = new Items(this.slots.length, path);
     this.add(this.items);
+    this.from = { container: from.container, connector: from.connector };
+    this.to = { container: to.container, connector: to.connector };
     from.container.addBelt(this, 'output');
     to.container.addBelt(this, 'input');
   }
@@ -157,6 +119,50 @@ export class Belt extends Mesh {
 }
 
 class Belts extends Group {
+  private static readonly offset: Vector3 = new Vector3(0, -0.5, 0);
+  static getGeometry(from: Connection, to: Connection) {
+    const fromConnector = from.container.getConnector(from.connector);
+    const fromDirection = fromConnector.getWorldDirection(new Vector3());
+    const fromPosition = fromConnector
+      .getWorldPosition(new Vector3())
+      .addScaledVector(fromDirection, -0.5)
+      .add(Belts.offset);
+    const toConnector = to.container.getConnector(to.connector);
+    const toDirection = toConnector.getWorldDirection(new Vector3());
+    const toPosition = toConnector
+      .getWorldPosition(new Vector3())
+      .addScaledVector(toDirection, -0.5)
+      .add(Belts.offset);
+    const offset = fromPosition.distanceTo(toPosition) * 0.3;
+    const path = new CubicBezierCurve3(
+      fromPosition,
+      fromPosition.clone().addScaledVector(fromDirection, offset),
+      toPosition.clone().addScaledVector(toDirection, offset),
+      toPosition
+    );
+    {
+      // @dani @hack
+      // this is prolly wrong but it seems to work at preventing weird horizontal extrusions
+      const { normals, binormals } = path.computeFrenetFrames(1, false);
+      if (Math.abs(normals[0].dot(Object3D.DEFAULT_UP)) < Math.abs(binormals[0].dot(Object3D.DEFAULT_UP))) {
+        const flipBinormals = binormals[0].dot(Object3D.DEFAULT_UP) > 0;
+        const compute = path.computeFrenetFrames.bind(path);
+        path.computeFrenetFrames = (steps: number, closed: boolean) => {
+          const { normals, binormals, tangents } = compute(steps, closed);
+          if (flipBinormals) {
+            binormals.forEach((n) => n.negate());
+          } else {
+            normals.forEach((n) => n.negate());
+          }
+          return { normals: binormals, binormals: normals, tangents };
+        };
+      }
+    }
+    const segments = Math.ceil(path.getLength() / 0.1);
+    const geometry = new ExtrudeGeometry(Belts.getShape(), { extrudePath: path, steps: segments });
+    return { geometry, path };
+  };
+
   private static material: MeshStandardMaterial | undefined;
   static getMaterial() {
     if (!Belts.material) {
@@ -209,9 +215,9 @@ class Belts extends Group {
     this.timer = 0;
   }
 
-  create(from: Connector, to: Connector) {
+  create(from: Connection, to: Connection) {
     const { physics } = this;
-    const belt = new Belt(Belts.getMaterial(), Belts.getShape(), from, to);
+    const belt = new Belt(Belts.getGeometry(from, to), Belts.getMaterial(), from, to);
     this.add(belt);
     physics.addBody(
       belt,

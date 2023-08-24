@@ -5,6 +5,7 @@ import {
   Shader,
   Vector3,
 } from 'three';
+import Belts, { Connection } from '../objects/belts';
 
 class Ghost extends Mesh {
   private static material: MeshStandardMaterial | undefined;
@@ -37,24 +38,43 @@ class Ghost extends Mesh {
     return Ghost.material;
   }
 
+  private beltGeometry?: BufferGeometry;
+
   constructor() {
     super(undefined, Ghost.getMaterial());
     this.matrixAutoUpdate = false;
     this.visible = false;
   }
 
+  setBelt(from: Connection, to: Connection, isValid: boolean) {
+    const geometry = Belts.getGeometry(from, to).geometry;
+    this.setGeometry(geometry);
+    this.beltGeometry = geometry;
+    this.position.set(0, 0, 0);
+    this.rotation.set(0, 0, 0);
+    this.update(isValid);
+  }
+  
   setBrush(geometry: BufferGeometry, position: Vector3, rotation: number, isValid: boolean) {
-    this.geometry = geometry;
+    this.setGeometry(geometry);
     this.position.copy(position);
     this.rotation.y = rotation;
     this.update(isValid);
   }
 
   setConnector(connector: Mesh, isValid: boolean) {
-    this.geometry = connector.geometry;
+    this.setGeometry(connector.geometry);
     connector.getWorldPosition(this.position);
     connector.getWorldQuaternion(this.quaternion);
     this.update(isValid);
+  }
+
+  private setGeometry(geometry: BufferGeometry) {
+    if (this.beltGeometry) {
+      this.beltGeometry.dispose();
+      this.beltGeometry = undefined;
+    }
+    this.geometry = geometry;
   }
 
   private update(isValid: boolean) {
