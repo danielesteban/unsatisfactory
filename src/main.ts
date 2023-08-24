@@ -21,20 +21,20 @@ import Viewport from './core/viewport';
 import Belts, { Belt, Connection } from './objects/belts';
 import Birds from './objects/birds';
 import Buffers, { Buffer } from './objects/buffers';
-import Combinators, { Combinator } from './objects/combinators';
+import Combinators from './objects/combinators';
 import Deposit from './objects/deposit';
-import Fabricators, { Fabricator } from './objects/fabricators';
+import Fabricators from './objects/fabricators';
 import Foundations from './objects/foundations';
 import Generators, { Generator } from './objects/generators';
 import Ghost from './objects/ghost';
 import Grass from './objects/grass';
 import Items from './objects/items';
-import Miners, { Miner } from './objects/miners';
+import Miners from './objects/miners';
 import Pillars from './objects/pillars';
 import Poles, { Pole } from './objects/poles';
 import Ramps from './objects/ramps';
-import Sinks, { Sink } from './objects/sinks';
-import Smelters, { Smelter } from './objects/smelters';
+import Sinks from './objects/sinks';
+import Smelters from './objects/smelters';
 import Terrain from './objects/terrain';
 import Walls from './objects/walls';
 import Wires, { Wire } from './objects/wires';
@@ -134,55 +134,21 @@ const connection: { container: Container | PoweredContainer | undefined; connect
   connector: 0,
 };
 
-const canBelt = (intersection: Intersection) => (
-  (
-    intersection.object instanceof Buffer
-    || intersection.object instanceof Combinator
-    || intersection.object instanceof Fabricator
-    || intersection.object instanceof Miner
-    || intersection.object instanceof Sink
-    || intersection.object instanceof Smelter
-  )
-  // @dani @incomplete
-  // Once Container.belts starts having info about the new connectors,
-  // A check should happen here to enforce a single belt per connector.
-  && (!connection.container || connection.container !== intersection.object)
+type IntersectionWithConnector = { connector: number | false; } & Intersection;
+
+const canInteract = (intersection: Intersection) => (
+  intersection?.object instanceof Container
+  && !(intersection.object instanceof Buffer)
+  && !(intersection.object instanceof Pole)
+  && intersection.object.position.distanceToSquared(viewport.camera.position) <= interactionRadiusSquared
 );
 
-const canInteract = (intersection: Intersection) => {
-  if (
-    !(
-      intersection.object instanceof Combinator
-      || intersection.object instanceof Fabricator
-      || intersection.object instanceof Generator
-      || intersection.object instanceof Miner
-      || intersection.object instanceof Sink
-      || intersection.object instanceof Smelter
-    )
-  ) {
-    return false;
-  }
-  return intersection.object.position.distanceToSquared(viewport.camera.position) <= interactionRadiusSquared;
-};
+const canWire = (intersection: Intersection) => (
+  intersection?.object instanceof PoweredContainer
+  && intersection.object.canWire(connection.container as PoweredContainer)
+);
 
-const canWire = (intersection: Intersection) => {
-  if (
-    !(
-      intersection.object instanceof Combinator
-      || intersection.object instanceof Fabricator
-      || intersection.object instanceof Generator
-      || intersection.object instanceof Miner
-      || intersection.object instanceof Pole
-      || intersection.object instanceof Sink
-      || intersection.object instanceof Smelter
-    )
-  ) {
-    return false;
-  }
-  return intersection.object.canWire(connection.container as PoweredContainer);
-};
-
-const create = (intersection: Intersection) => {
+const create = (intersection: IntersectionWithConnector) => {
   if (
     brush === Brush.none
     || brush === Brush.dismantle
@@ -294,7 +260,7 @@ const remove = (intersection: Intersection) => {
 
 const handleInput = (
   { primary, secondary, tertiary, build, dismantle, interact }: Buttons,
-  intersection?: Intersection
+  intersection?: IntersectionWithConnector
 ) => {
   const hasConnection = connection.container !== undefined;
   if (primary && intersection && brush !== Brush.none && brush !== Brush.dismantle) {
@@ -328,7 +294,7 @@ const handleInput = (
 };
 
 const aux = new Vector3();
-const hover = (intersection?: Intersection) => {
+const hover = (intersection?: IntersectionWithConnector) => {
   ghost.visible = false;
   
   if (
@@ -421,8 +387,24 @@ const hover = (intersection?: Intersection) => {
   setTooltip(undefined);
 };
 
+const getConnector = (intersection: Intersection) => {
+  if (
+    brush !== Brush.belt
+    || !(intersection?.object instanceof Container)
+    || intersection.object instanceof Generator
+    || intersection.object instanceof Pole
+  ) {
+    return false;
+  }
+  const connector = intersection.object.intersectConnector(raycaster, intersection.distance);
+  if (connector === false || !intersection.object.canBelt(connector, connection.container as Container)) {
+    return false;
+  }
+  return connector;
+};
+
 const center = new Vector2();
-const intersection: Intersection = {
+const intersection: IntersectionWithConnector = {
   connector: false,
   distance: 0,
   normal: new Vector3(),
@@ -449,12 +431,7 @@ const animate = (buttons: Buttons, delta: number) => {
     intersection.point.copy(vertexHit.point);
     hit = intersection;
   }
-  intersection.connector = (
-    brush === Brush.belt
-    && intersection?.object
-    && canBelt(intersection)
-    && intersection.object.intersectConnector(raycaster, intersection.distance)
-  );
+  intersection.connector = getConnector(intersection);
   hover(hit);
   if (buttons.primary || buttons.secondary || buttons.tertiary || buttons.build || buttons.dismantle || buttons.interact) {
     handleInput(buttons, hit);

@@ -38,19 +38,14 @@ export class Connectors extends Group {
 }
 
 class Container<Events extends BaseEvent = BaseEvent> extends Instance<Events> {
-  // @dani @incomplete
-  // Merge this legacy belts business together with the new connectors
-  // This will finally prevent connecting several belts to the same connector
-  // And other stuff like setting a connector to be input/output only.
-  protected readonly connectors: Connectors;
   protected readonly belts: {
     input: Belt[];
     output: Belt[];
   };
-  protected outputBelt: number;
-
   protected readonly capacity: number;
+  protected readonly connectors: Connectors;
   protected readonly items: Item[];
+  protected outputBelt: number;
 
   constructor(parent: Instances<Instance<Events>>, connectors: Connectors, position: Vector3, rotation: number, capacity: number) {
     super(parent, position, rotation);
@@ -118,6 +113,17 @@ class Container<Events extends BaseEvent = BaseEvent> extends Instance<Events> {
 
   getBelts() {
     return this.belts;
+  }
+
+  canBelt(connector: number, container?: Container): boolean {
+    const { belts } = this;
+    return (
+      container !== this
+      && !(
+        belts.input.find(({ to }) => to.connector === connector)
+        || belts.output.find(({ from }) => from.connector === connector)
+      )
+    );
   }
 
   addBelt(belt: Belt, type: 'input' | 'output') {
