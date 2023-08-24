@@ -137,14 +137,14 @@ const connection: { container: Container | PoweredContainer | undefined; connect
 type IntersectionWithConnector = { connector: number | false; } & Intersection;
 
 const canInteract = (intersection: Intersection) => (
-  intersection?.object instanceof Container
+  intersection.object instanceof Container
   && !(intersection.object instanceof Buffer)
   && !(intersection.object instanceof Pole)
   && intersection.object.position.distanceToSquared(viewport.camera.position) <= interactionRadiusSquared
 );
 
 const canWire = (intersection: Intersection) => (
-  intersection?.object instanceof PoweredContainer
+  intersection.object instanceof PoweredContainer
   && intersection.object.canWire(connection.container as PoweredContainer)
 );
 
@@ -343,8 +343,8 @@ const hover = (intersection?: IntersectionWithConnector) => {
   }
 
   if (
-    intersection?.object
-    && brush === Brush.dismantle
+    brush === Brush.dismantle
+    && intersection?.object
     && (
       intersection.object instanceof Instance
       || intersection.object instanceof Belt
@@ -358,9 +358,9 @@ const hover = (intersection?: IntersectionWithConnector) => {
   if (
     brush === Brush.none
     && intersection?.object instanceof Deposit
-    && intersection?.object.getWorldPosition(aux).distanceToSquared(viewport.camera.position) <= interactionRadiusSquared
+    && intersection.object.getWorldPosition(aux).distanceToSquared(viewport.camera.position) <= interactionRadiusSquared
   ) {
-    setTooltip('yield', undefined, undefined, intersection?.object.getItem(), intersection?.object.getPurity());
+    setTooltip('yield', undefined, undefined, intersection.object.getItem(), intersection.object.getPurity());
     Achievements.complete(Achievement.deposit);
     return;
   }
@@ -390,7 +390,7 @@ const hover = (intersection?: IntersectionWithConnector) => {
 const getConnector = (intersection: Intersection) => {
   if (
     brush !== Brush.belt
-    || !(intersection?.object instanceof Container)
+    || !(intersection.object instanceof Container)
     || intersection.object instanceof Generator
     || intersection.object instanceof Pole
   ) {
@@ -431,7 +431,9 @@ const animate = (buttons: Buttons, delta: number) => {
     intersection.point.copy(vertexHit.point);
     hit = intersection;
   }
-  intersection.connector = getConnector(intersection);
+  if (hit) {
+    hit.connector = getConnector(hit);
+  }
   hover(hit);
   if (buttons.primary || buttons.secondary || buttons.tertiary || buttons.build || buttons.dismantle || buttons.interact) {
     handleInput(buttons, hit);
