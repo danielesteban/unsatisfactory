@@ -118,11 +118,11 @@ class Container<Events extends BaseEvent = BaseEvent> extends Instance<Events> {
 
 type PoweredContainerEvents = (
   {
-    type: "enabled";
+    type: 'enabled';
     status: boolean;
   }
   | {
-    type: "powered";
+    type: 'powered';
     status: boolean;
   }
 );

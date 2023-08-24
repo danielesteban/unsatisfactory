@@ -134,7 +134,10 @@ const connection: { container: Container | PoweredContainer | undefined; connect
   connector: 0,
 };
 
-type Intersection = { connector: number | false; } & PhysicsIntersection;
+type Intersection = Omit<PhysicsIntersection, 'object'> & {
+  connector: number | false;
+  object?: Instance | Belt | Wire
+};
 
 const intersection: Intersection = {
   connector: false,
@@ -170,15 +173,15 @@ const create = (intersection: Intersection) => {
         return 'nope';
       }
       if (!connection.container) {
-        connection.container = intersection.object;
+        connection.container = intersection.object as Container;
         connection.connector = intersection.connector;
         return 'tap';
       }
       belts.create(
         connection as Connection,
-        { container: intersection.object, connector: intersection.connector }
+        { container: intersection.object as Container, connector: intersection.connector }
       );
-      return;
+      return 'tap';
     case Brush.buffer:
       buffers.create(snap(intersection), rotation);
       return;
@@ -421,7 +424,7 @@ const animate = (buttons: Buttons, delta: number) => {
   // @dani @incomplete
   // wires don't have physics colliders implemented yet,
   // so.. keep using the threejs raycaster for those and merge them in.
-  const vertexHit = (brush === Brush.dismantle || buttons.tertiary) && raycaster.intersectObjects(wires.children, false)[0];
+  const vertexHit = (brush === Brush.dismantle || buttons.tertiary) && raycaster.intersectObjects<Wire>(wires.children, false)[0];
   const physicsHit = viewport.physics.castRay(intersection, raycaster.ray.origin, raycaster.ray.direction, raycaster.far);
   let hit;
   if (physicsHit && (!vertexHit || intersection.distance < vertexHit.distance)) {
