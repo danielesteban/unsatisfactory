@@ -16,7 +16,7 @@ import Container, { PoweredContainer } from './core/container';
 import { Buttons } from './core/controls';
 import { Instance } from './core/instances';
 import { decode, deserialize, Objects } from './core/loader';
-import { Intersection } from './core/physics';
+import { Intersection as PhysicsIntersection } from './core/physics';
 import Viewport from './core/viewport';
 import Belts, { Belt, Connection } from './objects/belts';
 import Birds from './objects/birds';
@@ -134,7 +134,14 @@ const connection: { container: Container | PoweredContainer | undefined; connect
   connector: 0,
 };
 
-type IntersectionWithConnector = { connector: number | false; } & Intersection;
+type Intersection = { connector: number | false; } & PhysicsIntersection;
+
+const intersection: Intersection = {
+  connector: false,
+  distance: 0,
+  normal: new Vector3(),
+  point: new Vector3(),
+};
 
 const canInteract = (intersection: Intersection) => (
   intersection.object instanceof Container
@@ -148,7 +155,7 @@ const canWire = (intersection: Intersection) => (
   && intersection.object.canWire(connection.container as PoweredContainer)
 );
 
-const create = (intersection: IntersectionWithConnector) => {
+const create = (intersection: Intersection) => {
   if (
     brush === Brush.none
     || brush === Brush.dismantle
@@ -260,7 +267,7 @@ const remove = (intersection: Intersection) => {
 
 const handleInput = (
   { primary, secondary, tertiary, build, dismantle, interact }: Buttons,
-  intersection?: IntersectionWithConnector
+  intersection?: Intersection
 ) => {
   const hasConnection = connection.container !== undefined;
   if (primary && intersection && brush !== Brush.none && brush !== Brush.dismantle) {
@@ -294,7 +301,7 @@ const handleInput = (
 };
 
 const aux = new Vector3();
-const hover = (intersection?: IntersectionWithConnector) => {
+const hover = (intersection?: Intersection) => {
   ghost.visible = false;
   
   if (
@@ -387,7 +394,7 @@ const hover = (intersection?: IntersectionWithConnector) => {
   setTooltip(undefined);
 };
 
-const getConnector = (intersection: Intersection) => {
+const getConnector = (intersection: Intersection, raycaster: Raycaster) => {
   if (
     brush !== Brush.belt
     || !(intersection.object instanceof Container)
@@ -404,12 +411,6 @@ const getConnector = (intersection: Intersection) => {
 };
 
 const center = new Vector2();
-const intersection: IntersectionWithConnector = {
-  connector: false,
-  distance: 0,
-  normal: new Vector3(),
-  point: new Vector3(),
-};
 const raycaster = new Raycaster();
 raycaster.far = viewport.camera.far;
 const animate = (buttons: Buttons, delta: number) => {
@@ -432,7 +433,7 @@ const animate = (buttons: Buttons, delta: number) => {
     hit = intersection;
   }
   if (hit) {
-    hit.connector = getConnector(hit);
+    hit.connector = getConnector(hit, raycaster);
   }
   hover(hit);
   if (buttons.primary || buttons.secondary || buttons.tertiary || buttons.build || buttons.dismantle || buttons.interact) {
