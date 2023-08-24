@@ -261,10 +261,10 @@ const create = (intersection: Intersection) => {
         return 'nope';
       }
       if (!connection.container) {
-        connection.container = intersection.object;
+        connection.container = intersection.object as PoweredContainer;
         return 'tap';
       }
-      wires.create(connection.container as PoweredContainer, intersection.object);
+      wires.create(connection.container as PoweredContainer, intersection.object as PoweredContainer);
       return 'wire';
   }
 };
@@ -336,11 +336,10 @@ const hover = (intersection?: Intersection) => {
     intersection?.object
     && (brush === Brush.belt && intersection.connector !== false)
   ) {
-    const connector = (intersection.object as Container).getConnector(intersection.connector);
     if (connection.container) {
-      ghost.setBelt(connection as Connection, { container: intersection.object, connector: intersection.connector }, true);
+      ghost.setBelt(connection as Connection, { container: intersection.object as Container, connector: intersection.connector }, true);
     } else {
-      ghost.setConnector(connector, true);
+      ghost.setConnector((intersection.object as Container).getConnector(intersection.connector), true);
     }
     setTooltip('belt', intersection.object as Instance, connection.container);
     return;
@@ -405,10 +404,16 @@ const hover = (intersection?: Intersection) => {
     intersection?.object
     && (brush === Brush.wire && canWire(intersection))
   ) {
+    if (connection.container) {
+      ghost.setWire(connection.container as PoweredContainer, intersection.object as PoweredContainer, true);
+    }
     setTooltip('wire', intersection.object as Instance, connection.container);
     return;
-  } else if (
-    brush === Brush.wire && connection.container
+  }
+
+  if (
+    brush === Brush.wire
+    && connection.container
   ) {
     setTooltip('wire', connection.container);
     return;

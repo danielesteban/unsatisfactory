@@ -1,4 +1,5 @@
 import {
+  BufferGeometry,
   CubicBezierCurve3,
   Group,
   Material,
@@ -13,7 +14,27 @@ export class Wire extends Mesh {
   public readonly from: PoweredContainer;
   public readonly to: PoweredContainer;
 
-  constructor(material: Material, from: PoweredContainer, to: PoweredContainer) {
+  constructor(geometry: BufferGeometry, material: Material, from: PoweredContainer, to: PoweredContainer) {
+    super(geometry, material);
+    this.castShadow = this.receiveShadow = true;
+    this.updateMatrixWorld();
+    this.matrixAutoUpdate = false;
+    this.from = from;
+    this.to = to;
+    from.addWire(this);
+    to.addWire(this);
+  }
+
+  dispose() {
+    const { geometry, from, to } = this;
+    geometry.dispose();
+    from.removeWire(this);
+    to.removeWire(this);
+  }
+}
+
+class Wires extends Group {
+  static getGeometry(from: PoweredContainer, to: PoweredContainer) {
     const fromConnector = from.getWireConnector();
     const toConnector = to.getWireConnector();
     const direction = toConnector.clone().sub(fromConnector);
@@ -36,26 +57,9 @@ export class Wire extends Mesh {
       toConnector
     );
     const segments = Math.ceil(path.getLength() / 0.1);
-    const geometry = new TubeGeometry(path, segments, 0.0625, 4, false);
-    super(geometry, material);
-    this.castShadow = this.receiveShadow = true;
-    this.updateMatrixWorld();
-    this.matrixAutoUpdate = false;
-    this.from = from;
-    this.to = to;
-    from.addWire(this);
-    to.addWire(this);
+    return new TubeGeometry(path, segments, 0.0625, 4, false);
   }
 
-  dispose() {
-    const { geometry, from, to } = this;
-    geometry.dispose();
-    from.removeWire(this);
-    to.removeWire(this);
-  }
-}
-
-class Wires extends Group {
   private static material: MeshStandardMaterial | undefined;
   static getMaterial() {
     if (!Wires.material) {
@@ -96,7 +100,7 @@ class Wires extends Group {
         grid.containers.push(container);
       }
     });
-    const wire = new Wire(Wires.getMaterial(), from, to);
+    const wire = new Wire(Wires.getGeometry(from, to), Wires.getMaterial(), from, to);
     this.add(wire);
     this.updatePower();
     return wire;
