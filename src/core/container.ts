@@ -130,6 +130,9 @@ type PoweredContainerEvents = (
 export class PoweredContainer<Events extends BaseEvent = BaseEvent> extends Container<
   PoweredContainerEvents | Events
 > {
+  // @dani @incomplete
+  // This is now confusing AF because there's also a connectors on Container.
+  // Maybe rename to electricalConnections or wiring?
   protected connections: PoweredContainer[];
   protected readonly consumption: number;
   protected enabled: boolean;
