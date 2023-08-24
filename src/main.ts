@@ -396,7 +396,7 @@ const getConnector = (intersection: Intersection) => {
   ) {
     return false;
   }
-  const connector = intersection.object.intersectConnector(raycaster, intersection.distance);
+  const connector = intersection.object.intersectConnector(raycaster, intersection.distance + 0.25);
   if (connector === false || !intersection.object.canBelt(connector, connection.container as Container)) {
     return false;
   }

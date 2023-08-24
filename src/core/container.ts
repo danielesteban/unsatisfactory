@@ -18,7 +18,8 @@ export class Connectors extends Group {
 
   static getDefaultGeometry() {
     if (!Connectors.defaultGeometry) {
-      Connectors.defaultGeometry = new BoxGeometry(1.5, 1.5, 0.5);
+      Connectors.defaultGeometry = new BoxGeometry(1.5, 1.5, 0.25);
+      Connectors.defaultGeometry.translate(0, 0, -0.125);
       Connectors.defaultGeometry.computeBoundingSphere();
     }
     return Connectors.defaultGeometry;
