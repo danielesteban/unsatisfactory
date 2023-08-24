@@ -32,16 +32,16 @@ class Foundations extends Instances<Foundation> {
     if (!Foundations.geometry) {
       Foundations.geometry = new BoxGeometry(4, 1, 4);
       Foundations.geometry.computeBoundingSphere();
-      const uv = Foundations.geometry.getAttribute('uv') as BufferAttribute;
-      const index = Foundations.geometry.getIndex()!;
       const aux = new Vector2();
-      const map = new Map();
+      const index = Foundations.geometry.getIndex()!;
+      const set = new Set();
+      const uv = Foundations.geometry.getAttribute('uv') as BufferAttribute;
       Foundations.geometry.groups.forEach(({ start, count }, group) => {
         if ([0, 1, 4, 5].includes(group)) {
           for (let i = start; i < start + count; i++) {
             const v = index.getX(i);
-            if (!map.has(v)) {
-              map.set(v, true);
+            if (!set.has(v)) {
+              set.add(v);
               aux.fromBufferAttribute(uv, v);
               uv.setXY(v, aux.x, aux.y / 4);
             }

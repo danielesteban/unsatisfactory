@@ -41,14 +41,14 @@ class Ramps extends Instances<Ramp> {
       const base = new Brush(new BoxGeometry(4, 2, 4));
       const index = base.geometry.getIndex()!;
       {
-        const map = new Map();
+        const set = new Set();
         const uv = base.geometry.getAttribute('uv') as BufferAttribute;
         base.geometry.groups.forEach(({ start, count }, group) => {
           if ([0, 1, 4, 5].includes(group)) {
             for (let i = start; i < start + count; i++) {
               const v = index.getX(i);
-              if (!map.has(v)) {
-                map.set(v, true);
+              if (!set.has(v)) {
+                set.add(v);
                 aux.fromBufferAttribute(uv, v);
                 uv.setXY(v, aux.x, aux.y / 2);
               }
@@ -59,14 +59,14 @@ class Ramps extends Instances<Ramp> {
       const s = Math.sqrt(4*4+2*2)/4;
       const carving = new Brush(new BoxGeometry(4 * s, 2, 4 * s));
       {
-        const map = new Map();
+        const set = new Set();
         const uv = carving.geometry.getAttribute('uv') as BufferAttribute;
         carving.geometry.groups.forEach(({ start, count }, group) => {
           const isSide = [0, 1, 4, 5].includes(group);
           for (let i = start; i < start + count; i++) {
             const v = index.getX(i);
-            if (!map.has(v)) {
-              map.set(v, true);
+            if (!set.has(v)) {
+              set.add(v);
               aux.fromBufferAttribute(uv, v);
               if (isSide) {
                 uv.setXY(v, aux.x, aux.y / 2);

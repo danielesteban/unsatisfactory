@@ -142,13 +142,13 @@ class Wires extends Group {
     });
     grid.generators.forEach((generator) => {
       let available = generator.getPower();
-      const visited = new Map();
+      const visited = new Set<PoweredContainer>([generator]);
       const flow = (connections: PoweredContainer[]) => (
         connections.forEach((container) => {
-          if (container instanceof Generator || visited.has(container)) {
+          if (visited.has(container)) {
             return;
           }
-          visited.set(container, true);
+          visited.add(container);
           if (container.isEnabled() && !container.isPowered()) {
             const required = container.getConsumption();
             if (required <= available) {

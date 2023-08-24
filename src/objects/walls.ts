@@ -32,16 +32,16 @@ class Walls extends Instances<Wall> {
     if (!Walls.geometry) {
       const geometry = new BoxGeometry(4, 4, 0.5);
       geometry.computeBoundingSphere();
-      const uv = geometry.getAttribute('uv') as BufferAttribute;
-      const index = geometry.getIndex()!;
       const aux = new Vector2();
-      const map = new Map();
+      const index = geometry.getIndex()!;
+      const set = new Set();
+      const uv = geometry.getAttribute('uv') as BufferAttribute;
       geometry.groups.forEach(({ start, count }, group) => {
         if ([0, 1, 2, 3].includes(group)) {
           for (let i = start; i < start + count; i++) {
             const v = index.getX(i);
-            if (!map.has(v)) {
-              map.set(v, true);
+            if (!set.has(v)) {
+              set.add(v);
               aux.fromBufferAttribute(uv, v);
               if ([0, 1].includes(group)) {
                 uv.setXY(v, aux.x / 8, aux.y);
