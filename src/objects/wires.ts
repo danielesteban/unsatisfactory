@@ -151,7 +151,7 @@ class Wires extends Group {
           visited.add(container);
           if (container.isEnabled() && !container.isPowered()) {
             const required = container.getConsumption();
-            if (required <= available) {
+            if (required && required <= available) {
               available -= required;
               container.setPowered(true);
             }
