@@ -20,8 +20,9 @@ import Walls from '../objects/walls';
 import Wires, { Wire } from '../objects/wires';
 import Achievements, { Achievement } from '../ui/stores/achievements';
 import Hotbar from '../ui/stores/hotbar';
+import Points from '../ui/stores/points';
 
-const version = 12;
+const version = 13;
 
 export type Objects = {
   belts: Belts;
@@ -55,12 +56,13 @@ type Serialized = {
   pillars: [SerializedPosition, number][];
   poles: [SerializedPosition, number][];
   ramps: [SerializedPosition, number][];
-  sinks: [SerializedPosition, number, SerializedEnabled, number][];
+  sinks: [SerializedPosition, number, SerializedEnabled][];
   smelters: [SerializedPosition, number, SerializedEnabled, number][];
   walls: [SerializedPosition, number][];
   wires: [SerializedContainer, SerializedContainer][];
   achievements: Achievement[];
   hotbar: Brush[];
+  points: number;
   view: [SerializedPosition, [number, number, number]];
   version: number;
 };
@@ -138,6 +140,7 @@ export const serialize = (
     ]) as Serialized['wires'],
     achievements: Achievements.serialize(),
     hotbar: Hotbar.serialize(),
+    points: Points.serialize(),
     view: [camera.position.toArray(), camera.rotation.toArray().slice(0, 3)] as Serialized['view'],
     version,
   };
@@ -200,13 +203,10 @@ export const deserialize = (
     serialized.poles.map(([position, rotation]) => (
       poles.create(aux.fromArray(position), rotation)
     )),
-    serialized.sinks.map(([position, rotation, enabled, points]) => {
+    serialized.sinks.map(([position, rotation, enabled]) => {
       const sink = sinks.create(aux.fromArray(position), rotation)
       if (!enabled) {
         sink.setEnabled(false);
-      }
-      if (points > 0) {
-        sink.setPoints(points);
       }
       return sink;
     }),
@@ -250,6 +250,7 @@ export const deserialize = (
   ));
   Achievements.deserialize(serialized.achievements);
   Hotbar.deserialize(serialized.hotbar);
+  Points.deserialize(serialized.points);
   camera.position.fromArray(serialized.view[0]);
   camera.userData.targetPosition.copy(camera.position);
   camera.rotation.fromArray(serialized.view[1]);
@@ -478,6 +479,15 @@ const migrations: Record<number, (serialized: Serialized) => Serialized> = {
         remapConnector(to, toDirection as any),
         items,
       ])),
+    };
+  },
+  [12]: (serialized: Serialized) => {
+    const points = serialized.sinks.reduce<number>((points, sink) => {
+      return points + ((sink as any)[3] || 0);
+    }, 0);
+    return {
+      ...serialized,
+      points,
     };
   }
 };

@@ -17,7 +17,7 @@ import { loadTexture } from '../textures';
 import DiffuseMap from '../textures/rust_coarse_01_diff_1k.webp';
 import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.webp';
 import RoughnessMap from '../textures/rust_coarse_01_rough_1k.webp';
-import Achievements, { Achievement } from '../ui/stores/achievements';
+import Points from '../ui/stores/points';
 
 export class Sink extends PoweredContainer<
   {
@@ -25,11 +25,9 @@ export class Sink extends PoweredContainer<
     count: number;
   }
 > {
-  private points: number;
 
   constructor(parent: Sinks, connectors: Connectors, position: Vector3, rotation: number) {
     super(parent, connectors, position, rotation, 100);
-    this.points = 0;
   }
 
   override canInput() {
@@ -37,27 +35,7 @@ export class Sink extends PoweredContainer<
   }
 
   override input(item: Item) {
-    this.setPoints(
-      this.points + (Sinking[item] || 1)
-    );
-    Achievements.complete(Achievement.points);
-  }
-
-  getPoints() {
-    return this.points;
-  }
-
-  setPoints(count: number) {
-    this.points = count;
-    this.dispatchEvent({ type: 'points', count });
-  }
-
-  override serialize() {
-    const { points } = this;
-    return [
-      ...super.serialize(),
-      points,
-    ];
+    Points.increment((Sinking[item] || 1));
   }
 }
 

@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { onDestroy } from 'svelte';
   import { Sink } from '../../objects/sinks';
   import Dialog from '../components/dialog.svelte';
   import Grid from '../components/grid.svelte';
@@ -8,20 +7,12 @@
   import Module from '../components/module.svelte';
   import Power from '../modules/power.svelte';
   import Toggle from '../modules/toggle.svelte';
+  import Points from '../stores/points';
 
   export let close: () => void;
   export let instance: Sink;
 
-  let points = instance.getPoints();
-  const onPoints = ({ count }: { count: number }) => {
-    points = count;
-  };
-  instance.addEventListener('points', onPoints);
-  onDestroy(() => (
-    instance.removeEventListener('points', onPoints)
-  ));
-
-  $: formattedPoints = ('00000000' + points).slice(-8);
+  $: formattedPoints = ('00000000' + $Points).slice(-8);
 </script>
 
 <Dialog close={close}>
