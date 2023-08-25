@@ -57,7 +57,7 @@ class Ghost extends Mesh {
   setBrush(brush: Brush, position: Vector3, rotation: number, isValid: boolean) {
     this.setGeometry(getBrushGeometry(brush));
     this.position.copy(position);
-    this.rotation.y = rotation;
+    this.rotation.set(0, rotation, 0);
     this.update(isValid);
   }
 
