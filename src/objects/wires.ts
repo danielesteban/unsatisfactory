@@ -9,6 +9,7 @@ import {
 } from 'three';
 import { PoweredContainer } from '../core/container';
 import { Generator } from './generators';
+import Alerts, { Alert } from '../ui/stores/alerts';
 
 export class Wire extends Mesh {
   public readonly from: PoweredContainer;
@@ -140,6 +141,7 @@ class Wires extends Group {
         container.setPowered(false);
       }
     });
+    const overloaded = new Set<PoweredContainer>();
     grid.generators.forEach((generator) => {
       let available = generator.getPower();
       const visited = new WeakSet<PoweredContainer>([generator]);
@@ -149,11 +151,18 @@ class Wires extends Group {
             return;
           }
           visited.add(container);
-          if (container.isEnabled() && !container.isPowered()) {
+          if (
+            container.getConsumption()
+            && container.isEnabled()
+            && !container.isPowered()
+          ) {
             const required = container.getConsumption();
-            if (required && required <= available) {
+            if (required > available) {
+              overloaded.add(container);
+            } else {
               available -= required;
               container.setPowered(true);
+              overloaded.delete(container);
             }
           }
           flow(container.getConnections());
@@ -162,6 +171,7 @@ class Wires extends Group {
       flow(generator.getConnections());
       generator.setAvailable(available);
     });
+    Alerts.set(Alert.overloaded, overloaded.size > 0);
   }
 }
 

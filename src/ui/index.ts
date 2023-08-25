@@ -21,6 +21,7 @@ import SinkUI from './dialogs/sink.svelte';
 import SettingsUI from './dialogs/settings.svelte';
 import TransformerUI from './dialogs/transformer.svelte';
 import Achievements from './achievements.svelte';
+import Alerts from './alerts.svelte';
 import Compass from './compass.svelte';
 import Cursor from './cursor.svelte';
 import Hotbar from './hotbar.svelte';
@@ -127,6 +128,7 @@ export const init = (
   sfx: SFX,
 ) => {
   new Achievements({ target });
+  new Alerts({ target });
   new Hotbar({ target });  
   new SettingsUI({
     props: {

@@ -197,6 +197,5 @@
     stroke: currentColor;
     width: 1rem;
     height: 1rem;
-    pointer-events: none;
   }
 </style>
