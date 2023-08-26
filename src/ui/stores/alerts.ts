@@ -1,23 +1,26 @@
 import { writable } from 'svelte/store';
 
 export enum Alert {
-  none,
   overloaded,
 }
 
-let current = Alert.none;
-const { subscribe, set } = writable<Alert>(current);
+const alerts: Set<Alert> = new Set();
+const { subscribe, set } = writable<Set<Alert>>(alerts);
 
 export default {
   subscribe,
   set(alert: Alert, enabled: boolean) {
-    if (
-      (enabled && current === alert)
-      || (!enabled && current !== alert)
-    ) {
-      return;
+    if (enabled) {
+      if (alerts.has(alert)) {
+        return;
+      }
+      alerts.add(alert);
+    } else {
+      if (!alerts.has(alert)) {
+        return;
+      }
+      alerts.delete(alert);
     }
-    current = enabled ? alert : Alert.none;
-    set(current);
+    set(alerts);
   },
 };
