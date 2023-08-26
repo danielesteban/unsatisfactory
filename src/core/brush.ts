@@ -274,6 +274,7 @@ const terrainOffsets = (Object.keys(offsets) as any as Brush[]).reduce((terrainO
 
 const quaternion = new Quaternion();
 const objectNormal = new Vector3();
+const objectPosition = new Vector3();
 const rotatedDirection = new Vector3();
 const rotatedOffset = new Vector3();
 const rotatedBrushOffset = new Vector3();
@@ -285,8 +286,16 @@ export const snap = (intersection: Intersection) => {
     const brushOffset = offsets[brush];
     const offset = offsets[getFromObject(intersection.object)];
 
-    objectNormal.copy(intersection.normal).applyQuaternion(Instance.getQuaternion(intersection.object, true));
-    rotatedOffset.copy(offset).multiply(objectNormal).applyQuaternion(Instance.getQuaternion(intersection.object));
+    const objectQuaternion = Instance.getQuaternion(intersection.object, true);
+    objectNormal.copy(intersection.normal).applyQuaternion(objectQuaternion);
+    rotatedOffset.copy(offset).multiply(objectNormal);
+    if (objectNormal.dot(Object3D.DEFAULT_UP) > 0) {
+      objectPosition.copy(intersection.point).sub(intersection.object.position).applyQuaternion(objectQuaternion);
+      objectPosition.y = 0;
+      objectPosition.round();
+      rotatedOffset.add(objectPosition);
+    }
+    rotatedOffset.applyQuaternion(Instance.getQuaternion(intersection.object));
 
     rotatedDirection.copy(intersection.normal).applyQuaternion(quaternion.setFromAxisAngle(Object3D.DEFAULT_UP, -rotation));
     rotatedBrushOffset.copy(brushOffset).multiply(rotatedDirection).applyQuaternion(quaternion.setFromAxisAngle(Object3D.DEFAULT_UP, rotation));
