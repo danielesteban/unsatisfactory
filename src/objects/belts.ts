@@ -40,13 +40,14 @@ export class Belt extends Mesh {
   constructor({ geometry, path }: { geometry: BufferGeometry, path: Curve<Vector3> }, material: Material, from: Connection, to: Connection) {
     super(mergeVertices(geometry), material);
     this.castShadow = this.receiveShadow = true;
+    this.geometry.computeBoundingSphere();
     this.updateMatrixWorld();
     this.matrixAutoUpdate = false;
     this.onBeforeRender = this.animate.bind(this);
     this.isSaturated = false;
     this.needsUpdate = true;
     this.slots = Array.from({ length: Math.ceil(path.getLength() / 0.5) }, () => ({ item: Item.none, locked: false }));
-    this.items = new Items(this.slots.length, path);
+    this.items = new Items(this.geometry.boundingSphere!, this.slots.length, path);
     this.add(this.items);
     this.from = { container: from.container, connector: from.connector };
     this.to = { container: to.container, connector: to.connector };

@@ -12,6 +12,7 @@ import {
   MeshStandardMaterial,
   Object3D,
   RepeatWrapping,
+  Sphere,
   SRGBColorSpace,
   TetrahedronGeometry,
   Vector3,
@@ -156,8 +157,9 @@ export const deserializeItems = (items: SerializedItems) => items.reduce<Item[]>
 }, []);
 
 class InstancedItems extends InstancedMesh {
-  constructor(geometry: BufferGeometry, material: Material, count: number) {
+  constructor(bounds: Sphere, geometry: BufferGeometry, material: Material, count: number) {
     super(geometry, material, count);
+    this.boundingSphere = bounds;
     this.instanceMatrix.setUsage(DynamicDrawUsage);
     this.receiveShadow = true;
     this.updateMatrixWorld();
@@ -179,7 +181,6 @@ class InstancedItems extends InstancedMesh {
     if (!this.count) {
       return;
     }
-    this.computeBoundingSphere();
     this.instanceMatrix.needsUpdate = true;
     this.visible = true;
   }
@@ -264,11 +265,12 @@ class Items extends Group {
     return materials;
   }
 
+  private readonly bounds: Sphere;
   private readonly instances: Record<Exclude<Item, Item.none>, InstancedItems | undefined>;
   private readonly path: Curve<Vector3>;
   private readonly tangents: Vector3[];
 
-  constructor(count: number, path: Curve<Vector3>) {
+  constructor(bounds: Sphere, count: number, path: Curve<Vector3>) {
     if (!Items.geometries) {
       Items.setupGeometries();
     }
@@ -285,6 +287,7 @@ class Items extends Group {
       [Item.ingot]: undefined,
       [Item.ore]: undefined,
     };
+    this.bounds = bounds;
     this.path = path;
     const { tangents } = path.computeFrenetFrames(count, false);
     this.tangents = tangents;
@@ -297,7 +300,7 @@ class Items extends Group {
   private static aux: Vector3 = new Vector3();
   private static transform: Object3D = new Object3D();
   animate(slots: { item: Item; locked: boolean; }[], step: number) {
-    const { children, instances, path, tangents } = this;
+    const { bounds, children, instances, path, tangents } = this;
     const count = slots.length;
     (children as InstancedItems[]).forEach((items) => items.reset());
     slots.forEach(({ item, locked }, i) => {
@@ -305,7 +308,7 @@ class Items extends Group {
         return;
       }
       if (!instances[item]) {
-        instances[item] = new InstancedItems(Items.geometries![item], Items.materials![item], count);
+        instances[item] = new InstancedItems(bounds, Items.geometries![item], Items.materials![item], count);
         this.add(instances[item]!);
       }
       const alpha = locked ? 1 : step;

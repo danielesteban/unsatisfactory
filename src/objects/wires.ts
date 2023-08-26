@@ -18,6 +18,7 @@ export class Wire extends Mesh {
   constructor(geometry: BufferGeometry, material: Material, from: PoweredContainer, to: PoweredContainer) {
     super(geometry, material);
     this.castShadow = this.receiveShadow = true;
+    this.geometry.computeBoundingSphere();
     this.updateMatrixWorld();
     this.matrixAutoUpdate = false;
     this.from = from;
