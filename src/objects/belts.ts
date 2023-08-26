@@ -41,6 +41,7 @@ export class Belt extends Mesh {
     this.castShadow = this.receiveShadow = true;
     this.updateMatrixWorld();
     this.matrixAutoUpdate = false;
+    this.onBeforeRender = this.animate.bind(this);
     this.enabled = true;
     this.slots = Array.from({ length: Math.ceil(path.getLength() / 0.5) }, () => ({ item: Item.none, locked: false }));
     this.items = new Items(this.slots.length, path);
@@ -59,11 +60,16 @@ export class Belt extends Mesh {
     to.container.removeBelt(this, 'input');
   }
 
-  animate(step: number) {
+  animate() {
     const { enabled, items, slots } = this;
     if (enabled) {
-      items.animate(slots, step);
+      items.animate(slots, Belt.animationStep);
     }
+  }
+
+  private static animationStep: number = 0;
+  static setAnimationStep(step: number) {
+    Belt.animationStep = step;
   }
 
   isEnabled() {
@@ -250,8 +256,7 @@ class Belts extends Group {
       this.timer -= rate;
       (this.children as Belt[]).forEach((belt) => belt.step());
     }
-    const step = this.timer / rate;
-    (this.children as Belt[]).forEach((belt) => belt.animate(step));
+    Belt.setAnimationStep(this.timer / rate);
   }
 }
 
