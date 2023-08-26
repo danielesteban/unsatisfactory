@@ -88,7 +88,7 @@ export class Miner extends PoweredContainer {
     if (
       outputBelt < belts.length
       && belts[outputBelt] !== belt
-      && belts[outputBelt].isEnabled()
+      && belts[outputBelt].canInput()
     ) {
       return Item.none;
     }

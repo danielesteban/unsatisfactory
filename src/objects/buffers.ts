@@ -68,7 +68,7 @@ export class Buffer extends Container {
     if (
       outputBelt < belts.length
       && belts[outputBelt] !== belt
-      && belts[outputBelt].isEnabled()
+      && belts[outputBelt].canInput()
     ) {
       return Item.none;
     }

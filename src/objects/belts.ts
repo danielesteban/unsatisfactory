@@ -32,7 +32,8 @@ export class Belt extends Mesh {
   public readonly from: Connection;
   public readonly to: Connection;
 
-  private enabled: boolean;
+  private isSaturated: boolean;
+  private needsUpdate: boolean;
   private readonly items: Items;
   private readonly slots: { item: Item; locked: boolean; }[];
 
@@ -42,7 +43,8 @@ export class Belt extends Mesh {
     this.updateMatrixWorld();
     this.matrixAutoUpdate = false;
     this.onBeforeRender = this.animate.bind(this);
-    this.enabled = true;
+    this.isSaturated = false;
+    this.needsUpdate = true;
     this.slots = Array.from({ length: Math.ceil(path.getLength() / 0.5) }, () => ({ item: Item.none, locked: false }));
     this.items = new Items(this.slots.length, path);
     this.add(this.items);
@@ -61,8 +63,9 @@ export class Belt extends Mesh {
   }
 
   animate() {
-    const { enabled, items, slots } = this;
-    if (enabled) {
+    const { isSaturated, items, needsUpdate, slots } = this;
+    if (!isSaturated || needsUpdate) {
+      this.needsUpdate = false;
       items.animate(slots, Belt.animationStep);
     }
   }
@@ -72,8 +75,8 @@ export class Belt extends Mesh {
     Belt.animationStep = step;
   }
 
-  isEnabled() {
-    return this.enabled;
+  canInput() {
+    return !this.isSaturated;
   }
 
   hasOutput() {
@@ -87,17 +90,18 @@ export class Belt extends Mesh {
     if (output.item !== Item.none && to.container.canInput(output.item, this)) {
       to.container.input(output.item);
       output.item = Item.none;
-      this.enabled = true;
+      this.isSaturated = false;
     }
 
-    if (this.enabled) {
-      let isSaturated = true;
+    if (!this.isSaturated) {
+      this.isSaturated = true;
+      this.needsUpdate = true;
       for (let i = slots.length - 1; i > 0; i--) {
         if (slots[i].item === Item.none && slots[i - 1].item !== Item.none) {
           slots[i].item = slots[i - 1].item;
           slots[i].locked = false;
           slots[i - 1].item = Item.none;
-          isSaturated = false;
+          this.isSaturated = false;
         } else {
           slots[i].locked = true;
         }
@@ -105,10 +109,7 @@ export class Belt extends Mesh {
       if (slots[0].item === Item.none) {
         slots[0].item = from.container.output(this);
         slots[0].locked = false;
-        isSaturated = false;
-      }
-      if (isSaturated) {
-        this.enabled = false;
+        this.isSaturated = false;
       }
     }
   }
@@ -120,7 +121,7 @@ export class Belt extends Mesh {
 
   setItems(items: Item[]) {
     const { slots } = this;
-    this.enabled = true;
+    this.isSaturated = false;
     items = items.slice(0, slots.length).reverse();
     const gap = Math.floor(slots.length / items.length);
     items.forEach((item, i) => {
