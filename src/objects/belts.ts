@@ -66,7 +66,7 @@ export class Belt extends Mesh {
     const { isSaturated, items, needsUpdate, slots } = this;
     if (!isSaturated || needsUpdate) {
       this.needsUpdate = false;
-      items.animate(slots, Belt.animationStep);
+      items.animate(slots, isSaturated ? 1 : Belt.animationStep);
     }
   }
 
