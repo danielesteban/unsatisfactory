@@ -20,6 +20,9 @@ import {
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 import { loadTexture } from '../textures';
+import MetalDiffuseMap from '../textures/green_metal_rust_diff_1k.webp';
+import MetalNormalMap from '../textures/green_metal_rust_nor_gl_1k.webp';
+import MetalRoughnessMap from '../textures/green_metal_rust_rough_1k.webp';
 import RockDiffuseMap from '../textures/rock_boulder_dry_diff_1k.webp';
 import RockNormalMap from '../textures/rock_boulder_dry_nor_gl_1k.webp';
 import RockRoughnessMap from '../textures/rock_boulder_dry_rough_1k.webp';
@@ -63,8 +66,8 @@ export enum Transformer {
 }
 
 export type Recipe = {
-  input: { item: Item; count: number; }[];
-  output: { item: Item; count: number; };
+  input: { item: Exclude<Item, Item.none>; count: number; }[];
+  output: { item: Exclude<Item, Item.none>; count: number; };
   rate: number;
   transformer: Transformer;
 };
@@ -188,37 +191,40 @@ class InstancedItems extends InstancedMesh {
 
 class Items extends Group {
   private static geometries: Record<Exclude<Item, Item.none>, BufferGeometry> | undefined;
-  private static setupGeometries() {
-    const csgEvaluator = new Evaluator();
-    let brush = new Brush(new BoxGeometry(0.25, 0.25, 0.25));
-    brush = csgEvaluator.evaluate(brush, new Brush(new IcosahedronGeometry(0.15, 2)), SUBTRACTION);
-    const artifact = mergeVertices(brush.geometry);
-    artifact.translate(0, 0.125, 0);
-    artifact.computeBoundingSphere();
-    const box = new BoxGeometry(0.25, 0.25, 0.25);
-    box.translate(0, 0.125, 0);
-    box.computeBoundingSphere();
-    const cylinder = new CylinderGeometry(0.125, 0.125, 0.25);
-    cylinder.translate(0, 0.125, 0);
-    cylinder.computeBoundingSphere();
-    const ingot = new BoxGeometry(0.5, 0.125, 0.25);
-    ingot.translate(0, 0.0625, 0);
-    ingot.computeBoundingSphere();
-    const ore = new TetrahedronGeometry(0.2, 2);
-    ore.scale(1.5, 1, 1);
-    ore.translate(0, 0.2, 0);
-    ore.computeBoundingSphere();
-    Items.geometries = {
-      [Item.artifact]: artifact,
-      [Item.box]: box,
-      [Item.cylinder]: cylinder,
-      [Item.ingot]: ingot,
-      [Item.ore]: ore,
-    };
+  static setupGeometries() {
+    if (!Items.geometries) {
+      const csgEvaluator = new Evaluator();
+      let brush = new Brush(new BoxGeometry(0.25, 0.25, 0.25));
+      brush = csgEvaluator.evaluate(brush, new Brush(new IcosahedronGeometry(0.15, 2)), SUBTRACTION);
+      const artifact = mergeVertices(brush.geometry);
+      artifact.translate(0, 0.125, 0);
+      artifact.computeBoundingSphere();
+      const box = new BoxGeometry(0.25, 0.25, 0.25);
+      box.translate(0, 0.125, 0);
+      box.computeBoundingSphere();
+      const cylinder = new CylinderGeometry(0.125, 0.125, 0.25);
+      cylinder.translate(0, 0.125, 0);
+      cylinder.computeBoundingSphere();
+      const ingot = new BoxGeometry(0.5, 0.125, 0.25);
+      ingot.translate(0, 0.0625, 0);
+      ingot.computeBoundingSphere();
+      const ore = new TetrahedronGeometry(0.2, 2);
+      ore.scale(1.5, 1, 1);
+      ore.translate(0, 0.2, 0);
+      ore.computeBoundingSphere();
+      Items.geometries = {
+        [Item.artifact]: artifact,
+        [Item.box]: box,
+        [Item.cylinder]: cylinder,
+        [Item.ingot]: ingot,
+        [Item.ore]: ore,
+      };
+    }
+    return Items.geometries;
   }
 
   private static materials: Record<Exclude<Item, Item.none>, MeshStandardMaterial> | undefined;
-  private static setupMaterials() {
+  static setupMaterials() {
     if (!Items.materials) {
       const getMaterial = (diffuse: string, normal: string, roughness: string) => {
         const material = new MeshStandardMaterial({
@@ -228,22 +234,21 @@ class Items extends Group {
         });
         material.map!.anisotropy = 16;
         material.map!.colorSpace = SRGBColorSpace;
+        material.map!.repeat.set(0.1, 0.1);
         [material.map!, material.normalMap!, material.roughnessMap!].forEach((map) => {
           map.wrapS = map.wrapT = RepeatWrapping;
         });
         return material;
       };
-      const processed = new MeshStandardMaterial({
-        color: 0x332211,
-        roughness: 0.15,
-      });
+      const metal = getMaterial(MetalDiffuseMap, MetalNormalMap, MetalRoughnessMap);
+      metal.roughness = 0.15;
       const rock = getMaterial(RockDiffuseMap, RockNormalMap, RockRoughnessMap);
       rock.envMapIntensity = rock.roughness = 0.7;
       const rust = getMaterial(RustDiffuseMap, RustNormalMap, RustRoughnessMap);
       Items.materials = {
-        [Item.artifact]: processed,
-        [Item.box]: processed,
-        [Item.cylinder]: processed,
+        [Item.artifact]: metal,
+        [Item.box]: metal,
+        [Item.cylinder]: metal,
         [Item.ingot]: rust,
         [Item.ore]: rock,
       };
@@ -252,9 +257,7 @@ class Items extends Group {
   }
 
   static getMaterials() {
-    if (!Items.materials) {
-      Items.setupMaterials();
-    }
+    Items.setupMaterials();
     const materials: MeshStandardMaterial[] = [];
     for (let key in Items.materials) {
       const material = Items.materials[key as any as Exclude<Item, Item.none>];
@@ -271,12 +274,6 @@ class Items extends Group {
   private readonly tangents: Vector3[];
 
   constructor(bounds: Sphere, count: number, path: Curve<Vector3>) {
-    if (!Items.geometries) {
-      Items.setupGeometries();
-    }
-    if (!Items.materials) {
-      Items.setupMaterials();
-    }
     super();
     this.updateMatrixWorld();
     this.matrixAutoUpdate = false;
@@ -291,6 +288,8 @@ class Items extends Group {
     this.path = path;
     const { tangents } = path.computeFrenetFrames(count, false);
     this.tangents = tangents;
+    Items.setupGeometries();
+    Items.setupMaterials();
   }
 
   dispose() {

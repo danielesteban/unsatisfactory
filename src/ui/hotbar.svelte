@@ -2,7 +2,7 @@
   import { derived } from 'svelte/store';
   import { Brush, set, subscribe } from '../core/brush';
   import slots from './stores/hotbar';
-  import Capture from './capture';
+  import { captureBrush } from './capture';
 
   const current = { subscribe };
 
@@ -27,7 +27,7 @@
       <div class="key">{index + 1}</div>
       <div class="brush">
         {#if id !== Brush.none}
-          {#await Capture(id) then images}
+          {#await captureBrush(id) then images}
             <!-- svelte-ignore a11y-missing-attribute -->
             <img src={images[0]} />
           {/await}

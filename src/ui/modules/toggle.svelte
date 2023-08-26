@@ -2,7 +2,7 @@
   import { breaker } from '../../sounds';
   const sfx = new Audio(breaker);
   sfx.volume = 0.2;
-</script>  
+</script>
 
 <script lang="ts">
   import { onDestroy } from 'svelte';

@@ -1,3 +1,9 @@
+<script lang="ts" context="module">
+  import { tap } from '../../sounds';
+  const sfx = new Audio(tap);
+  sfx.volume = 0.2;
+</script>
+
 <script lang="ts">
   import { onDestroy } from 'svelte';
   import Transformer from '../../core/transformer';
@@ -10,6 +16,7 @@
   import Power from '../modules/power.svelte';
   import Production from '../modules/production.svelte';
   import Toggle from '../modules/toggle.svelte';
+  import { captureItem } from '../capture';
 
   export let close: () => void;
   export let transformer: ItemTrasformer;
@@ -22,15 +29,14 @@
   }[transformer];
   const recipes = Recipes.filter((recipe) => recipe.transformer === transformer);
 
-  const setRecipe = ({ target: { value } }: any) => {
-    instance.setRecipe(recipes[+value]);
+  const setRecipe = (recipe: Recipe) => () => {
+    instance.setRecipe(recipe);
+    !localStorage.getItem('sfx:muted') && sfx.paused && sfx.play();
   };
 
   let recipe = instance.getRecipe();
-  let recipeIndex = recipes.indexOf(recipe);
   const onRecipe = ({ data }: { data: Recipe }) => {
     recipe = data;
-    recipeIndex = recipes.indexOf(recipe);
   };
   instance.addEventListener('recipe', onRecipe);
   onDestroy(() => (
@@ -48,17 +54,22 @@
     <Modules>
       <Module>
         <div slot="name">Production</div>
-        <div>
-          <select
-            on:change={setRecipe}
-            value={recipeIndex}
-          >
-            {#each recipes as recipe, index}
-              <option value={index}>
-                {ItemName[recipe.output.item]}
-              </option>
-            {/each}
-          </select>
+        <div class="recipes">
+          {#each recipes as r}
+            <button
+              class="recipe"
+              class:selected={r === recipe}
+              on:click={setRecipe(r)}
+            >
+              {#await captureItem(r.output.item) then images}
+                {#each images as image}
+                  <!-- svelte-ignore a11y-missing-attribute -->
+                  <img src={image} />
+                {/each}
+              {/await}
+              <span>{ItemName[r.output.item]}</span>
+            </button>
+          {/each}
         </div>
       </Module>
       <Production
@@ -74,3 +85,50 @@
     </Modules>
   </Grid>
 </Dialog>
+
+<style>
+  .recipes {
+    display: flex;
+    gap: 0.25rem;
+  }
+  .recipe {
+    position: relative;
+    width: 4rem;
+    height: 4rem;
+    background: rgba(0, 0, 0, .2);
+    border: 2px solid transparent;
+    border-radius: 0.5rem;
+  }
+  .recipe.selected {
+    border-color: rgba(90, 255, 90, 0.5);
+  }
+  .recipe > img {
+    position: absolute;
+    width: 3rem;
+    height: 3rem;
+    top: 0.375rem;
+    left: 0.375rem;
+    pointer-events: none;
+  }
+  .recipe > img:nth-child(2) {
+    display: none;
+  }
+  .recipe:hover > img:nth-child(1), .recipe.selected > img:nth-child(1) {
+    display: none;
+  }
+  .recipe:hover > img:nth-child(2), .recipe.selected > img:nth-child(2) {
+    display: block;
+  }
+  .recipe > span {
+    position: absolute;
+    left: 0;
+    bottom: 0.25rem;
+    width: 100%;
+    display: block;
+    text-align: center;
+    color: #999;
+  }
+  .recipe:hover > span, .recipe.selected > span {
+    color: #eee;
+  }
+</style>

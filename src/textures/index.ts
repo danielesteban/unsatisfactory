@@ -1,24 +1,10 @@
 import {
   EquirectangularReflectionMapping,
   PMREMGenerator,
-  TextureLoader,
+  Texture,
   WebGLRenderer,
 } from 'three';
 import { EXRLoader } from 'three/examples/jsm/loaders/EXRLoader.js';
-
-const loaders = {
-  exr: new EXRLoader(),
-  texture: new TextureLoader(),
-};
-
-let pmremGenerator: PMREMGenerator;
-const getPMREMGenerator = (renderer: WebGLRenderer) => {
-  if (!pmremGenerator) {
-    pmremGenerator = new PMREMGenerator(renderer);
-    pmremGenerator.compileEquirectangularShader();
-  }
-  return pmremGenerator;
-};
 
 let loading = 0;
 const load = () => {
@@ -34,10 +20,19 @@ const load = () => {
   };
 };
 
+let pmremGenerator: PMREMGenerator;
+const getPMREMGenerator = (renderer: WebGLRenderer) => {
+  if (!pmremGenerator) {
+    pmremGenerator = new PMREMGenerator(renderer);
+    pmremGenerator.compileEquirectangularShader();
+  }
+  return pmremGenerator;
+};
+
 export const loadEnvironment = async (url: string, renderer: WebGLRenderer) => {
   const done = load();
   const pmrem = getPMREMGenerator(renderer);
-  const background = await loaders.exr.loadAsync(url);
+  const background = await (new EXRLoader()).loadAsync(url);
   background.mapping = EquirectangularReflectionMapping;
   done();
   return {
@@ -46,7 +41,39 @@ export const loadEnvironment = async (url: string, renderer: WebGLRenderer) => {
   };
 };
 
+const images = {
+  loaded: new Map<string, HTMLImageElement>(),
+  queue: new Map<string, ((image: HTMLImageElement) => void)[]>,
+};
+
+const loadImage = (url: string) => new Promise((resolve) => {
+  const loaded = images.loaded.get(url);
+  if (loaded) {
+    resolve(loaded);
+    return;
+  }
+  let queue = images.queue.get(url);
+  if (!queue) {
+    queue = [];
+    images.queue.set(url, queue);
+    const done = load();
+    const image = new Image();
+    image.addEventListener('load', () => {
+      images.queue.delete(url);
+      images.loaded.set(url, image);
+      queue!.forEach((resolve) => resolve(image));
+      done();
+    });
+    image.src = url;
+  }
+  queue.push(resolve);
+});
+
 export const loadTexture = (url: string) => {
-  const texture = loaders.texture.load(url, load());
+  const texture = new Texture();
+  loadImage(url).then((image) => {
+    texture.image = image;
+    texture.needsUpdate = true;
+  });
   return texture;
 };

@@ -3,7 +3,7 @@
   import { Brush, names, groups, set as setBrush } from '../../core/brush';
   import Hotbar from '../stores/hotbar';
   import Dialog from '../components/dialog.svelte';
-  import Capture from '../capture';
+  import { captureBrush } from '../capture';
 
   export let close: () => void;
 
@@ -13,7 +13,7 @@
   };
 
   const brushes = groups.map((group) => (
-    group.map((brush) => ({ id: brush, name: names[brush], images: Capture(brush) }))
+    group.map((brush) => ({ id: brush, name: names[brush], images: captureBrush(brush) }))
   ));
 
   const filter = (search: string) => {

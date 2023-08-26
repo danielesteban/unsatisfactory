@@ -19,6 +19,7 @@ import { SMAAPass } from 'three/examples/jsm/postprocessing/SMAAPass.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { Brush, getGeometry, getMaterial } from '../core/brush';
 import Belts from '../objects/belts';
+import Items, { Item } from '../objects/items';
 
 const width = 256;
 const height = 256;
@@ -79,29 +80,43 @@ const setupRenderer = () => {
   composer.addPass(new SMAAPass(width, height));
 };
 
-const queue: { brush: Brush; promises: ((capture: string[]) => void)[]; }[] = [];
-const process = () => {
-  const queued = queue.shift();
+const captures = {
+  brush: new Map<Brush, string[]>(),
+  item: new Map<Item, string[]>(),
+};
+
+const queues: {
+  brush: { brush: Brush; promises: ((capture: string[]) => void)[]; }[];
+  item: { item: Exclude<Item, Item.none>; promises: ((capture: string[]) => void)[]; }[];
+} = {
+  brush: [],
+  item: [],
+};
+
+const isLoading = (material: MeshStandardMaterial) => (
+  (
+    material.map
+    && !material.map?.image
+  )
+  || (
+    material.normalMap
+    && !material.normalMap?.image
+  ) || (
+    material.roughnessMap
+    && !material.roughnessMap?.image
+  )
+);
+
+const processBrushQueue = () => {
+  const queued = queues.brush.shift();
   if (!queued) {
     return;
   }
   const { brush, promises } = queued;
   const material: Material = getMaterial(brush);
-  if (
-    (
-      (material as MeshStandardMaterial).map
-      && !(material as MeshStandardMaterial).map?.image
-    )
-    || (
-      (material as MeshStandardMaterial).normalMap
-      && !(material as MeshStandardMaterial).normalMap?.image
-    ) || (
-      (material as MeshStandardMaterial).roughnessMap
-      && !(material as MeshStandardMaterial).roughnessMap?.image
-    )
-  ) {
-    queue.unshift(queued);
-    requestAnimationFrame(process);
+  if (isLoading(material as MeshStandardMaterial)) {
+    queues.brush.unshift(queued);
+    requestAnimationFrame(processBrushQueue);
     return;
   }
   setupGeometries();
@@ -123,34 +138,85 @@ const process = () => {
     }
     mesh.rotation.y = brush === Brush.generator ? Math.PI * 0.5 : 0;
     camera.position.set(0, 0.5, 1).multiplyScalar(zoom);
+    camera.lookAt(0, 0.125, 0);
+    composer.render();
+    return renderer.domElement.toDataURL();
+  });
+  scene.remove(mesh);
+  captures.brush.set(brush, capture);
+  promises.forEach((resolve) => resolve(capture));
+  if (queues.brush.length) {
+    requestAnimationFrame(processBrushQueue);
+  }
+};
+
+const processItemQueue = () => {
+  const queued = queues.item.shift();
+  if (!queued) {
+    return;
+  }
+  const { item, promises } = queued;
+  const material: Material = Items.setupMaterials()[item];
+  if (isLoading(material as MeshStandardMaterial)) {
+    queues.item.unshift(queued);
+    requestAnimationFrame(processItemQueue);
+    return;
+  }
+  setupRenderer();
+  const mesh = new Mesh(
+    Items.setupGeometries()[item],
+    material
+  );
+  scene.add(mesh);
+  const capture = [1, 0.75].map((zoom) => {
+    camera.position.set(0, 0.5, 1).multiplyScalar(zoom);
     camera.lookAt(0, 0, 0);
     composer.render();
     return renderer.domElement.toDataURL();
   });
   scene.remove(mesh);
-  captures.set(brush, capture);
+  captures.item.set(item, capture);
   promises.forEach((resolve) => resolve(capture));
-  if (queue.length) {
-    requestAnimationFrame(process);
+  if (queues.item.length) {
+    requestAnimationFrame(processItemQueue);
   }
 };
 
-const captures = new Map();
-export default (brush: Brush) => new Promise<string[]>((resolve) => {
-  let capture = captures.get(brush);
+export const captureBrush = (brush: Brush) => new Promise<string[]>((resolve) => {
+  let capture = captures.brush.get(brush);
   if (capture) {
     resolve(capture);
     return;
   }
-  if (queue.length) {
-    const queued = queue.find((q) => q.brush === brush);
+  if (queues.brush.length) {
+    const queued = queues.brush.find((q) => q.brush === brush);
     if (queued) {
       queued.promises.push(resolve);
     } else {
-      queue.push({ brush, promises: [resolve] });
+      queues.brush.push({ brush, promises: [resolve] });
     }
     return;
   }
-  queue.push({ brush, promises: [resolve] });
-  requestAnimationFrame(process);
+  queues.brush.push({ brush, promises: [resolve] });
+  requestAnimationFrame(processBrushQueue);
 });
+
+export const captureItem = (item: Exclude<Item, Item.none>) => new Promise<string[]>((resolve) => {
+  let capture = captures.item.get(item);
+  if (capture) {
+    resolve(capture);
+    return;
+  }
+  if (queues.item.length) {
+    const queued = queues.item.find((q) => q.item === item);
+    if (queued) {
+      queued.promises.push(resolve);
+    } else {
+      queues.item.push({ item, promises: [resolve] });
+    }
+    return;
+  }
+  queues.item.push({ item, promises: [resolve] });
+  requestAnimationFrame(processItemQueue);
+});
+
