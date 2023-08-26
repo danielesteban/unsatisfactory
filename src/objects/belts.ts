@@ -132,7 +132,7 @@ export class Belt extends Mesh {
 }
 
 class Belts extends Group {
-  private static readonly offset: Vector3 = new Vector3(0, -0.5, 0);
+  private static readonly offset: Vector3 = new Vector3(0, -0.375, 0);
   static getGeometry(from: Connection, to: Connection) {
     const fromConnector = from.container.getConnector(from.connector);
     const fromDirection = fromConnector.getWorldDirection(new Vector3());
