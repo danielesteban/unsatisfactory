@@ -499,7 +499,7 @@ const migrations: Record<number, (serialized: Serialized) => Serialized> = {
       miners: [],
       combinators: serialized.combinators.map(remapRecipe),
       fabricators: serialized.fabricators.map(remapRecipe),
-      smelters: serialized.fabricators.map(remapRecipe),
+      smelters: serialized.smelters.map(remapRecipe),
       belts: serialized.belts.filter(([from, _fromConnector, to]) => from[0] !== 4 && to[0] !== 4),
       wires: serialized.wires.filter(([from, to]) => from[0] !== 4 && to[0] !== 4),
     };
