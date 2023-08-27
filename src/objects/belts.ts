@@ -218,14 +218,12 @@ class Belts extends Group {
   }
 
   private readonly physics: Physics;
-  private timer: number;
 
   constructor(physics: Physics) {
     super();
     this.updateMatrixWorld();
     this.matrixAutoUpdate = false;
     this.physics = physics;
-    this.timer = 0;
   }
 
   create(from: Connection, to: Connection) {
@@ -251,14 +249,8 @@ class Belts extends Group {
     return this;
   }
 
-  step(delta: number) {
-    this.timer += delta;
-    const rate = 1 / 5;
-    while (this.timer > rate) {
-      this.timer -= rate;
-      (this.children as Belt[]).forEach((belt) => belt.step());
-    }
-    Belt.setAnimationStep(this.timer / rate);
+  step() {
+    (this.children as Belt[]).forEach((belt) => belt.step());
   }
 }
 

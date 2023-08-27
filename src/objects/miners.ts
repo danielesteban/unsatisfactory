@@ -29,6 +29,7 @@ export class Miner extends PoweredContainer {
   private readonly rate: number;
   private readonly sfx: SFX;
   private sound?: PositionalAudio;
+  private static readonly capacity: number = 4;
   private count: number;
   private outputBelt: number;
   private tick: number;
@@ -81,7 +82,6 @@ export class Miner extends PoweredContainer {
 
   override output(belt: Belt) {
     const { belts: { output: belts }, outputBelt } = this;
-    this.process();
     if (belts.length <= 1) {
       return this.getOutput();
     }
@@ -99,12 +99,13 @@ export class Miner extends PoweredContainer {
     return output;
   }
 
-  private process() {
-    const { belts: { output: belts }, enabled, position, powered, rate, sfx } = this;
+  process() {
+    const { count, enabled, position, powered, rate, sfx } = this;
     if (
       !enabled
       || !powered
-      || (this.tick += (1 / belts.length)) < rate
+      || count >= Miner.capacity
+      || ++this.tick < rate
     ) {
       return false;
     }

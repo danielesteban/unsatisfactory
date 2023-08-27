@@ -25,6 +25,21 @@ class Transformer extends PoweredContainer<
     this.sfx = sfx;
     this.tick = 0;
   }
+  
+  getRecipe() {
+    return this.recipe;
+  }
+
+  setRecipe(recipe: Recipe) {
+    this.counts.input = recipe.input.reduce<Transformer["counts"]["input"]>((counts, { item }) => {
+      counts[item] = 0;
+      return counts;
+    }, {}),
+    this.counts.output = 0;
+    this.recipe = recipe;
+    this.tick = 0;
+    this.dispatchEvent({ type: 'recipe', data: recipe });
+  }
 
   override dispose() {
     if (this.sound?.isPlaying) {
@@ -44,7 +59,6 @@ class Transformer extends PoweredContainer<
 
   override output() {
     const { counts, recipe } = this;
-    this.process();
     if (counts.output > 0 && recipe) {
       counts.output--;
       return recipe.output.item;
@@ -52,7 +66,7 @@ class Transformer extends PoweredContainer<
     return Item.none;
   }
 
-  protected process() {
+  process() {
     const { counts, enabled, position, powered, recipe, sfx } = this;
     if (
       !enabled
@@ -72,21 +86,6 @@ class Transformer extends PoweredContainer<
     });
     counts.output += recipe.output.count;
     return true;
-  }
-
-  getRecipe() {
-    return this.recipe;
-  }
-
-  setRecipe(recipe: Recipe) {
-    this.counts.input = recipe.input.reduce<Transformer["counts"]["input"]>((counts, { item }) => {
-      counts[item] = 0;
-      return counts;
-    }, {}),
-    this.counts.output = 0;
-    this.recipe = recipe;
-    this.tick = 0;
-    this.dispatchEvent({ type: 'recipe', data: recipe });
   }
 
   override serialize() {

@@ -17,6 +17,7 @@ import { Buttons } from './core/controls';
 import { Instance } from './core/instances';
 import { decode, deserialize, Objects } from './core/loader';
 import { Intersection as PhysicsIntersection } from './core/physics';
+import Simulation from './core/simulation';
 import Viewport from './core/viewport';
 import Belts, { Belt, Connection } from './objects/belts';
 import Birds from './objects/birds';
@@ -417,9 +418,10 @@ const getConnector = (intersection: Intersection, raycaster: Raycaster) => {
 const center = new Vector2();
 const raycaster = new Raycaster();
 raycaster.far = viewport.camera.far;
+const simulation = new Simulation(belts, [combinators, fabricators, miners, smelters]);
 const animate = (buttons: Buttons, delta: number) => {
-  belts.step(delta);
   birds.step(delta);
+  simulation.step(delta);
   terrain.update(viewport.camera.position, terrainRadius);
   raycaster.setFromCamera(center, viewport.camera);
   // @dani @incomplete
