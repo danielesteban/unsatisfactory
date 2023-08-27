@@ -12,17 +12,24 @@
   export let instance: Generator;
 
   let available = instance.getAvailable();
+  let efficiency = instance.getEfficiency();
   let power = instance.getPower();
   const onAvailable = ({ power }: { power: number }) => {
     available = power;
+  };
+  const onEfficiency = ({ scale }: { scale: number }) => {
+    efficiency = scale;
+    power = instance.getPower();
   };
   const onEnabled = () => {
     power = instance.getPower();
   };
   instance.addEventListener('available', onAvailable);
+  instance.addEventListener('efficiency', onEfficiency);
   instance.addEventListener('enabled', onEnabled);
   onDestroy(() => {
     instance.removeEventListener('available', onAvailable);
+    instance.removeEventListener('efficiency', onEfficiency);
     instance.removeEventListener('enabled', onEnabled);
   });
 </script>
@@ -35,13 +42,19 @@
     </Modules>
     <Modules>
       <Module>
-        <div slot="name">Power generation</div>
+        <div slot="name">Efficiency</div>
+        <div>
+          <span class="power">{Math.floor(efficiency * 100)}</span> %
+        </div>
+      </Module>
+      <Module>
+        <div slot="name">Generated power</div>
         <div>
           <span class="power">{power}</span> MW
         </div>
       </Module>
       <Module>
-        <div slot="name">Available power</div>
+        <div slot="name">Unused power</div>
         <div>
           <span class="power">{available}</span> MW
         </div>

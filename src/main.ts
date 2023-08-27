@@ -117,6 +117,7 @@ const walls = new Walls(viewport.physics);
 viewport.scene.add(walls);
 
 const wires = new Wires();
+generators.addEventListener('efficiency', wires.updatePower.bind(wires));
 viewport.scene.add(wires);
 
 const birds = new Birds(viewport.camera.position);

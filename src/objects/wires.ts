@@ -135,44 +135,55 @@ class Wires extends Group {
     return this;
   }
 
+  private isUpdatingPower: boolean = false;
   updatePower() {
     const { grid } = this;
-    grid.containers.forEach((container) => {
-      if (container.getConsumption()) {
-        container.setPowered(false);
-      }
-    });
-    const overloaded = new Set<PoweredContainer>();
-    grid.generators.forEach((generator) => {
-      let available = generator.getPower();
-      const visited = new WeakSet<PoweredContainer>([generator]);
-      const flow = (connections: PoweredContainer[]) => (
-        connections.forEach((container) => {
-          if (visited.has(container)) {
-            return;
-          }
-          visited.add(container);
-          if (
-            container.getConsumption()
-            && container.isEnabled()
-            && !container.isPowered()
-          ) {
-            const required = container.getConsumption();
-            if (required > available) {
-              overloaded.add(container);
-            } else {
-              available -= required;
-              container.setPowered(true);
-              overloaded.delete(container);
+    if (this.isUpdatingPower) {
+      return;
+    }
+    this.isUpdatingPower = true;
+    // @dani
+    // Defer to the end of the frame
+    // So it happens only once
+    new Promise(() => {
+      this.isUpdatingPower = false;
+      grid.containers.forEach((container) => {
+        if (container.getConsumption()) {
+          container.setPowered(false);
+        }
+      });
+      const overloaded = new Set<PoweredContainer>();
+      grid.generators.forEach((generator) => {
+        let available = generator.getPower();
+        const visited = new WeakSet<PoweredContainer>([generator]);
+        const flow = (connections: PoweredContainer[]) => (
+          connections.forEach((container) => {
+            if (visited.has(container)) {
+              return;
             }
-          }
-          flow(container.getConnections());
-        })
-      );
-      flow(generator.getConnections());
-      generator.setAvailable(available);
+            visited.add(container);
+            if (
+              container.getConsumption()
+              && container.isEnabled()
+              && !container.isPowered()
+            ) {
+              const required = container.getConsumption();
+              if (required > available) {
+                overloaded.add(container);
+              } else {
+                available -= required;
+                container.setPowered(true);
+                overloaded.delete(container);
+              }
+            }
+            flow(container.getConnections());
+          })
+        );
+        flow(generator.getConnections());
+        generator.setAvailable(available);
+      });
+      Alerts.set(Alert.overloaded, overloaded.size > 0);
     });
-    Alerts.set(Alert.overloaded, overloaded.size > 0);
   }
 }
 

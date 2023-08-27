@@ -4,6 +4,7 @@ import {
   BufferAttribute,
   BufferGeometry,
   CylinderGeometry,
+  MathUtils,
   MeshDepthMaterial,
   MeshStandardMaterial,
   Object3D,
@@ -27,13 +28,19 @@ export class Generator extends PoweredContainer<
     type: 'available';
     power: number;
   }
+  | {
+    type: 'efficiency';
+    scale: number;
+  }
 > {
   private available: number;
+  private efficiency: number;
   private readonly power: number;
 
   constructor(parent: Generators, connectors: Connectors, position: Vector3, rotation: number, power: number) {
     super(parent, connectors, position, rotation, 0, 4);
     this.available = power;
+    this.efficiency = 1;
     this.power = power;
   }
 
@@ -46,8 +53,18 @@ export class Generator extends PoweredContainer<
     this.dispatchEvent({ type: 'available', power });
   }
 
+  getEfficiency() {
+    return this.efficiency;
+  }
+
+  setEfficiency(scale: number) {
+    this.efficiency = scale;
+    this.available = this.getPower();
+    this.dispatchEvent({ type: 'efficiency', scale });
+  }
+
   getPower() {
-    return this.enabled ? this.power : 0;
+    return this.enabled ? Math.floor(this.power * this.efficiency) : 0;
   }
   
   private static readonly wireConnectorOffset: Vector3 = new Vector3(-1, 0, 0);
@@ -236,7 +253,46 @@ class Generators extends Instances<Generator> {
   }
 
   create(position: Vector3, rotation: number, power: number = 100) {
-    return super.addInstance(new Generator(this, Generators.getConnectors(), position, rotation, power));
+    const generator = super.addInstance(new Generator(this, Generators.getConnectors(), position, rotation, power));
+    this.updateEfficiency();
+    return generator;
+  }
+
+  override removeInstance(instance: Generator) {
+    super.removeInstance(instance);
+    this.updateEfficiency();
+  }
+
+  private static readonly efficiencyEvent = { type: 'efficiency' };
+  private static readonly efficiencyRadiusSquared = 32 ** 2;
+  private isUpdatingEfficiency: boolean = false;
+  private updateEfficiency() {
+    if (this.isUpdatingEfficiency) {
+      return;
+    }
+    this.isUpdatingEfficiency = true;
+    // @dani
+    // Defer to the end of the frame
+    // So it happens only once
+    new Promise(() => {
+      this.isUpdatingEfficiency = false;
+      const count = this.getCount();
+      for (let i = 0; i < count; i++) {
+        const generator = this.getInstance(i);
+        let efficiency = MathUtils.clamp(generator.position.y / 10, 0.3, 1);
+        for (let j = 0; j < count; j++) {
+          if (j === i) {
+            continue;
+          }
+          const instance = this.getInstance(j);
+          if (instance.position.distanceToSquared(generator.position) < Generators.efficiencyRadiusSquared) {
+            efficiency *= 0.5;
+          }
+        }
+        generator.setEfficiency(Math.max(efficiency, 0.15));
+      }
+      this.dispatchEvent(Generators.efficiencyEvent);
+    });
   }
 }
 
