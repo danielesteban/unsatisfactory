@@ -14,21 +14,14 @@ class Transformer extends PoweredContainer<
   }
 > {
   private readonly counts: { input: Partial<Record<Item, number>>, output: number };
-  private recipe: Recipe;
+  private recipe?: Recipe;
   private readonly sfx: SFX;
   private sound?: PositionalAudio;
   private tick: number;
 
-  constructor(parent: Instances<Transformer>, connectors: Connectors, position: Vector3, rotation: number, consumption: number, recipe: Recipe, sfx: SFX) {
+  constructor(parent: Instances<Transformer>, connectors: Connectors, position: Vector3, rotation: number, consumption: number, sfx: SFX) {
     super(parent, connectors, position, rotation, consumption);
-    this.counts = {
-      input: recipe.input.reduce<Transformer["counts"]["input"]>((counts, { item }) => {
-        counts[item] = 0;
-        return counts;
-      }, {}),
-      output: 0,
-    };
-    this.recipe = recipe;
+    this.counts = { input: {}, output: 0 };
     this.sfx = sfx;
     this.tick = 0;
   }
@@ -41,7 +34,7 @@ class Transformer extends PoweredContainer<
 
   override canInput(item: Item) {
     const { counts, enabled, recipe } = this;
-    return enabled && !!recipe.input.find((input) => input.item === item && counts.input[item]! < input.count);
+    return enabled && !!recipe?.input.find((input) => input.item === item && counts.input[item]! < input.count);
   }
 
   override input(item: Item) {
@@ -52,7 +45,7 @@ class Transformer extends PoweredContainer<
   override output() {
     const { counts, recipe } = this;
     this.process();
-    if (counts.output > 0) {
+    if (counts.output > 0 && recipe) {
       counts.output--;
       return recipe.output.item;
     }
@@ -64,6 +57,7 @@ class Transformer extends PoweredContainer<
     if (
       !enabled
       || !powered
+      || !recipe
       || !!recipe.input.find(({ item, count }) => counts.input[item]! < count)
       || ++this.tick < recipe.rate
     ) {
@@ -99,7 +93,7 @@ class Transformer extends PoweredContainer<
     const { recipe } = this;
     return [
       ...super.serialize(),
-      Recipes.indexOf(recipe),
+      ...(recipe ? [Recipes.indexOf(recipe)] : []),
     ];
   }
 }

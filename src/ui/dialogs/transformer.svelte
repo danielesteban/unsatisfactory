@@ -72,16 +72,18 @@
           {/each}
         </div>
       </Module>
-      <Production
-        name="Input"
-        items={recipe.input}
-        rate={recipe.rate}
-      />
-      <Production
-        name="Output"
-        items={recipe.output}
-        rate={recipe.rate}
-      />
+      {#if recipe}
+        <Production
+          name="Input"
+          items={recipe.input}
+          rate={recipe.rate}
+        />
+        <Production
+          name="Output"
+          items={recipe.output}
+          rate={recipe.rate}
+        />
+      {/if}
     </Modules>
   </Grid>
 </Dialog>
@@ -93,8 +95,8 @@
   }
   .recipe {
     position: relative;
-    width: 4rem;
-    height: 4rem;
+    width: 5rem;
+    height: 5rem;
     background: rgba(0, 0, 0, .2);
     border: 2px solid transparent;
     border-radius: 0.5rem;
@@ -104,10 +106,10 @@
   }
   .recipe > img {
     position: absolute;
-    width: 3rem;
-    height: 3rem;
-    top: 0.375rem;
-    left: 0.375rem;
+    width: 3.5rem;
+    height: 3.5rem;
+    top: 0.625rem;
+    left: 0.625rem;
     pointer-events: none;
   }
   .recipe > img:nth-child(2) {
@@ -127,6 +129,7 @@
     display: block;
     text-align: center;
     color: #999;
+    white-space: nowrap;
   }
   .recipe:hover > span, .recipe.selected > span {
     color: #eee;

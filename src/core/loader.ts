@@ -22,7 +22,7 @@ import Achievements, { Achievement } from '../ui/stores/achievements';
 import Hotbar from '../ui/stores/hotbar';
 import Points from '../ui/stores/points';
 
-const version = 13;
+const version = 14;
 
 export type Objects = {
   belts: Belts;
@@ -48,8 +48,8 @@ type SerializedPosition = [number, number, number];
 type Serialized = {
   belts: [SerializedContainer, number, SerializedContainer, number, SerializedItems | undefined][];
   buffers: [SerializedPosition, number, SerializedItems | undefined][];
-  combinators: [SerializedPosition, number, SerializedEnabled, number][];
-  fabricators: [SerializedPosition, number, SerializedEnabled, number][];
+  combinators: [SerializedPosition, number, SerializedEnabled, number | undefined][];
+  fabricators: [SerializedPosition, number, SerializedEnabled, number | undefined][];
   foundations: [SerializedPosition, number][];
   generators: [SerializedPosition, number, SerializedEnabled][];
   miners: [SerializedPosition, number, SerializedEnabled, Item, number][];
@@ -57,7 +57,7 @@ type Serialized = {
   poles: [SerializedPosition, number][];
   ramps: [SerializedPosition, number][];
   sinks: [SerializedPosition, number, SerializedEnabled][];
-  smelters: [SerializedPosition, number, SerializedEnabled, number][];
+  smelters: [SerializedPosition, number, SerializedEnabled, number | undefined][];
   walls: [SerializedPosition, number][];
   wires: [SerializedContainer, SerializedContainer][];
   achievements: Achievement[];
@@ -171,7 +171,7 @@ export const deserialize = (
       if (!enabled) {
         combinator.setEnabled(false);
       }
-      if (Recipes[recipe]) {
+      if (recipe !== undefined && Recipes[recipe]) {
         combinator.setRecipe(Recipes[recipe]);
       }
       return combinator;
@@ -181,7 +181,7 @@ export const deserialize = (
       if (!enabled) {
         fabricator.setEnabled(false);
       }
-      if (Recipes[recipe]) {
+      if (recipe !== undefined && Recipes[recipe]) {
         fabricator.setRecipe(Recipes[recipe]);
       }
       return fabricator;
@@ -215,7 +215,7 @@ export const deserialize = (
       if (!enabled) {
         smelter.setEnabled(false);
       }
-      if (Recipes[recipe]) {
+      if (recipe !== undefined && Recipes[recipe]) {
         smelter.setRecipe(Recipes[recipe]);
       }
       return smelter;
@@ -489,5 +489,19 @@ const migrations: Record<number, (serialized: Serialized) => Serialized> = {
       ...serialized,
       points,
     };
-  }
+  },
+  [13]: (serialized: Serialized) => {
+    const remapRecipe = (transformer: [SerializedPosition, number, SerializedEnabled, number | undefined]) => ([
+      ...transformer.slice(0, 3), (transformer[3] || 0) + 1,
+    ] as [SerializedPosition, number, SerializedEnabled, number | undefined]);
+    return {
+      ...serialized,
+      miners: [],
+      combinators: serialized.combinators.map(remapRecipe),
+      fabricators: serialized.fabricators.map(remapRecipe),
+      smelters: serialized.fabricators.map(remapRecipe),
+      belts: serialized.belts.filter(([from, _fromConnector, to]) => from[0] !== 4 && to[0] !== 4),
+      wires: serialized.wires.filter(([from, to]) => from[0] !== 4 && to[0] !== 4),
+    };
+  },
 };

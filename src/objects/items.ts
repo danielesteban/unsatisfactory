@@ -2,7 +2,6 @@ import {
   BoxGeometry,
   BufferGeometry,
   Curve,
-  CylinderGeometry,
   DynamicDrawUsage,
   IcosahedronGeometry,
   InstancedMesh,
@@ -15,48 +14,55 @@ import {
   Sphere,
   SRGBColorSpace,
   TetrahedronGeometry,
+  TubeGeometry,
   Vector3,
 } from 'three';
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 import { loadTexture } from '../textures';
-import MetalDiffuseMap from '../textures/green_metal_rust_diff_1k.webp';
-import MetalNormalMap from '../textures/green_metal_rust_nor_gl_1k.webp';
-import MetalRoughnessMap from '../textures/green_metal_rust_rough_1k.webp';
-import RockDiffuseMap from '../textures/rock_boulder_dry_diff_1k.webp';
-import RockNormalMap from '../textures/rock_boulder_dry_nor_gl_1k.webp';
-import RockRoughnessMap from '../textures/rock_boulder_dry_rough_1k.webp';
+import CopperDiffuseMap from '../textures/rock_06_diff_1k.webp';
+import CopperNormalMap from '../textures/rock_06_nor_gl_1k.webp';
+import CopperRoughnessMap from '../textures/rock_06_rough_1k.webp';
+import IronDiffuseMap from '../textures/rock_boulder_dry_diff_1k.webp';
+import IronNormalMap from '../textures/rock_boulder_dry_nor_gl_1k.webp';
+import IronRoughnessMap from '../textures/rock_boulder_dry_rough_1k.webp';
 import RustDiffuseMap from '../textures/rust_coarse_01_diff_1k.webp';
 import RustNormalMap from '../textures/rust_coarse_01_nor_gl_1k.webp';
 import RustRoughnessMap from '../textures/rust_coarse_01_rough_1k.webp';
 
 export enum Item {
   none,
-  box,
-  cylinder,
-  ingot,
-  ore,
+  wire,
+  ironPlate,
+  ironIngot,
+  ironOre,
   artifact,
+  copperIngot,
+  copperOre,
 }
 
 export const ItemName = {
   [Item.none]: 'None',
   [Item.artifact]: 'Artifact',
-  [Item.box]: 'Box',
-  [Item.cylinder]: 'Cylinder',
-  [Item.ingot]: 'Ingot',
-  [Item.ore]: 'Ore',
+  [Item.copperIngot]: 'Copper Ingot',
+  [Item.copperOre]: 'Copper Ore',
+  [Item.ironIngot]: 'Iron Ingot',
+  [Item.ironOre]: 'Iron Ore',
+  [Item.ironPlate]: 'Iron Plate',
+  [Item.wire]: 'Wire',
 };
 
 export const Mining: Partial<Record<Item, { consumption: number; rate: number; }>> = {
-  [Item.ore]: { consumption: 100, rate: 3 },
+  [Item.copperOre]: { consumption: 100, rate: 1 },
+  [Item.ironOre]: { consumption: 100, rate: 1 },
 };
 
 export const Sinking: Partial<Record<Item, number>> = {
   [Item.artifact]: 32,
-  [Item.box]: 4,
-  [Item.cylinder]: 8,
-  [Item.ingot]: 2,
+  [Item.copperIngot]: 2,
+  [Item.ironIngot]: 2,
+  [Item.ironPlate]: 4,
+  [Item.wire]: 4,
 };
 
 export enum Transformer {
@@ -75,11 +81,11 @@ export type Recipe = {
 export const Recipes: Recipe[] = [
   {
     input: [{
-      item: Item.ore,
+      item: Item.copperOre,
       count: 1,
     }],
     output: {
-      item: Item.ingot,
+      item: Item.copperIngot,
       count: 1,
     },
     rate: 10,
@@ -87,11 +93,23 @@ export const Recipes: Recipe[] = [
   },
   {
     input: [{
-      item: Item.ingot,
+      item: Item.ironOre,
       count: 1,
     }],
     output: {
-      item: Item.cylinder,
+      item: Item.ironIngot,
+      count: 1,
+    },
+    rate: 10,
+    transformer: Transformer.smelter,
+  },
+  {
+    input: [{
+      item: Item.ironIngot,
+      count: 1,
+    }],
+    output: {
+      item: Item.ironPlate,
       count: 1,
     },
     rate: 10,
@@ -99,11 +117,11 @@ export const Recipes: Recipe[] = [
   },
   {
     input: [{
-      item: Item.ingot,
+      item: Item.copperIngot,
       count: 1,
     }],
     output: {
-      item: Item.box,
+      item: Item.wire,
       count: 2,
     },
     rate: 10,
@@ -112,11 +130,11 @@ export const Recipes: Recipe[] = [
   {
     input: [
       {
-        item: Item.cylinder,
+        item: Item.ironPlate,
         count: 3,
       },
       {
-        item: Item.box,
+        item: Item.wire,
         count: 3,
       }
     ],
@@ -194,30 +212,48 @@ class Items extends Group {
   static setupGeometries() {
     if (!Items.geometries) {
       const csgEvaluator = new Evaluator();
-      let brush = new Brush(new BoxGeometry(0.25, 0.25, 0.25));
-      brush = csgEvaluator.evaluate(brush, new Brush(new IcosahedronGeometry(0.15, 2)), SUBTRACTION);
+
+      let brush = new Brush(new BoxGeometry(0.3, 0.3, 0.3));
+      brush = csgEvaluator.evaluate(brush, new Brush(new IcosahedronGeometry(0.175, 3)), SUBTRACTION);
       const artifact = mergeVertices(brush.geometry);
-      artifact.translate(0, 0.125, 0);
+      artifact.translate(0, 0.15, 0);
       artifact.computeBoundingSphere();
-      const box = new BoxGeometry(0.25, 0.25, 0.25);
-      box.translate(0, 0.125, 0);
-      box.computeBoundingSphere();
-      const cylinder = new CylinderGeometry(0.125, 0.125, 0.25);
-      cylinder.translate(0, 0.125, 0);
-      cylinder.computeBoundingSphere();
+
       const ingot = new BoxGeometry(0.5, 0.125, 0.25);
       ingot.translate(0, 0.0625, 0);
       ingot.computeBoundingSphere();
+
       const ore = new TetrahedronGeometry(0.2, 2);
       ore.scale(1.5, 1, 1);
       ore.translate(0, 0.2, 0);
       ore.computeBoundingSphere();
+
+      const plate = new BoxGeometry(0.4, 0.0625, 0.4);
+      plate.translate(0, 0.03125, 0);
+      plate.computeBoundingSphere();
+
+      class WireCurve extends Curve<Vector3> {
+        constructor() { super(); }
+        override getPoint(t: number, optionalTarget = new Vector3()) {
+          const r = 6;
+          return optionalTarget.set(
+            Math.sin(Math.PI * 2 * t * r) * 0.15,
+            t * r * 0.04 + (t < (1 / r) ? 0.04 : 0) + (t > (1 - (1 / r)) ? -0.04 : 0),
+            Math.cos(Math.PI * 2 * t * r) * 0.15
+          );
+        }
+      }
+      const wire = mergeVertices(new TubeGeometry(new WireCurve(), 64, 0.02, 4));
+      wire.computeBoundingSphere();
+
       Items.geometries = {
         [Item.artifact]: artifact,
-        [Item.box]: box,
-        [Item.cylinder]: cylinder,
-        [Item.ingot]: ingot,
-        [Item.ore]: ore,
+        [Item.copperIngot]: ingot,
+        [Item.copperOre]: ore,
+        [Item.ironIngot]: ingot,
+        [Item.ironOre]: ore,
+        [Item.ironPlate]: plate,
+        [Item.wire]: wire,
       };
     }
     return Items.geometries;
@@ -234,23 +270,29 @@ class Items extends Group {
         });
         material.map!.anisotropy = 16;
         material.map!.colorSpace = SRGBColorSpace;
-        material.map!.repeat.set(0.1, 0.1);
+        material.map!.repeat.set(0.2, 0.2);
         [material.map!, material.normalMap!, material.roughnessMap!].forEach((map) => {
           map.wrapS = map.wrapT = RepeatWrapping;
         });
         return material;
       };
-      const metal = getMaterial(MetalDiffuseMap, MetalNormalMap, MetalRoughnessMap);
-      metal.roughness = 0.15;
-      const rock = getMaterial(RockDiffuseMap, RockNormalMap, RockRoughnessMap);
-      rock.envMapIntensity = rock.roughness = 0.7;
+      const iron = getMaterial(IronDiffuseMap, IronNormalMap, IronRoughnessMap);
+      iron.roughness = 0.7;
+      const copper = getMaterial(CopperDiffuseMap, CopperNormalMap, CopperRoughnessMap);
+      copper.roughness = 0.7;
       const rust = getMaterial(RustDiffuseMap, RustNormalMap, RustRoughnessMap);
+      const wire = new MeshStandardMaterial({
+        color: 0,
+        roughness: 0.3,
+      });
       Items.materials = {
-        [Item.artifact]: metal,
-        [Item.box]: metal,
-        [Item.cylinder]: metal,
-        [Item.ingot]: rust,
-        [Item.ore]: rock,
+        [Item.artifact]: rust,
+        [Item.copperIngot]: copper,
+        [Item.copperOre]: copper,
+        [Item.ironIngot]: iron,
+        [Item.ironOre]: iron,
+        [Item.ironPlate]: iron,
+        [Item.wire]: wire,
       };
     }
     return Items.materials;
@@ -269,7 +311,7 @@ class Items extends Group {
   }
 
   private readonly bounds: Sphere;
-  private readonly instances: Record<Exclude<Item, Item.none>, InstancedItems | undefined>;
+  private readonly instances: Partial<Record<Exclude<Item, Item.none>, InstancedItems | undefined>>;
   private readonly path: Curve<Vector3>;
   private readonly tangents: Vector3[];
 
@@ -277,14 +319,8 @@ class Items extends Group {
     super();
     this.updateMatrixWorld();
     this.matrixAutoUpdate = false;
-    this.instances = {
-      [Item.artifact]: undefined,
-      [Item.box]: undefined,
-      [Item.cylinder]: undefined,
-      [Item.ingot]: undefined,
-      [Item.ore]: undefined,
-    };
     this.bounds = bounds;
+    this.instances = {};
     this.path = path;
     const { tangents } = path.computeFrenetFrames(count, false);
     this.tangents = tangents;

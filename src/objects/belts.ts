@@ -158,7 +158,7 @@ class Belts extends Group {
       // this is prolly wrong but it seems to work at preventing weird horizontal extrusions
       const { normals, binormals } = path.computeFrenetFrames(1, false);
       if (Math.abs(normals[0].dot(Object3D.DEFAULT_UP)) < Math.abs(binormals[0].dot(Object3D.DEFAULT_UP))) {
-        const flipBinormals = binormals[0].dot(Object3D.DEFAULT_UP) > 0;
+        const flipBinormals = binormals[0].dot(Object3D.DEFAULT_UP) > 0.001;
         const compute = path.computeFrenetFrames.bind(path);
         path.computeFrenetFrames = (steps: number, closed: boolean) => {
           const { normals, binormals, tangents } = compute(steps, closed);

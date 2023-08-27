@@ -50,7 +50,7 @@ const viewport = new Viewport();
   Belts.getMaterial(),
   Buffers.getMaterial(),
   Combinators.getMaterial(),
-  Deposit.getMaterial(),
+  ...Deposit.getMaterials(),
   Fabricators.getMaterial(),
   Foundations.getMaterial(),
   Generators.getMaterial(),

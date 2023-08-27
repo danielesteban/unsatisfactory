@@ -14,7 +14,6 @@ import Instances from '../core/instances';
 import Physics from '../core/physics';
 import SFX from '../core/sfx';
 import Transformer from '../core/transformer';
-import { Recipes, Transformer as ItemTransformer } from './items';
 import { loadTexture } from '../textures';
 import DiffuseMap from '../textures/rust_coarse_01_diff_1k.webp';
 import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.webp';
@@ -22,9 +21,8 @@ import RoughnessMap from '../textures/rust_coarse_01_rough_1k.webp';
 import Achievements, { Achievement } from '../ui/stores/achievements';
 
 export class Combinator extends Transformer {
-  private static readonly defaultRecipe = Recipes.find(({ transformer }) => transformer === ItemTransformer.combinator)!;
   constructor(parent: Combinators, connectors: Connectors, position: Vector3, rotation: number, sfx: SFX) {
-    super(parent, connectors, position, rotation, 20, Combinator.defaultRecipe, sfx);
+    super(parent, connectors, position, rotation, 20, sfx);
   }
 
   override process() {

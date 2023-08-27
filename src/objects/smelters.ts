@@ -15,7 +15,6 @@ import Instances, { Instance } from '../core/instances';
 import Physics from '../core/physics';
 import SFX from '../core/sfx';
 import Transformer from '../core/transformer';
-import { Recipes, Transformer as ItemTransformer } from './items';
 import { loadTexture } from '../textures';
 import DiffuseMap from '../textures/rust_coarse_01_diff_1k.webp';
 import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.webp';
@@ -23,9 +22,8 @@ import RoughnessMap from '../textures/rust_coarse_01_rough_1k.webp';
 import Achievements, { Achievement } from '../ui/stores/achievements';
 
 export class Smelter extends Transformer {
-  private static readonly defaultRecipe = Recipes.find(({ transformer }) => transformer === ItemTransformer.smelter)!;
   constructor(parent: Smelters, connectors: Connectors, position: Vector3, rotation: number, sfx: SFX) {
-    super(parent, connectors, position, rotation, 10, Smelter.defaultRecipe, sfx);
+    super(parent, connectors, position, rotation, 10, sfx);
   }
 
   private static readonly wireConnectorOffset: Vector3 = new Vector3(1, 0, 0);
