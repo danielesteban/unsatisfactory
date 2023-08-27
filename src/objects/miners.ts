@@ -29,7 +29,7 @@ export class Miner extends PoweredContainer {
   private readonly rate: number;
   private readonly sfx: SFX;
   private sound?: PositionalAudio;
-  private static readonly capacity: number = 4;
+  private static readonly buffer: number = 4;
   private count: number;
   private outputBelt: number;
   private tick: number;
@@ -104,7 +104,7 @@ export class Miner extends PoweredContainer {
     if (
       !enabled
       || !powered
-      || count >= Miner.capacity
+      || count >= Miner.buffer
       || ++this.tick < rate
     ) {
       return false;

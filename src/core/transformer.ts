@@ -13,6 +13,7 @@ class Transformer extends PoweredContainer<
     data: Recipe;
   }
 > {
+  private static readonly buffer: number = 4;
   private readonly counts: { input: Partial<Record<Item, number>>, output: number };
   private recipe?: Recipe;
   private readonly sfx: SFX;
@@ -73,6 +74,7 @@ class Transformer extends PoweredContainer<
       || !powered
       || !recipe
       || !!recipe.input.find(({ item, count }) => counts.input[item]! < count)
+      || counts.output >= recipe.output.count + Transformer.buffer
       || ++this.tick < recipe.rate
     ) {
       return false;
