@@ -278,6 +278,8 @@ const objectPosition = new Vector3();
 const rotatedDirection = new Vector3();
 const rotatedOffset = new Vector3();
 const rotatedBrushOffset = new Vector3();
+const worldEast = new Vector3(1, 0, 0);
+const worldSouth = new Vector3(0, 0, 1);
 export const snap = (intersection: Intersection) => {
   if (intersection.object instanceof Deposit && brush === Brush.miner) {
     return intersection.object.localToWorld(new Vector3(0, 2, 0)).add(terrainOffsets[brush]);
@@ -288,14 +290,22 @@ export const snap = (intersection: Intersection) => {
 
     const objectQuaternion = Instance.getQuaternion(intersection.object, true);
     objectNormal.copy(intersection.normal).applyQuaternion(objectQuaternion);
-    rotatedOffset.copy(offset).multiply(objectNormal);
-    if (objectNormal.dot(Object3D.DEFAULT_UP) > 0) {
-      objectPosition.copy(intersection.point).sub(intersection.object.position).applyQuaternion(objectQuaternion);
+
+    objectPosition.copy(intersection.point).sub(intersection.object.position).applyQuaternion(objectQuaternion);
+    if (Math.abs(objectNormal.dot(Object3D.DEFAULT_UP)) > 0.001) {  
       objectPosition.y = 0;
-      objectPosition.round();
-      rotatedOffset.add(objectPosition);
+    } else if (Math.abs(objectNormal.dot(worldEast)) > 0.001) {  
+      objectPosition.x = 0;
+    } else if (Math.abs(objectNormal.dot(worldSouth)) > 0.001) {  
+      objectPosition.z = 0;
     }
-    rotatedOffset.applyQuaternion(Instance.getQuaternion(intersection.object));
+    objectPosition.round();
+  
+    rotatedOffset
+      .copy(offset)
+      .multiply(objectNormal)
+      .add(objectPosition)
+      .applyQuaternion(Instance.getQuaternion(intersection.object));
 
     rotatedDirection.copy(intersection.normal).applyQuaternion(quaternion.setFromAxisAngle(Object3D.DEFAULT_UP, -rotation));
     rotatedBrushOffset.copy(brushOffset).multiply(rotatedDirection).applyQuaternion(quaternion.setFromAxisAngle(Object3D.DEFAULT_UP, rotation));
