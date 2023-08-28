@@ -22,7 +22,7 @@ import Achievements, { Achievement } from '../ui/stores/achievements';
 import Hotbar from '../ui/stores/hotbar';
 import Points from '../ui/stores/points';
 
-const version = 14;
+const version = 15;
 
 export type Objects = {
   belts: Belts;
@@ -47,7 +47,7 @@ type SerializedPosition = [number, number, number];
 
 type Serialized = {
   belts: [SerializedContainer, number, SerializedContainer, number, SerializedItems | undefined][];
-  buffers: [SerializedPosition, number, SerializedItems | undefined][];
+  buffers: [SerializedPosition, number, Item | undefined][];
   combinators: [SerializedPosition, number, SerializedEnabled, number | undefined][];
   fabricators: [SerializedPosition, number, SerializedEnabled, number | undefined][];
   foundations: [SerializedPosition, number][];
@@ -159,10 +159,10 @@ export const deserialize = (
   }
   const aux = new Vector3();
   const containers = [
-    serialized.buffers.map(([position, rotation, items]) => {
+    serialized.buffers.map(([position, rotation, item]) => {
       const buffer = buffers.create(aux.fromArray(position), rotation);
-      if (items?.length) {
-        buffer.setItems(deserializeItems(items));
+      if (item !== undefined) {
+        buffer.setItem(item);
       }
       return buffer;
     }),
@@ -502,6 +502,14 @@ const migrations: Record<number, (serialized: Serialized) => Serialized> = {
       smelters: serialized.smelters.map(remapRecipe),
       belts: serialized.belts.filter(([from, _fromConnector, to]) => from[0] !== 4 && to[0] !== 4),
       wires: serialized.wires.filter(([from, to]) => from[0] !== 4 && to[0] !== 4),
+    };
+  },
+  [14]: (serialized: Serialized) => {
+    return {
+      ...serialized,
+      buffers: serialized.buffers.map(([position, rotation, items]) => ([
+        position, rotation, ((items as any) || [])[0]
+      ])),
     };
   },
 };

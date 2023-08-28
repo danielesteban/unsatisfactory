@@ -11,85 +11,49 @@ import { SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 import Container, { Connectors } from '../core/container';
 import Instances from '../core/instances';
 import Physics from '../core/physics';
-import { Belt } from './belts';
-import { Item, serializeItems } from './items';
+import { Item } from './items';
 import { loadTexture } from '../textures';
 import DiffuseMap from '../textures/rust_coarse_01_diff_1k.webp';
 import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.webp';
 import RoughnessMap from '../textures/rust_coarse_01_rough_1k.webp';
 
 export class Buffer extends Container {
-  private static readonly capacity: number = 4;
-  private readonly items: Item[];
-  private inputBelt: number;
-  private outputBelt: number;
+  private item: Item;
 
   constructor(parent: Buffers, connectors: Connectors, position: Vector3, rotation: number) {
     super(parent, connectors, position, rotation);
-    this.items = [];
-    this.inputBelt = 0;
-    this.outputBelt = 0;
+    this.item = Item.none;
   }
 
-  override canInput(_item: Item, belt: Belt) {
-    const { belts: { input: belts }, inputBelt, items } = this;
-    const canInput = items.length < Buffer.capacity;
-    if (belts.length <= 1) {
-      return canInput;
-    }
-    if (
-      inputBelt < belts.length
-      && belts[inputBelt] !== belt
-      && belts[inputBelt].hasOutput()
-    ) {
-      return false;
-    }
-    if (canInput) {
-      this.inputBelt = (belts.indexOf(belt) + 1) % belts.length;
-    }
-    return canInput;
+  setItem(item: Item) {
+    this.item = item;
+  }
+    
+  override canInput() {
+    const { item } = this;
+    return item === Item.none;
   }
 
   override input(item: Item) {
-    const { items } = this;
-    items.unshift(item);
+    this.item = item;
+  }
+  
+  override canOutput() {
+    const { item } = this;
+    return item !== Item.none;
   }
 
-  private getOutput() {
-    const { items } = this;
-    return items.pop() || Item.none;
-  }
-
-  override output(belt: Belt) {
-    const { belts: { output: belts }, outputBelt } = this;
-    if (belts.length <= 1) {
-      return this.getOutput();
-    }
-    if (
-      outputBelt < belts.length
-      && belts[outputBelt] !== belt
-      && belts[outputBelt].canInput()
-    ) {
-      return Item.none;
-    }
-    const output = this.getOutput();
-    if (output !== Item.none) {
-      this.outputBelt = (belts.indexOf(belt) + 1) % belts.length;
-    }
-    return output;
-  }
-
-  setItems(data: Item[]) {
-    const { items } = this;
-    items.length = 0;
-    items.push(...data.slice(0, Buffer.capacity));
+  override output() {
+    const { item } = this;
+    this.item = Item.none;
+    return item;
   }
 
   override serialize() {
-    const items = serializeItems(this.items.filter((item) => item !== Item.none));
+    const { item } = this;
     return [
       ...super.serialize(),
-      ...(items ? [items] : []),
+      ...(item !== Item.none ? [item] : []),
     ];
   }
 }

@@ -77,42 +77,55 @@ export class Belt extends Mesh {
   }
 
   canInput() {
-    return !this.isSaturated;
+    const { slots } = this;
+    return slots[0].item === Item.none;
   }
 
-  hasOutput() {
+  input(item: Item) {
     const { slots } = this;
-    return slots[slots.length - 1].item !== Item.none;
+    const input = slots[0];
+    input.item = item;
+    input.locked = false;
+  }
+
+  output() {
+    const { slots } = this;
+    const output = slots[slots.length - 1];
+    const { item } = output;
+    output.item = Item.none;
+    output.locked = false;
+    this.isSaturated = false;
+    return item;
+  }
+
+  peek() {
+    const { slots } = this;
+    return slots[slots.length - 1].item;
   }
 
   step() {
-    const { from, to, slots } = this;
-    const output = slots[slots.length - 1];
-    if (output.item !== Item.none && to.container.canInput(output.item, this)) {
-      to.container.input(output.item);
-      output.item = Item.none;
-      this.isSaturated = false;
+    const { slots } = this;
+    if (this.isSaturated) {
+      return;
     }
-
-    if (!this.isSaturated) {
-      this.isSaturated = true;
-      this.needsUpdate = true;
-      for (let i = slots.length - 1; i > 0; i--) {
-        if (slots[i].item === Item.none && slots[i - 1].item !== Item.none) {
-          slots[i].item = slots[i - 1].item;
-          slots[i].locked = false;
-          slots[i - 1].item = Item.none;
-          this.isSaturated = false;
-        } else {
-          slots[i].locked = true;
-        }
-      }
-      if (slots[0].item === Item.none) {
-        slots[0].item = from.container.output(this);
-        slots[0].locked = false;
-        this.isSaturated = false;
+    this.needsUpdate = true;
+    let isSaturated = true;
+    for (let i = slots.length - 1; i > 0; i--) {
+      if (slots[i].item === Item.none && slots[i - 1].item !== Item.none) {
+        slots[i].item = slots[i - 1].item;
+        slots[i].locked = false;
+        slots[i - 1].item = Item.none;
+        isSaturated = false;
+      } else {
+        slots[i].locked = true;
       }
     }
+    if (slots[0].item === Item.none) {
+      isSaturated = false;
+    } else {
+      slots[0].locked = true;
+    }
+    this.isSaturated = isSaturated;
   }
 
   getItems() {

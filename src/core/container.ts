@@ -39,27 +39,40 @@ export class Connectors extends Group {
 }
 
 class Container<Events extends BaseEvent = BaseEvent> extends Instance<Events> {
-  protected readonly belts: {
+  private readonly belts: {
     input: Belt[];
     output: Belt[];
   };
-  protected readonly connectors: Connectors;
+  private readonly connectors: Connectors;
+  private readonly splitter: {
+    input: number;
+    output: number;
+  };
 
   constructor(parent: Instances<Instance<Events>>, connectors: Connectors, position: Vector3, rotation: number) {
     super(parent, position, rotation);
     this.belts = { input: [], output: [] };
     this.connectors = connectors;
+    this.splitter = { input: 0, output: 0 };
   }
 
-  canInput(_item: Item, _belt: Belt) {
+  protected acceptsInput(_item: Item) {
+    return this.canInput();
+  }
+
+  protected canInput() {
     return false;
   }
 
-  input(_item: Item) {
+  protected input(_item: Item) {
 
   }
 
-  output(_belt: Belt) {
+  protected canOutput() {
+    return false;
+  }
+
+  protected output() {
     return Item.none;
   }
 
@@ -103,15 +116,58 @@ class Container<Events extends BaseEvent = BaseEvent> extends Instance<Events> {
   }
 
   addBelt(belt: Belt, type: 'input' | 'output') {
-    const { belts } = this;
+    const { belts, splitter } = this;
     belts[type].push(belt);
+    splitter[type] = 0;
   }
 
   removeBelt(belt: Belt, type: 'input' | 'output') {
-    const { belts } = this;
+    const { belts, splitter } = this;
     const index = belts[type].indexOf(belt);
     if (index !== -1) {
       belts[type].splice(index, 1);
+    }
+    splitter[type] = 0;
+  }
+
+  stepInput() {
+    const { belts, splitter } = this;
+    if (!this.canInput()) {
+      return;
+    }
+    for (let i = 0; i < belts.input.length; i++) {
+      let belt;
+      const output = belts.input[splitter.input].peek();
+      if (output !== Item.none && this.acceptsInput(output)) {
+        belt = belts.input[splitter.input];
+      }
+      splitter.input = (splitter.input + 1) % belts.input.length;
+      if (belt) {
+        this.input(belt.output());
+        if (!this.canInput()) {
+          return;
+        }
+      }
+    }
+  }
+
+  stepOutput() {
+    const { belts, splitter } = this;
+    if (!this.canOutput()) {
+      return;
+    }
+    for (let i = 0; i < belts.output.length; i++) {
+      let belt;
+      if (belts.output[splitter.output].canInput()) {
+        belt = belts.output[splitter.output];
+      }
+      splitter.output = (splitter.output + 1) % belts.output.length;
+      if (belt) {
+        belt.input(this.output());
+        if (!this.canOutput()) {
+          return;
+        }
+      }
     }
   }
 };

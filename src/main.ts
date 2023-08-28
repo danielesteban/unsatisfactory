@@ -418,7 +418,10 @@ const getConnector = (intersection: Intersection, raycaster: Raycaster) => {
 const center = new Vector2();
 const raycaster = new Raycaster();
 raycaster.far = viewport.camera.far;
-const simulation = new Simulation(belts, [combinators, fabricators, miners, smelters]);
+const simulation = new Simulation(
+  belts,
+  [buffers, combinators, fabricators, miners, sinks, smelters]
+);
 const animate = (buttons: Buttons, delta: number) => {
   birds.step(delta);
   simulation.step(delta);

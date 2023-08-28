@@ -319,6 +319,7 @@ class Items extends Group {
     super();
     this.updateMatrixWorld();
     this.matrixAutoUpdate = false;
+    this.renderOrder = 1;
     this.bounds = bounds;
     this.instances = {};
     this.path = path;

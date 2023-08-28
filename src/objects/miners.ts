@@ -15,7 +15,6 @@ import { Connectors, PoweredContainer } from '../core/container';
 import Instances from '../core/instances';
 import Physics from '../core/physics';
 import SFX from '../core/sfx';
-import { Belt } from './belts';
 import { Item, Mining } from './items';
 import { loadTexture } from '../textures';
 import DiffuseMap from '../textures/rust_coarse_01_diff_1k.webp';
@@ -31,7 +30,6 @@ export class Miner extends PoweredContainer {
   private sound?: PositionalAudio;
   private static readonly buffer: number = 4;
   private count: number;
-  private outputBelt: number;
   private tick: number;
 
   constructor(parent: Miners, connectors: Connectors, position: Vector3, rotation: number, item: Item, purity: number, sfx: SFX) {
@@ -42,7 +40,6 @@ export class Miner extends PoweredContainer {
     this.rate = rate * purity;
     this.sfx = sfx;
     this.count = 0;
-    this.outputBelt = 0;
     this.tick = 0;
   }
 
@@ -71,32 +68,18 @@ export class Miner extends PoweredContainer {
     }
   }
 
-  private getOutput() {
+  override canOutput() {
+    const { count } = this;
+    return count > 0;
+  }
+
+  override output() {
     const { count, item } = this;
     if (count > 0) {
       this.count--;
       return item;
     }
     return Item.none;
-  }
-
-  override output(belt: Belt) {
-    const { belts: { output: belts }, outputBelt } = this;
-    if (belts.length <= 1) {
-      return this.getOutput();
-    }
-    if (
-      outputBelt < belts.length
-      && belts[outputBelt] !== belt
-      && belts[outputBelt].canInput()
-    ) {
-      return Item.none;
-    }
-    const output = this.getOutput();
-    if (output !== Item.none) {
-      this.outputBelt = (belts.indexOf(belt) + 1) % belts.length;
-    }
-    return output;
   }
 
   process() {

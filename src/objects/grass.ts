@@ -129,6 +129,7 @@ class Grass extends Mesh {
     geometry.setAttribute('instance', new InstancedBufferAttribute(new Float32Array(geometry.instanceCount * 4), 4));
     super(geometry, Grass.getMaterial());
     this.matrixAutoUpdate = false;
+    this.renderOrder = 2;
   }
 
   private static readonly aux: Vector3 = new Vector3();

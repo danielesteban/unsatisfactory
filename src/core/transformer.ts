@@ -13,7 +13,6 @@ class Transformer extends PoweredContainer<
     data: Recipe;
   }
 > {
-  private static readonly buffer: number = 4;
   private readonly counts: { input: Partial<Record<Item, number>>, output: number };
   private recipe?: Recipe;
   private readonly sfx: SFX;
@@ -48,14 +47,26 @@ class Transformer extends PoweredContainer<
     }
   }
 
-  override canInput(item: Item) {
+  override acceptsInput(item: Item) {
     const { counts, enabled, recipe } = this;
     return enabled && !!recipe?.input.find((input) => input.item === item && counts.input[item]! < input.count);
+  }
+
+  override canInput() {
+    const { counts, enabled, recipe } = this;
+    return (
+      enabled && !!recipe?.input.find(({ item, count }) => counts.input[item]! < count)
+    );
   }
 
   override input(item: Item) {
     const { counts } = this;
     counts.input[item]!++;
+  }
+
+  override canOutput() {
+    const { counts } = this;
+    return counts.output > 0;
   }
 
   override output() {
@@ -73,19 +84,25 @@ class Transformer extends PoweredContainer<
       !enabled
       || !powered
       || !recipe
-      || !!recipe.input.find(({ item, count }) => counts.input[item]! < count)
-      || counts.output >= recipe.output.count + Transformer.buffer
-      || ++this.tick < recipe.rate
+      || counts.output >= recipe.output.count
     ) {
+      return false;
+    }
+    if (this.tick === 0) {
+      if (!!recipe.input.find(({ item, count }) => counts.input[item]! < count)) {
+        return false;
+      }
+      recipe.input.forEach(({ item, count }) => {
+        counts.input[item]! -= count;
+      });
+    }
+    if (++this.tick < recipe.rate) {
       return false;
     }
     this.tick = 0;
     if (!this.sound?.isPlaying) {
       this.sound = sfx.playAt('machine', position, Math.random() * 0.1, (Math.random() - 0.5) * 1200);
     }
-    recipe.input.forEach(({ item, count }) => {
-      counts.input[item]! -= count;
-    });
     counts.output += recipe.output.count;
     return true;
   }
