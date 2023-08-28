@@ -2,6 +2,7 @@ import {
   BoxGeometry,
   BufferGeometry,
   Curve,
+  CylinderGeometry,
   DynamicDrawUsage,
   IcosahedronGeometry,
   InstancedMesh,
@@ -18,7 +19,7 @@ import {
   Vector3,
 } from 'three';
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
+import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 import { loadTexture } from '../textures';
 import CopperDiffuseMap from '../textures/rock_06_diff_1k.webp';
 import CopperNormalMap from '../textures/rock_06_nor_gl_1k.webp';
@@ -39,6 +40,7 @@ export enum Item {
   artifact,
   copperIngot,
   copperOre,
+  ironRod,
 }
 
 export const ItemName = {
@@ -49,6 +51,7 @@ export const ItemName = {
   [Item.ironIngot]: 'Iron Ingot',
   [Item.ironOre]: 'Iron Ore',
   [Item.ironPlate]: 'Iron Plate',
+  [Item.ironRod]: 'Iron Rod',
   [Item.wire]: 'Wire',
 };
 
@@ -61,7 +64,8 @@ export const Sinking: Partial<Record<Item, number>> = {
   [Item.artifact]: 32,
   [Item.copperIngot]: 2,
   [Item.ironIngot]: 2,
-  [Item.ironPlate]: 4,
+  [Item.ironPlate]: 6,
+  [Item.ironRod]: 4,
   [Item.wire]: 4,
 };
 
@@ -113,6 +117,18 @@ export const Recipes: Recipe[] = [
       count: 1,
     },
     rate: 10,
+    transformer: Transformer.fabricator,
+  },
+  {
+    input: [{
+      item: Item.ironIngot,
+      count: 1,
+    }],
+    output: {
+      item: Item.ironRod,
+      count: 1,
+    },
+    rate: 5,
     transformer: Transformer.fabricator,
   },
   {
@@ -232,6 +248,25 @@ class Items extends Group {
       plate.translate(0, 0.03125, 0);
       plate.computeBoundingSphere();
 
+      const rodBrush = new Brush(new CylinderGeometry(0.04, 0.04, 0.5));
+      rodBrush.geometry.rotateZ(Math.PI * 0.5);
+      rodBrush.geometry.translate(0, 0.04, 0);
+      brush = rodBrush.clone();
+      rodBrush.position.set(0, 0.08 * 0.9, 0.04 * 0.9);
+      rodBrush.updateMatrixWorld();
+      brush = csgEvaluator.evaluate(brush, rodBrush, ADDITION);
+      rodBrush.position.set(0, 0.08 * 0.9, -0.04 * 0.9);
+      rodBrush.updateMatrixWorld();
+      brush = csgEvaluator.evaluate(brush, rodBrush, ADDITION);
+      rodBrush.position.set(0, 0, 0.08 * 0.9);
+      rodBrush.updateMatrixWorld();
+      brush = csgEvaluator.evaluate(brush, rodBrush, ADDITION);
+      rodBrush.position.set(0, 0, -0.08 * 0.9);
+      rodBrush.updateMatrixWorld();
+      brush = csgEvaluator.evaluate(brush, rodBrush, ADDITION);
+      const rod = mergeVertices(brush.geometry);
+      rod.computeBoundingSphere();
+
       class WireCurve extends Curve<Vector3> {
         constructor() { super(); }
         override getPoint(t: number, optionalTarget = new Vector3()) {
@@ -253,6 +288,7 @@ class Items extends Group {
         [Item.ironIngot]: ingot,
         [Item.ironOre]: ore,
         [Item.ironPlate]: plate,
+        [Item.ironRod]: rod,
         [Item.wire]: wire,
       };
     }
@@ -292,6 +328,7 @@ class Items extends Group {
         [Item.ironIngot]: iron,
         [Item.ironOre]: iron,
         [Item.ironPlate]: iron,
+        [Item.ironRod]: iron,
         [Item.wire]: wire,
       };
     }

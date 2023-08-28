@@ -22,7 +22,7 @@ import Achievements, { Achievement } from '../ui/stores/achievements';
 import Hotbar from '../ui/stores/hotbar';
 import Points from '../ui/stores/points';
 
-const version = 15;
+const version = 16;
 
 export type Objects = {
   belts: Belts;
@@ -510,6 +510,17 @@ const migrations: Record<number, (serialized: Serialized) => Serialized> = {
       buffers: serialized.buffers.map(([position, rotation, items]) => ([
         position, rotation, ((items as any) || [])[0]
       ])),
+    };
+  },
+  [15]: (serialized: Serialized) => {
+    const remapRecipe = (transformer: [SerializedPosition, number, SerializedEnabled, number | undefined]) => ([
+      ...transformer.slice(0, 3), transformer[3] ? (transformer[3] + (transformer[3] >= 3 ? 1 : 0)) : undefined,
+    ] as [SerializedPosition, number, SerializedEnabled, number | undefined]);
+    return {
+      ...serialized,
+      combinators: serialized.combinators.map(remapRecipe),
+      fabricators: serialized.fabricators.map(remapRecipe),
+      smelters: serialized.smelters.map(remapRecipe),
     };
   },
 };
