@@ -91,9 +91,10 @@ class SFX extends Group {
   }
 
   private static readonly endedEvent = { type: 'ended' };
+  private static readonly maxDistanceSquared = 128 ** 2;
   playAt(id: keyof typeof Sounds, position: Vector3, delta: number = 0, detune: number = 0, volume: number = 0.4, onEnded?: () => void) {
     const { buffers, listener, pool } = this;
-    if (!buffers || !listener) {
+    if (!buffers || !listener || listener.position.distanceToSquared(position) >= SFX.maxDistanceSquared) {
       return;
     }
     let sound = pool.find(({ isPlaying, userData }) => !isPlaying && userData.id === id);
