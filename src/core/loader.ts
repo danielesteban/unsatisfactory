@@ -514,7 +514,7 @@ const migrations: Record<number, (serialized: Serialized) => Serialized> = {
   },
   [15]: (serialized: Serialized) => {
     const remapRecipe = (transformer: [SerializedPosition, number, SerializedEnabled, number | undefined]) => ([
-      ...transformer.slice(0, 3), transformer[3] ? (transformer[3] + (transformer[3] >= 3 ? 1 : 0)) : undefined,
+      ...transformer.slice(0, 3), transformer[3] !== undefined ? (transformer[3] + (transformer[3] >= 3 ? 1 : 0)) : undefined,
     ] as [SerializedPosition, number, SerializedEnabled, number | undefined]);
     return {
       ...serialized,
