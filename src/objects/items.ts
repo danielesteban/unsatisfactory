@@ -128,7 +128,7 @@ export const Recipes: Recipe[] = [
       item: Item.ironRod,
       count: 1,
     },
-    rate: 5,
+    rate: 20,
     transformer: Transformer.fabricator,
   },
   {
