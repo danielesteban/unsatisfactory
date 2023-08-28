@@ -56,8 +56,9 @@ export class Miner extends PoweredContainer {
   }
 
   override dispose() {
-    if (this.sound?.isPlaying) {
-      this.sound.stop();
+    const { sound } = this;
+    if (sound) {
+      sound.stop();
     }
   }
 
@@ -93,10 +94,19 @@ export class Miner extends PoweredContainer {
       return false;
     }
     this.tick = 0;
-    if (!this.sound?.isPlaying) {
-      this.sound = sfx.playAt('machine', position, Math.random() * 0.1, (Math.random() - 0.5) * 1200);
-    }
     this.count++;
+    if (!this.sound) {
+      this.sound = sfx.playAt(
+        'machine',
+        position,
+        Math.random() * 0.1,
+        (Math.random() - 0.5) * 1200,
+        0.4,
+        () => {
+          this.sound = undefined;
+        }
+      );
+    }
     return true;
   }
 

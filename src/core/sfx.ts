@@ -90,7 +90,8 @@ class SFX extends Group {
     }
   }
 
-  playAt(id: keyof typeof Sounds, position: Vector3, delta: number = 0, detune: number = 0, volume: number = 0.4) {
+  private static readonly endedEvent = { type: 'ended' };
+  playAt(id: keyof typeof Sounds, position: Vector3, delta: number = 0, detune: number = 0, volume: number = 0.4, onEnded?: () => void) {
     const { buffers, listener, pool } = this;
     if (!buffers || !listener) {
       return;
@@ -100,6 +101,10 @@ class SFX extends Group {
       sound = new PositionalAudio(listener);
       sound.userData.id = id;
       sound.matrixAutoUpdate = false;
+      sound.onEnded = () => {
+        sound!.isPlaying = false;
+        sound!.dispatchEvent(SFX.endedEvent);
+      };
       sound.setBuffer(buffers[id]);
       pool.push(sound);
       this.add(sound);
@@ -109,6 +114,13 @@ class SFX extends Group {
     sound.play(sound.listener.timeDelta + delta);
     sound.setDetune(detune);
     sound.setVolume(volume);
+    if (onEnded) {
+      const ended = () => {
+        sound!.removeEventListener('ended', ended);
+        onEnded();
+      };
+      sound.addEventListener('ended', ended);
+    }
     return sound;
   }
 
