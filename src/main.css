@@ -75,6 +75,10 @@ canvas {
   z-index: 2;
 }
 
+body.pointerlock #info {
+  display: none;
+}
+
 body.loading #viewport {
   filter: blur(0.75rem);
 }
