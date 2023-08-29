@@ -11,7 +11,7 @@
   export let close: () => void;
   export let instance: Miner;
 
-  let item = { item: instance.getItem(), count: 1 };
+  let item = { item: instance.getItem(), count: instance.getCount() };
   let rate = instance.getRate();
 </script>
 

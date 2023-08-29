@@ -55,9 +55,9 @@ export const ItemName = {
   [Item.wire]: 'Wire',
 };
 
-export const Mining: Partial<Record<Item, { consumption: number; rate: number; }>> = {
-  [Item.copperOre]: { consumption: 100, rate: 1 },
-  [Item.ironOre]: { consumption: 100, rate: 1 },
+export const Mining: Partial<Record<Item, { consumption: number; count: number; rate: number; }>> = {
+  [Item.copperOre]: { consumption: 100, count: 20, rate: 20 },
+  [Item.ironOre]: { consumption: 100, count: 20, rate: 20 },
 };
 
 export const Sinking: Partial<Record<Item, number>> = {

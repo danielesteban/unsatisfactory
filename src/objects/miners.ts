@@ -23,24 +23,29 @@ import RoughnessMap from '../textures/rust_coarse_01_rough_1k.webp';
 import Achievements, { Achievement } from '../ui/stores/achievements';
 
 export class Miner extends PoweredContainer {
+  private buffer: number;
+  private readonly count: number;
   private readonly item: Item;
   private readonly purity: number;
   private readonly rate: number;
   private readonly sfx: SFX;
   private sound?: PositionalAudio;
-  private static readonly buffer: number = 4;
-  private count: number;
   private tick: number;
 
   constructor(parent: Miners, connectors: Connectors, position: Vector3, rotation: number, item: Item, purity: number, sfx: SFX) {
-    const { consumption, rate } = Mining[item] || { consumption: 0, rate: 0 };
+    const { consumption, count, rate } = Mining[item] || { consumption: 0, count: 0, rate: 0 };
     super(parent, connectors, position, rotation, consumption / purity);
+    this.buffer = 0;
+    this.count = count;
     this.item = item;
     this.purity = purity;
     this.rate = rate * purity;
     this.sfx = sfx;
-    this.count = 0;
-    this.tick = 0;
+    this.tick = rate;
+  }
+
+  getCount() {
+    return this.count;
   }
 
   getItem() {
@@ -70,31 +75,31 @@ export class Miner extends PoweredContainer {
   }
 
   override canOutput() {
-    const { count } = this;
-    return count > 0;
+    const { buffer } = this;
+    return buffer > 0;
   }
 
   override output() {
-    const { count, item } = this;
-    if (count > 0) {
-      this.count--;
+    const { buffer, item } = this;
+    if (buffer > 0) {
+      this.buffer--;
       return item;
     }
     return Item.none;
   }
 
   process() {
-    const { count, enabled, position, powered, rate, sfx } = this;
+    const { buffer, count, enabled, position, powered, rate, sfx } = this;
     if (
       !enabled
       || !powered
-      || count >= Miner.buffer
+      || buffer >= count
       || ++this.tick < rate
     ) {
       return false;
     }
     this.tick = 0;
-    this.count++;
+    this.buffer += count;
     if (!this.sound) {
       this.sound = sfx.playAt(
         'machine',
