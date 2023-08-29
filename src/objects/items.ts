@@ -148,7 +148,7 @@ export const Recipes: Recipe[] = [
     input: [
       {
         item: Item.ironPlate,
-        count: 4,
+        count: 3,
       },
       {
         item: Item.wire,
@@ -159,29 +159,29 @@ export const Recipes: Recipe[] = [
       item: Item.artifact,
       count: 1,
     },
-    rate: 60,
+    rate: 30,
     transformer: Transformer.combinator,
   },
   {
     input: [
       {
         item: Item.ironPlate,
-        count: 3,
+        count: 2,
       },
       {
         item: Item.ironRod,
-        count: 3,
+        count: 2,
       },
       {
         item: Item.wire,
-        count: 6,
+        count: 3,
       }
     ],
     output: {
       item: Item.artifact,
-      count: 2,
+      count: 1,
     },
-    rate: 60,
+    rate: 10,
     transformer: Transformer.aggregator,
   },
 ];
