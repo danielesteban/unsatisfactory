@@ -5,6 +5,7 @@ import { Instance } from '../core/instances';
 import { download, encode, load, serialize, Objects } from '../core/loader';
 import Transformer from '../core/transformer';
 import SFX from '../core/sfx';
+import { Aggregator } from '../objects/aggregators';
 import { Belt } from '../objects/belts';
 import { Combinator } from '../objects/combinators';
 import { Fabricator } from '../objects/fabricators';
@@ -52,7 +53,9 @@ export default (type: 'build' | 'container', instance?: Instance) => {
       break;
     case 'container': {
       let transformer;
-      if (instance instanceof Combinator) {
+      if (instance instanceof Aggregator) {
+        transformer = ItemTransformer.aggregator;
+      } else if (instance instanceof Combinator) {
         transformer = ItemTransformer.combinator;
       } else if (instance instanceof Fabricator) {
         transformer = ItemTransformer.fabricator;

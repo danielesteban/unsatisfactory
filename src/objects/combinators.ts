@@ -4,13 +4,14 @@ import {
   BufferGeometry,
   CylinderGeometry,
   MeshStandardMaterial,
+  Object3D,
   SRGBColorSpace,
   Vector3,
 } from 'three';
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 import { Connectors } from '../core/container';
-import Instances from '../core/instances';
+import Instances, { Instance } from '../core/instances';
 import Physics from '../core/physics';
 import SFX from '../core/sfx';
 import Transformer from '../core/transformer';
@@ -23,6 +24,14 @@ import Achievements, { Achievement } from '../ui/stores/achievements';
 export class Combinator extends Transformer {
   constructor(parent: Combinators, connectors: Connectors, position: Vector3, rotation: number, sfx: SFX) {
     super(parent, connectors, position, rotation, 20, sfx);
+  }
+
+  private static readonly wireConnectorOffset: Vector3 = new Vector3(-1, 0, 0);
+  override getWireConnector() {
+    return Combinator.wireConnectorOffset.clone()
+      .applyQuaternion(Instance.getQuaternion(this))
+      .add(this.position)
+      .addScaledVector(Object3D.DEFAULT_UP, 2.5);
   }
 
   override process() {
@@ -47,8 +56,8 @@ class Combinators extends Instances<Combinator> {
       Combinators.collider = [
         RAPIER.ColliderDesc.cuboid(2, 1, 2)
           .setTranslation(0, -1, 0),
-        RAPIER.ColliderDesc.cuboid(2, 1, 1)
-          .setTranslation(0, 1, 0),
+        RAPIER.ColliderDesc.cuboid(1, 1, 1)
+          .setTranslation(-1, 1, 0),
       ];
     }
     return Combinators.collider;
@@ -68,14 +77,15 @@ class Combinators extends Instances<Combinator> {
       const csgEvaluator = new Evaluator();
       const base = new Brush(new BoxGeometry(4, 4, 4));
       const opening = new Brush(new BoxGeometry(1.5, 1.5, 0.5));
-      const carving = new Brush(new BoxGeometry(4, 4, 2));
       const stripe = new Brush(new BoxGeometry(3.5, 0.25, 0.25));
       let brush = base;
-      carving.position.set(0, 2, -2);
+      let carving = new Brush(new BoxGeometry(4, 4, 4));
+      const cut = new Brush(new BoxGeometry(2, 4, 2));
+      cut.position.set(-1, 0, 0);
+      cut.updateMatrixWorld();
+      carving.position.set(0, 2, 0);
       carving.updateMatrixWorld();
-      brush = csgEvaluator.evaluate(brush, carving, SUBTRACTION);
-      carving.position.set(0, 2, 2);
-      carving.updateMatrixWorld();
+      carving = csgEvaluator.evaluate(carving, cut, SUBTRACTION);
       brush = csgEvaluator.evaluate(brush, carving, SUBTRACTION);
       connectors.forEach(({ position, rotation }) => {
         opening.position.copy(position);
@@ -95,7 +105,7 @@ class Combinators extends Instances<Combinator> {
         }
       });
       const pole = new Brush(new CylinderGeometry(0.125, 0.125, 0.25));
-      pole.position.set(0, 2.125, 0);
+      pole.position.set(-1, 2.125, 0);
       pole.updateMatrixWorld();
       brush = csgEvaluator.evaluate(brush, pole, ADDITION);
       const connector = new Brush(new CylinderGeometry(0.25, 0.25, 0.5));

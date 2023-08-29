@@ -127,6 +127,7 @@ const processBrushQueue = () => {
   );
   scene.add(mesh);
   const capture = [6.5, 5.5].map((zoom) => {
+    let rotation = 0;
     if (brush === Brush.belt || brush === Brush.buffer) {
       zoom -= 1.5;
     }
@@ -136,9 +137,18 @@ const processBrushQueue = () => {
     if (brush === Brush.pillar || brush === Brush.pole || brush === Brush.sink) {
       zoom += 0.5;
     }
-    mesh.rotation.y = brush === Brush.generator ? Math.PI * 0.5 : 0;
+    if (brush === Brush.aggregator) {
+      zoom += 3.75;
+    }
+    if (brush === Brush.aggregator || brush === Brush.combinator || brush === Brush.fabricator || brush === Brush.smelter) {
+      rotation = Math.PI * -0.5;
+    }
+    if (brush === Brush.generator) {
+      rotation = Math.PI * 0.5;
+    }
+    mesh.rotation.y = rotation;
     camera.position.set(0, 0.5, 1).multiplyScalar(zoom);
-    camera.lookAt(0, 0.125, 0);
+    camera.lookAt(0, 0, 0);
     composer.render();
     return renderer.domElement.toDataURL();
   });

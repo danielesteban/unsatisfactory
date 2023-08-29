@@ -19,6 +19,7 @@ import { decode, deserialize, Objects } from './core/loader';
 import { Intersection as PhysicsIntersection } from './core/physics';
 import Simulation from './core/simulation';
 import Viewport from './core/viewport';
+import Aggregators  from './objects/aggregators';
 import Belts, { Belt, Connection } from './objects/belts';
 import Birds from './objects/birds';
 import Buffers, { Buffer } from './objects/buffers';
@@ -48,6 +49,7 @@ const interactionRadiusSquared = 12 ** 2;
 const viewport = new Viewport();
 
 [
+  Aggregators.getMaterial(),
   Belts.getMaterial(),
   Buffers.getMaterial(),
   Combinators.getMaterial(),
@@ -77,6 +79,9 @@ const viewport = new Viewport();
 
 const terrain = new Terrain(viewport.physics);
 viewport.scene.add(terrain);
+
+const aggregators = new Aggregators(viewport.physics, viewport.sfx);
+viewport.scene.add(aggregators);
 
 const belts = new Belts(viewport.physics);
 viewport.scene.add(belts);
@@ -128,7 +133,7 @@ const ghost = new Ghost();
 viewport.scene.add(ghost);
 
 const objects: Objects = {
-  belts, buffers, combinators, fabricators, foundations, generators, miners, pillars, poles, ramps, sinks, smelters, walls, wires,
+  aggregators, belts, buffers, combinators, fabricators, foundations, generators, miners, pillars, poles, ramps, sinks, smelters, walls, wires,
 };
 
 const connection: { container: Container | PoweredContainer | undefined; connector: number; } = {
@@ -170,6 +175,9 @@ const create = (intersection: Intersection) => {
     return 'nope';
   }
   switch (brush) {
+    case Brush.aggregator:
+      aggregators.create(snap(intersection), rotation);
+      return;
     case Brush.belt:
       if (intersection.connector === false) {
         return 'nope';
@@ -420,7 +428,7 @@ const raycaster = new Raycaster();
 raycaster.far = viewport.camera.far;
 const simulation = new Simulation(
   belts,
-  [buffers, combinators, fabricators, miners, sinks, smelters]
+  [aggregators, buffers, combinators, fabricators, miners, sinks, smelters]
 );
 const animate = (buttons: Buttons, delta: number) => {
   birds.step(delta);

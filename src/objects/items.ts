@@ -70,6 +70,7 @@ export const Sinking: Partial<Record<Item, number>> = {
 };
 
 export enum Transformer {
+  aggregator,
   combinator,
   fabricator,
   smelter,
@@ -151,7 +152,7 @@ export const Recipes: Recipe[] = [
       },
       {
         item: Item.wire,
-        count: 8,
+        count: 6,
       }
     ],
     output: {
@@ -160,6 +161,28 @@ export const Recipes: Recipe[] = [
     },
     rate: 60,
     transformer: Transformer.combinator,
+  },
+  {
+    input: [
+      {
+        item: Item.ironPlate,
+        count: 3,
+      },
+      {
+        item: Item.ironRod,
+        count: 3,
+      },
+      {
+        item: Item.wire,
+        count: 6,
+      }
+    ],
+    output: {
+      item: Item.artifact,
+      count: 2,
+    },
+    rate: 60,
+    transformer: Transformer.aggregator,
   },
 ];
 

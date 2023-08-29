@@ -7,6 +7,7 @@ import {
 } from 'three';
 import { Instance } from './instances';
 import { Intersection } from './physics';
+import Aggregators, { Aggregator }  from '../objects/aggregators';
 import Belts, { Belt } from '../objects/belts';
 import Buffers, { Buffer } from '../objects/buffers';
 import Deposit from '../objects/deposit';
@@ -25,6 +26,7 @@ import Wires, { Wire } from '../objects/wires';
 
 export enum Brush {
   none,
+  aggregator,
   belt,
   buffer,
   combinator,
@@ -82,6 +84,7 @@ export const subscribe = (listener: (brush: Brush) => void) => {
 
 export const names: Record<Brush, string> = {
   [Brush.none]: 'None',
+  [Brush.aggregator]: 'Aggregator',
   [Brush.belt]: 'Belt',
   [Brush.buffer]: 'Buffer',
   [Brush.dismantle]: 'Dismantle',
@@ -107,14 +110,15 @@ export const groups = [
     Brush.wall,
   ],
   [
-    Brush.miner,
     Brush.smelter,
     Brush.fabricator,
     Brush.combinator,
+    Brush.aggregator,
   ],
   [
     Brush.belt,
     Brush.buffer,
+    Brush.miner,
     Brush.sink,
   ],
   [
@@ -125,6 +129,9 @@ export const groups = [
 ];
 
 export const getFromObject = (instance?: Instance | Belt | Wire) => {
+  if (instance instanceof Aggregator) {
+    return Brush.aggregator;
+  }
   if (instance instanceof Belt) {
     return Brush.belt;
   }
@@ -172,6 +179,8 @@ export const getFromObject = (instance?: Instance | Belt | Wire) => {
 
 export const getGeometry = (brush: Brush) => {
   switch (brush) {
+    case Brush.aggregator:
+      return Aggregators.getGeometry();
     case Brush.buffer:
       return Buffers.getGeometry();
     case Brush.combinator:
@@ -203,6 +212,8 @@ export const getGeometry = (brush: Brush) => {
 
 export const getMaterial = (brush: Brush) => {
   switch (brush) {
+    case Brush.aggregator:
+      return Aggregators.getMaterial();
     case Brush.belt:
       return Belts.getMaterial();
     case Brush.buffer:
@@ -251,6 +262,7 @@ export const pick = (intersection: Intersection) => {
 
 const offsets = {
   [Brush.none]: new Vector3(),
+  [Brush.aggregator]: new Vector3(4, 2, 4),
   [Brush.belt]: new Vector3(),
   [Brush.buffer]: new Vector3(1, 1, 1),
   [Brush.combinator]: new Vector3(2, 2, 2),

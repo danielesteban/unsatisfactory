@@ -23,6 +23,7 @@
   export let instance: Transformer;
 
   const name = {
+    [ItemTrasformer.aggregator]: 'Aggregator',
     [ItemTrasformer.combinator]: 'Combinator',
     [ItemTrasformer.fabricator]: 'Fabricator',
     [ItemTrasformer.smelter]: 'Smelter',
