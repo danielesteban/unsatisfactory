@@ -478,7 +478,7 @@ const animate = (buttons: Buttons, delta: number) => {
 
   birds.reset();
   terrain.update(viewport.camera.position, terrainRadius);
-  initUI(viewport.camera, objects, viewport.sfx);
+  initUI(viewport.camera, objects, viewport);
   viewport.physics.init();
   viewport.setAnimationLoop(animate);
 }

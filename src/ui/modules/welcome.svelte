@@ -1,5 +1,6 @@
 <script lang="ts">
   import { readable } from 'svelte/store';
+  import Graphics from './graphics.svelte';
 
   export let play: () => void;
 
@@ -44,9 +45,12 @@
       {$fps}fps
     </p>
   </div>
-  <button on:click={play}>
-    Play
-  </button>
+  <div class="settings">
+    <Graphics />
+    <button class="play" on:click={play}>
+      Play
+    </button>
+  </div>
 </div> 
 
 <style>
@@ -56,7 +60,12 @@
     gap: 2rem;
     padding: 1rem;
   }
-  .welcome > button {
+  .settings {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .play {
     font-size: 1rem;
     width: 100%;
     height: 2.5rem;

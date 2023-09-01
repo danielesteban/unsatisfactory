@@ -4,7 +4,7 @@ import { getFromObject } from '../core/brush';
 import { Instance } from '../core/instances';
 import { download, encode, load, serialize, Objects } from '../core/loader';
 import Transformer from '../core/transformer';
-import SFX from '../core/sfx';
+import Viewport from '../core/viewport';
 import { Aggregator } from '../objects/aggregators';
 import { Belt } from '../objects/belts';
 import { Combinator } from '../objects/combinators';
@@ -26,6 +26,7 @@ import Alerts from './alerts.svelte';
 import Compass from './compass.svelte';
 import Cursor from './cursor.svelte';
 import Hotbar from './hotbar.svelte';
+import Settings from './stores/settings';
 
 let current: SvelteComponent | undefined = undefined;
 const target = document.getElementById('ui')!;
@@ -128,8 +129,9 @@ export const setTooltip = (
 export const init = (
   camera: Camera,
   objects: Objects,
-  sfx: SFX,
+  viewport: Viewport,
 ) => {
+  Settings.setViewport(viewport);
   new Achievements({ target });
   new Alerts({ target });
   new Hotbar({ target });  
@@ -168,7 +170,6 @@ export const init = (
       save: () => {
         localStorage.setItem('autosave', JSON.stringify(serialize(camera, objects)));
       },
-      sfx,
     },
     target: document.getElementById('ui')!,
   });

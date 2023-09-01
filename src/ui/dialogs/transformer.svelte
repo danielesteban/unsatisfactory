@@ -16,6 +16,7 @@
   import Power from '../modules/power.svelte';
   import Production from '../modules/production.svelte';
   import Toggle from '../modules/toggle.svelte';
+  import Settings from '../stores/settings';
   import { captureItem } from '../capture';
 
   export let close: () => void;
@@ -32,7 +33,7 @@
 
   const setRecipe = (recipe: Recipe) => () => {
     instance.setRecipe(recipe);
-    !localStorage.getItem('sfx:muted') && sfx.paused && sfx.play();
+    $Settings.sfx && sfx.paused && sfx.play();
   };
 
   let recipe = instance.getRecipe();

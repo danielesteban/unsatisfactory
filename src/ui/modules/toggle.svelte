@@ -6,14 +6,15 @@
 
 <script lang="ts">
   import { onDestroy } from 'svelte';
-  import Module from '../components/module.svelte';
   import { PoweredContainer } from '../../core/container';
+  import Module from '../components/module.svelte';
+  import Settings from '../stores/settings';
 
   export let instance: PoweredContainer;
 
   const toggle = () => {
     instance.setEnabled(!instance.isEnabled());
-    !localStorage.getItem('sfx:muted') && sfx.paused && sfx.play();
+    $Settings.sfx && sfx.paused && sfx.play();
   };
 
   let enabled = instance.isEnabled();

@@ -48,6 +48,10 @@ button {
   cursor: pointer;
 }
 
+canvas {
+  vertical-align: middle;
+}
+
 select {
   margin: 0;
   padding: 0.5rem 0.25rem;
@@ -62,8 +66,9 @@ select {
   cursor: pointer;
 }
 
-canvas {
-  vertical-align: middle;
+input {
+  accent-color: #000;
+  cursor: pointer;
 }
 
 #info {

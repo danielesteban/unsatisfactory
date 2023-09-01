@@ -23,6 +23,7 @@ import Environment from '../textures/industrial_sunset_puresky_1k.exr';
 class Viewport extends EventDispatcher {
   private static readonly ResizeEvent = { type: 'resize' };
   private animate?: (buttons: Buttons, delta: number, time: number) => void;
+  private readonly antialias: SMAAPass;
   private readonly clock: Clock;
   private readonly composer: EffectComposer;
   private readonly csm: CSM;
@@ -31,6 +32,7 @@ class Viewport extends EventDispatcher {
   public readonly dom: HTMLElement;
   public readonly physics: Physics;
   public readonly renderer: WebGLRenderer;
+  public readonly resolution: number;
   public readonly scene: Scene;
   public readonly sfx: SFX;
   private readonly time: { value: number; };
@@ -51,6 +53,7 @@ class Viewport extends EventDispatcher {
       stencil: false,
       powerPreference: 'high-performance',
     });
+    this.resolution = parseFloat(localStorage.getItem('viewport:resolution') || '1');
     this.renderer.setPixelRatio(window.devicePixelRatio || 1);
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = PCFSoftShadowMap;
@@ -73,13 +76,16 @@ class Viewport extends EventDispatcher {
     });
     this.csm.fade = true;
     this.composer = new EffectComposer(this.renderer);
+    this.composer.setPixelRatio((window.devicePixelRatio || 1) * this.resolution);
     this.composer.addPass(new N8AOPass(
       this.scene,
       this.camera,
       window.innerWidth,
       window.innerHeight
     ));
-    this.composer.addPass(new SMAAPass(window.innerWidth, window.innerHeight));
+    this.antialias = new SMAAPass(window.innerWidth, window.innerHeight);
+    this.antialias.enabled = localStorage.getItem('viewport:antialias') !== '0';
+    this.composer.addPass(this.antialias);
 
     this.resize();
     window.addEventListener('resize', this.resize.bind(this));
@@ -94,6 +100,30 @@ class Viewport extends EventDispatcher {
   setAnimationLoop(animate: (buttons: Buttons, delta: number, time: number) => void) {
     this.animate = animate;
     this.clock.start();
+  }
+
+  getAntialias() {
+    const { antialias } = this;
+    return antialias.enabled;
+  }
+
+  setAntialias(enabled: boolean) {
+    const { antialias } = this;
+    antialias.enabled = enabled;
+    localStorage.setItem('viewport:antialias', enabled ? '1' : '0');
+  }
+
+  getResolution() {
+    const { resolution } = this;
+    return resolution;
+  }
+
+  setResolution(scale: number) {
+    const { composer } = this;
+    const ratio = (window.devicePixelRatio || 1) * scale;
+    composer.setPixelRatio(ratio);
+    this.resize();
+    localStorage.setItem('viewport:resolution', `${scale}`);
   }
 
   setupMaterialCSM(material: Material) {
