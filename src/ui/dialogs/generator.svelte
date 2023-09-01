@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
-  import { Generator } from '../../objects/generators';
+  import { Generator, GeneratorEfficiencyReason } from '../../objects/generators';
   import Dialog from '../components/dialog.svelte';
   import Grid from '../components/grid.svelte';
   import Heading from '../components/heading.svelte';
@@ -13,15 +13,18 @@
 
   let available = instance.getAvailable();
   let efficiency = instance.getEfficiency();
+  let efficiencyReasons = instance.getEfficiencyReasons();
   let power = instance.getPower();
-  const onAvailable = ({ power }: { power: number }) => {
-    available = power;
+  const onAvailable = () => {
+    available = instance.getAvailable();
   };
-  const onEfficiency = ({ scale }: { scale: number }) => {
-    efficiency = scale;
+  const onEfficiency = () => {
+    efficiency = instance.getEfficiency();
+    efficiencyReasons = instance.getEfficiencyReasons();
     power = instance.getPower();
   };
   const onEnabled = () => {
+    available = instance.getAvailable();
     power = instance.getPower();
   };
   instance.addEventListener('available', onAvailable);
@@ -46,6 +49,18 @@
         <div>
           <span class="power">{Math.floor(efficiency * 100)}</span> %
         </div>
+        {#if efficiencyReasons & GeneratorEfficiencyReason.altitude}
+          <div class="info">
+            This Generator altitude is too low.<br />
+            Dismantle and rebuild it at a higher altitude to increase it's efficiency.
+          </div>
+        {/if}
+        {#if efficiencyReasons & GeneratorEfficiencyReason.obstruction}
+          <div class="info">
+            This Generator is too close to other Generators.<br />
+            Dismantle and rebuild it further away from others to increase it's efficiency.
+          </div>
+        {/if}
       </Module>
       <Module>
         <div slot="name">Generated power</div>
@@ -66,5 +81,9 @@
 <style>
   .power {
     font-weight: 600;
+  }
+  .info {
+    padding-top: 0.5rem;
+    color: #aaa;
   }
 </style>

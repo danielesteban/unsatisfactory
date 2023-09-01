@@ -8,11 +8,10 @@ import SFX from './sfx';
 import { Item, Recipe, Recipes } from '../objects/items';
 
 class Transformer extends PoweredContainer<
-  {
-    type: 'recipe';
-    data: Recipe;
-  }
+  { type: 'recipe'; }
 > {
+  private static readonly recipeEvent: { type: 'recipe' } = { type: 'recipe' };
+  
   private readonly counts: { input: Partial<Record<Item, number>>, output: number };
   private recipe?: Recipe;
   private readonly sfx: SFX;
@@ -38,7 +37,7 @@ class Transformer extends PoweredContainer<
     this.counts.output = 0;
     this.recipe = recipe;
     this.tick = 0;
-    this.dispatchEvent({ type: 'recipe', data: recipe });
+    this.dispatchEvent(Transformer.recipeEvent);
   }
 
   override dispose() {

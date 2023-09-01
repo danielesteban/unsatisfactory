@@ -18,12 +18,12 @@
   };
 
   let enabled = instance.isEnabled();
-  const onEnabled = ({ status }: { status: boolean }) => {
-    enabled = status;
+  const onEnabled = () => {
+    enabled = instance.isEnabled();
   };
-  instance.addEventListener('enabled', onEnabled as any);
+  instance.addEventListener('enabled', onEnabled);
   onDestroy(() => (
-    instance.removeEventListener('enabled', onEnabled as any)
+    instance.removeEventListener('enabled', onEnabled)
   ));
 </script>
 

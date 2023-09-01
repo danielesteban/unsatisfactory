@@ -9,17 +9,17 @@
 
   let enabled = instance.isEnabled();
   let powered = instance.isPowered();
-  const onEnabled = ({ status }: { status: boolean }) => {
-    enabled = status;
+  const onEnabled = () => {
+    enabled = instance.isEnabled();
   };
-  const onPowered = ({ status }: { status: boolean }) => {
-    powered = status;
+  const onPowered = () => {
+    powered = instance.isPowered();
   };
-  instance.addEventListener('enabled', onEnabled as any);
-  instance.addEventListener('powered', onPowered as any);
+  instance.addEventListener('enabled', onEnabled);
+  instance.addEventListener('powered', onPowered);
   onDestroy(() => {
-    instance.addEventListener('enabled', onEnabled as any);
-    instance.removeEventListener('powered', onPowered as any);
+    instance.addEventListener('enabled', onEnabled);
+    instance.removeEventListener('powered', onPowered);
   });
 
   let status: string;

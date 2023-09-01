@@ -23,44 +23,53 @@ import DiffuseMap from '../textures/rust_coarse_01_diff_1k.webp';
 import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.webp';
 import RoughnessMap from '../textures/rust_coarse_01_rough_1k.webp';
 
+export enum GeneratorEfficiencyReason {
+  altitude = 1,
+  obstruction = 2
+}
+
 export class Generator extends PoweredContainer<
-  {
-    type: 'available';
-    power: number;
-  }
-  | {
-    type: 'efficiency';
-    scale: number;
-  }
+  { type: 'available'; }
+  | { type: 'efficiency'; }
 > {
+  private static readonly availableEvent: { type: 'available' } = { type: 'available' };
+  private static readonly efficiencyEvent: { type: 'efficiency' } = { type: 'efficiency' };
+
   private available: number;
   private efficiency: number;
+  private efficiencyReasons: number;
   private readonly power: number;
 
   constructor(parent: Generators, connectors: Connectors, position: Vector3, rotation: number, power: number) {
     super(parent, connectors, position, rotation, 0, 4);
     this.available = power;
     this.efficiency = 1;
+    this.efficiencyReasons = 0;
     this.power = power;
   }
 
   getAvailable() {
-    return this.available;
+    return this.enabled ? this.available : 0;
   }
 
   setAvailable(power: number) {
     this.available = power;
-    this.dispatchEvent({ type: 'available', power });
+    this.dispatchEvent(Generator.availableEvent);
   }
 
   getEfficiency() {
     return this.efficiency;
   }
 
-  setEfficiency(scale: number) {
+  getEfficiencyReasons() {
+    return this.efficiencyReasons;
+  }
+
+  setEfficiency(scale: number, reasons: number) {
     this.efficiency = scale;
+    this.efficiencyReasons = reasons;
     this.available = this.getPower();
-    this.dispatchEvent({ type: 'efficiency', scale });
+    this.dispatchEvent(Generator.efficiencyEvent);
   }
 
   getPower() {
@@ -280,6 +289,7 @@ class Generators extends Instances<Generator> {
       for (let i = 0; i < count; i++) {
         const generator = this.getInstance(i);
         let efficiency = MathUtils.clamp(generator.position.y / 10, 0.3, 1);
+        let reasons = efficiency < 1 ? GeneratorEfficiencyReason.altitude : 0;
         for (let j = 0; j < count; j++) {
           if (j === i) {
             continue;
@@ -287,9 +297,10 @@ class Generators extends Instances<Generator> {
           const instance = this.getInstance(j);
           if (instance.position.distanceToSquared(generator.position) < Generators.efficiencyRadiusSquared) {
             efficiency *= 0.5;
+            reasons |= GeneratorEfficiencyReason.obstruction;
           }
         }
-        generator.setEfficiency(Math.max(efficiency, 0.15));
+        generator.setEfficiency(Math.max(efficiency, 0.15), reasons);
       }
       this.dispatchEvent(Generators.efficiencyEvent);
     });

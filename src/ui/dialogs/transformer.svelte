@@ -37,8 +37,8 @@
   };
 
   let recipe = instance.getRecipe();
-  const onRecipe = ({ data }: { data: Recipe }) => {
-    recipe = data;
+  const onRecipe = () => {
+    recipe = instance.getRecipe();
   };
   instance.addEventListener('recipe', onRecipe);
   onDestroy(() => (

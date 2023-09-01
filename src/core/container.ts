@@ -173,19 +173,16 @@ class Container<Events extends BaseEvent = BaseEvent> extends Instance<Events> {
 };
 
 type PoweredContainerEvents = (
-  {
-    type: 'enabled';
-    status: boolean;
-  }
-  | {
-    type: 'powered';
-    status: boolean;
-  }
+  { type: 'enabled'; }
+  | { type: 'powered'; }
 );
 
 export class PoweredContainer<Events extends BaseEvent = BaseEvent> extends Container<
   PoweredContainerEvents | Events
 > {
+  private static readonly enabledEvent: { type: 'enabled' } = { type: 'enabled' };
+  private static readonly poweredEvent: { type: 'powered' } = { type: 'powered' };
+
   // @dani @incomplete
   // This is now confusing AF because there's also a connectors on Container.
   // Maybe rename to electricalConnections or wiring?
@@ -221,7 +218,7 @@ export class PoweredContainer<Events extends BaseEvent = BaseEvent> extends Cont
 
   setEnabled(status: boolean) {
     this.enabled = status;
-    this.dispatchEvent({ type: 'enabled', status });
+    this.dispatchEvent(PoweredContainer.enabledEvent);
   }
 
   isPowered() {
@@ -230,7 +227,7 @@ export class PoweredContainer<Events extends BaseEvent = BaseEvent> extends Cont
 
   setPowered(status: boolean) {
     this.powered = status;
-    this.dispatchEvent({ type: 'powered', status });
+    this.dispatchEvent(PoweredContainer.poweredEvent);
   }
 
   getConnections() {
