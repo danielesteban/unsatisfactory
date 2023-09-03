@@ -1,8 +1,8 @@
 <script lang="ts">
   import { derived } from 'svelte/store';
   import { Brush, set, subscribe } from '../core/brush';
+  import BrushImage from './components/brush.svelte';
   import slots from './stores/hotbar';
-  import { captureBrush } from './capture';
 
   const current = { subscribe };
 
@@ -27,10 +27,7 @@
       <div class="key">{index + 1}</div>
       <div class="brush">
         {#if id !== Brush.none}
-          {#await captureBrush(id) then images}
-            <!-- svelte-ignore a11y-missing-attribute -->
-            <img src={images[1]} />
-          {/await}
+          <BrushImage brush={id} />
         {/if}
       </div>
     </div>
@@ -89,8 +86,5 @@
   }
   .brush {
     height: 2.5rem;
-  }
-  .brush > img {
-    height: 100%;
   }
 </style>

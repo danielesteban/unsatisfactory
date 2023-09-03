@@ -3,7 +3,7 @@
   import Inventory from '../../core/inventory';
   import { Item, ItemName } from '../../objects/items';
   import { Hand } from '../components/hand.svelte';
-  import { captureItem } from '../capture';
+  import ItemImage from '../components/item.svelte';
 
   export let inventory: Inventory;
   export let hand: Hand;
@@ -47,12 +47,12 @@
       on:pointerdown={pointerdown(slot)}
     >
       {#if item !== Item.none}
-        {#await captureItem(item) then images}
+        <ItemImage item={item} multiple let:images>
           {#each images as image}
             <!-- svelte-ignore a11y-missing-attribute -->
             <img src={image} />
           {/each}
-        {/await}
+        </ItemImage>
         <div class="name">
           {ItemName[item]}
         </div>

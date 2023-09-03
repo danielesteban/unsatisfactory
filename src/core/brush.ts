@@ -105,7 +105,7 @@ export const names: Record<Brush, string> = {
   [Brush.wire]: 'Wire',
 };
 
-export const groups = [
+export const groups: Exclude<Brush, Brush.none>[][] = [
   [
     Brush.foundation,
     Brush.pillar,

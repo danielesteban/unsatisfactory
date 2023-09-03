@@ -2,8 +2,8 @@
   import { derived } from 'svelte/store';
   import { Brush, names, subscribe } from '../core/brush';
   import { Item, ItemName } from '../objects/items';
+  import ItemImage from './components/item.svelte';
   import Inventory from './stores/inventory';
-  import { captureItem } from './capture';
 
   export let action: 'belt' | 'build' | 'configure' | 'dismantle' | 'invalid' | 'unaffordable' | 'wire' | 'yield' | undefined;
   export let cost: { item: Exclude<Item, Item.none>; count: number; }[] | undefined = undefined;
@@ -53,10 +53,7 @@
     <div class="cost">
       {#each cost as { item, count }}
         <div class="item">
-          {#await captureItem(item) then images}
-            <!-- svelte-ignore a11y-missing-attribute -->
-            <img src={images[1]} />
-          {/await}
+          <ItemImage item={item} />
           <div class="count" class:unaffordable={Inventory.getCount(item) < count}>
             {Inventory.getCount(item)}/{count}
           </div>
@@ -132,11 +129,6 @@
     font-size: 0.625rem;
     line-height: 1em;
     border-radius: 0.25rem;
-  }
-  .item > img {
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
   }
   .item .count {
     position: absolute;

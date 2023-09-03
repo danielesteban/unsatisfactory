@@ -7,7 +7,7 @@
 
 <script lang="ts">
   import { onDestroy } from 'svelte';
-  import { captureItem } from '../capture';
+  import ItemImage from './item.svelte';
 
   export let hand: Hand;
   export let inventory: Inventory;
@@ -38,10 +38,7 @@
 
 {#if $hand}
   <div class="hand" style="--x:{x}px; --y:{y}px;">
-    {#await captureItem($hand.item) then images}
-      <!-- svelte-ignore a11y-missing-attribute -->
-      <img src={images[1]} />
-    {/await}
+    <ItemImage item={$hand.item} />
     <div class="count">
       {$hand.count}
     </div>
@@ -58,9 +55,6 @@
     height: 3.5rem;
     pointer-events: none;
     z-index: 2;
-  }
-  .hand > img {
-    height: 100%;
   }
   .count {
     position: absolute;

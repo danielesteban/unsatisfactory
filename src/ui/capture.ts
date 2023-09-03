@@ -63,10 +63,10 @@ const setupRenderer = () => {
     return;
   }
   renderer = new WebGLRenderer({
+    alpha: true,
     preserveDrawingBuffer: true,
   });
   renderer.setSize(width, height);
-  renderer.setClearAlpha(0);
   scene = new Scene();
   scene.environment = (new PMREMGenerator(renderer)).fromScene(new RoomEnvironment(), 0.04).texture;
   camera = new PerspectiveCamera(60, width / height, 0.1, 1000);
@@ -81,12 +81,12 @@ const setupRenderer = () => {
 };
 
 const captures = {
-  brush: new Map<Brush, string[]>(),
-  item: new Map<Item, string[]>(),
+  brush: new Map<Exclude<Brush, Brush.none>, string[]>(),
+  item: new Map<Exclude<Item, Item.none>, string[]>(),
 };
 
 const queues: {
-  brush: { brush: Brush; promises: ((capture: string[]) => void)[]; }[];
+  brush: { brush: Exclude<Brush, Brush.none>; promises: ((capture: string[]) => void)[]; }[];
   item: { item: Exclude<Item, Item.none>; promises: ((capture: string[]) => void)[]; }[];
 } = {
   brush: [],
@@ -210,7 +210,7 @@ const processItemQueue = () => {
   }
 };
 
-export const captureBrush = (brush: Brush) => new Promise<string[]>((resolve) => {
+export const captureBrush = (brush: Exclude<Brush, Brush.none>) => new Promise<string[]>((resolve) => {
   let capture = captures.brush.get(brush);
   if (capture) {
     resolve(capture);
@@ -247,4 +247,3 @@ export const captureItem = (item: Exclude<Item, Item.none>) => new Promise<strin
   queues.item.push({ item, promises: [resolve] });
   requestAnimationFrame(processItemQueue);
 });
-

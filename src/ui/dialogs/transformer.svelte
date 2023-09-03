@@ -13,16 +13,16 @@
   import Grid from '../components/grid.svelte';
   import Hand, { Hand as HandStore } from '../components/hand.svelte';
   import Heading from '../components/heading.svelte';
-  import Inventory from '../modules/inventory.svelte';
+  import ItemImage from '../components/item.svelte';
   import Modules from '../components/modules.svelte';
   import Module from '../components/module.svelte';
+  import Inventory from '../modules/inventory.svelte';
   import Power from '../modules/power.svelte';
   import Production from '../modules/production.svelte';
   import Progress from '../modules/progress.svelte';
   import Toggle from '../modules/toggle.svelte';
   import inventory from '../stores/inventory';
   import Settings from '../stores/settings';
-  import { captureItem } from '../capture';
 
   export let close: () => void;
   export let instance: Transformer;
@@ -147,12 +147,12 @@
                   class="recipe"
                   on:click={setRecipe(r)}
                 >
-                  {#await captureItem(r.output.item) then images}
+                  <ItemImage item={r.output.item} multiple let:images>
                     {#each images as image}
                       <!-- svelte-ignore a11y-missing-attribute -->
                       <img src={image} />
                     {/each}
-                  {/await}
+                  </ItemImage>
                   <span>{ItemName[r.output.item]}</span>
                 </button>
               {/each}

@@ -1,7 +1,7 @@
 <script context="module" lang="ts">
   import { writable } from 'svelte/store';
   import { Item, ItemName } from '../../objects/items';
-  import { captureItem } from '../capture';
+  import ItemImage from '../components/item.svelte';
 
   const items = Object.keys(ItemName)
     .map((item) => parseInt(item, 10) as Item)
@@ -42,10 +42,7 @@
       </div>
       <div class="info">
         <div class="image">
-          {#await captureItem($selected) then images}
-            <!-- svelte-ignore a11y-missing-attribute -->
-            <img src={images[1]} />
-          {/await}
+          <ItemImage item={$selected} />
         </div>
         <div class="recipes">
           {#each recipes as recipe}
@@ -118,11 +115,6 @@
     height: 10rem;
     background: rgba(0, 0, 0, .2);
     border-radius: 0.5rem;
-  }
-  .image > img {
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
   }
   .recipes {
     display: flex;

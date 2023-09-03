@@ -2,8 +2,8 @@
   import { onDestroy } from 'svelte';
   import { derived } from 'svelte/store';
   import { ItemName, Recipes, Recipe, Transformer as ItemTrasformer } from '../../objects/items';
+  import ItemImage from '../components/item.svelte';
   import Inventory from '../stores/inventory';
-  import { captureItem } from '../capture';
 
   let crafting: Recipe | undefined;
   let step: number = 0;
@@ -52,12 +52,12 @@
         {/if}
       </span>
       <span class="image">
-        {#await captureItem(recipe.output.item) then images}
+        <ItemImage item={recipe.output.item} multiple let:images>
           {#each images as image}
             <!-- svelte-ignore a11y-missing-attribute -->
             <img src={image} />
           {/each}
-        {/await}
+        </ItemImage>
       </span>
       <span class="name">{ItemName[recipe.output.item]}</span>
     </button>

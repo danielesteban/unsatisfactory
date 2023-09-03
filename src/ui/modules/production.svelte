@@ -1,8 +1,8 @@
 <script lang="ts">
   import Simulation from '../../core/simulation';
   import { Item, ItemName } from '../../objects/items';
+  import ItemImage from '../components/item.svelte';
   import Module from '../components/module.svelte';
-  import { captureItem } from '../capture';
   
   export let name: string;
   export let items: { item: Exclude<Item, Item.none>; count: number; buffer: number; } | { item: Exclude<Item, Item.none>; count: number; buffer: number; }[];
@@ -20,12 +20,12 @@
           on:pointerdown={onBuffer(item)}
         >
           {#if buffer}
-            {#await captureItem(item) then images}
+            <ItemImage item={item} multiple let:images>
               {#each images as image}
                 <!-- svelte-ignore a11y-missing-attribute -->
                 <img src={image} />
               {/each}
-            {/await}
+            </ItemImage>
             <div class="bufferCount">
               {buffer}
             </div>

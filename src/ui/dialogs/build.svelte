@@ -1,10 +1,10 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
   import { Brush, names, groups, tiers, set as setBrush } from '../../core/brush';
+  import BrushImage from '../components/brush.svelte';
   import Dialog from '../components/dialog.svelte';
   import Achievements, { Achievement } from '../stores/achievements';
   import Hotbar from '../stores/hotbar';
-  import { captureBrush } from '../capture';
 
   export let close: () => void;
 
@@ -14,7 +14,7 @@
   };
 
   const brushes = groups.map((group) => (
-    group.map((brush) => ({ id: brush, name: names[brush], images: captureBrush(brush) }))
+    group.map((brush) => ({ id: brush, name: names[brush] }))
   ));
 
   $: tier = $Achievements.has(Achievement.points) ? 1 : 0;
@@ -27,7 +27,7 @@
       return brushes;
     }
     search = search.toLocaleLowerCase();
-    return brushes.reduce<{ id: Brush; name: string; images: Promise<string[]>; locked: boolean; }[][]>((groups, group) => {
+    return brushes.reduce<{ id: Exclude<Brush, Brush.none>; name: string; locked: boolean; }[][]>((groups, group) => {
       group = group.filter(({ name }) => name.toLocaleLowerCase().indexOf(search) !== -1);
       if (group.length) {
         groups.push(group);
@@ -99,12 +99,12 @@
               on:pointerenter={setHover(brush.id)}
               on:pointerleave={setHover(undefined)}
             >
-              {#await brush.images then images}
+              <BrushImage brush={brush.id} multiple let:images>
                 {#each images as image}
                   <!-- svelte-ignore a11y-missing-attribute -->
                   <img src={image} />
                 {/each}
-              {/await}
+              </BrushImage>
               <span class="name">{brush.name}</span>
               {#if brush.locked}
                 <span class="locked">
