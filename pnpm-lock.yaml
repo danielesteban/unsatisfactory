@@ -24,8 +24,8 @@ dependencies:
     specifier: ^0.156.0
     version: 0.156.0
   three-bvh-csg:
-    specifier: ^0.0.9
-    version: 0.0.9(three-mesh-bvh@0.6.5)(three@0.156.0)
+    specifier: ^0.0.10
+    version: 0.0.10(three-mesh-bvh@0.6.6)(three@0.156.0)
 
 devDependencies:
   '@rollup/plugin-commonjs':
@@ -959,7 +959,7 @@ packages:
     resolution: {integrity: sha512-3xaBaoMIplgPdBK+9mZefa8stWEoA2673h2734wYMxm/hUkMLENMhzymDe+WZueFQq93ly4xpl5s1NJrQBzFOQ==}
     peerDependencies:
       postprocessing: '>=6.30.0'
-      three: '>=0.137 || 156'
+      three: '>=0.137'
     dependencies:
       postprocessing: 6.33.0(three@0.156.0)
       three: 0.156.0
@@ -1438,7 +1438,7 @@ packages:
     resolution: {integrity: sha512-W6KGnF8OVyPtB9f5o2z8abJOefDeT9aoOrI/HmMmJM6/gXTKRc66MrL+qNoGmeeA3moWWsTk0mc9M+shN3vXaA==}
     engines: {node: '>= 0.13.2'}
     peerDependencies:
-      three: '>= 0.138.0 < 0.156.0 || 156'
+      three: '>= 0.138.0 < 0.156.0'
     dependencies:
       three: 0.156.0
     dev: false
@@ -1753,20 +1753,20 @@ packages:
       source-map-support: 0.5.21
     dev: true
 
-  /three-bvh-csg@0.0.9(three-mesh-bvh@0.6.5)(three@0.156.0):
-    resolution: {integrity: sha512-HwuYa2ElQkO+AgOMXO2bsMaqXm5E6AsfIyc0XMyQ6REK2e7WEp27zZmnZJyDqwC5aLZ0djkY7SKo8ILLFXPbYg==}
+  /three-bvh-csg@0.0.10(three-mesh-bvh@0.6.6)(three@0.156.0):
+    resolution: {integrity: sha512-p0CgsAoxfP43RFtltDZmT7YdHbnS0xsiJ8KHvFQpjLoV5N/Wy+btS/Vxl3chZ88SlBpfUmH92FsKzTbVprtdgQ==}
     peerDependencies:
-      three: '>=0.144.0 || 156'
-      three-mesh-bvh: ^0.6.0
+      three: '>=0.151.0'
+      three-mesh-bvh: ^0.6.5
     dependencies:
       three: 0.156.0
-      three-mesh-bvh: 0.6.5(three@0.156.0)
+      three-mesh-bvh: 0.6.6(three@0.156.0)
     dev: false
 
-  /three-mesh-bvh@0.6.5(three@0.156.0):
-    resolution: {integrity: sha512-EjoNaROLBy91Hh9Iwfk6VHLprGCBhGCH86RT2gLTzYZXjls1kQmFY6FUDb9c/mE+ykHi6wXkvuDKXGgoTDZIdQ==}
+  /three-mesh-bvh@0.6.6(three@0.156.0):
+    resolution: {integrity: sha512-EQykIpm7gDZQVhkoiOb/vfXPlfuagVRYmviNulbMsjFwXISJGmXrj1ktPncnGBFqWO3g2fX7GRwc9wLhLyX3MQ==}
     peerDependencies:
-      three: '>= 0.151.0 || 156'
+      three: '>= 0.151.0'
     dependencies:
       three: 0.156.0
     dev: false
