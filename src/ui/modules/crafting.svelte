@@ -108,8 +108,8 @@
   .image > img {
     position: absolute;
     display: block;
-    width: 3.5rem;
-    height: 3.5rem;
+    width: 100%;
+    height: 100%;
     top: 0;
     left: 0;
     pointer-events: none;
@@ -134,7 +134,6 @@
     display: block;
     text-align: center;
     color: #aaa;
-    padding-bottom: 0.125rem;
     white-space: nowrap;
   }
   .recipe.crafting .name, .recipe:hover .name {

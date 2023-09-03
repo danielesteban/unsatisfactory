@@ -1,6 +1,7 @@
 <script lang="ts">
-  import Module from '../components/module.svelte';
+  import Simulation from '../../core/simulation';
   import { Item, ItemName } from '../../objects/items';
+  import Module from '../components/module.svelte';
   import { captureItem } from '../capture';
   
   export let name: string;
@@ -32,7 +33,7 @@
         </div>
         <div class="info">
           <div><span class="count">{count}</span> {ItemName[item]}</div>
-          <div class="rate">{60 * (5 / rate) * count} / min</div>
+          <div class="rate">{60 * (Simulation.tps / rate) * count} / min</div>
         </div>
       </div>
     {/each}

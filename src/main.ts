@@ -316,7 +316,7 @@ const remove = (intersection: Intersection) => {
 };
 
 const handleInput = (
-  { primary, secondary, tertiary, build, dismantle, interact, inventory }: Buttons,
+  { primary, secondary, tertiary, build, codex, dismantle, interact, inventory }: Buttons,
   intersection?: Intersection
 ) => {
   const hasConnection = connection.container !== undefined;
@@ -335,6 +335,10 @@ const handleInput = (
     setBrush(Brush.none);
     UI('build');
     Achievements.complete(Achievement.build);
+  }
+  if (codex) {
+    setBrush(Brush.none);
+    UI('codex');
   }
   if (dismantle) {
     setBrush(brush === Brush.dismantle ? Brush.none : Brush.dismantle);
@@ -531,7 +535,7 @@ const animate = (buttons: Buttons, delta: number) => {
     hit.connector = getConnector(hit, raycaster);
   }
   hover(hit);
-  if (buttons.primary || buttons.secondary || buttons.tertiary || buttons.build || buttons.dismantle || buttons.interact || buttons.inventory) {
+  if (buttons.primary || buttons.secondary || buttons.tertiary || buttons.build || buttons.codex || buttons.dismantle || buttons.interact || buttons.inventory) {
     handleInput(buttons, hit);
   }
   setCompass(viewport.camera.rotation.y, viewport.camera.position);

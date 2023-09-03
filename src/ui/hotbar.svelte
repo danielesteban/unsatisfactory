@@ -29,7 +29,7 @@
         {#if id !== Brush.none}
           {#await captureBrush(id) then images}
             <!-- svelte-ignore a11y-missing-attribute -->
-            <img src={images[0]} />
+            <img src={images[1]} />
           {/await}
         {/if}
       </div>

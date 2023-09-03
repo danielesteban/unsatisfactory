@@ -12,6 +12,7 @@ export type Buttons = {
   secondary: boolean;
   tertiary: boolean;
   build: boolean;
+  codex: boolean;
   dismantle: boolean;
   interact: boolean;
   inventory: boolean;
@@ -44,6 +45,7 @@ class Controls {
       secondary: false,
       tertiary: false,
       build: false,
+      codex: false,
       dismantle: false,
       interact: false,
       inventory: false,
@@ -74,6 +76,7 @@ class Controls {
     buttons.secondary = false;
     buttons.tertiary = false;
     buttons.build = false;
+    buttons.codex = false;
     buttons.dismantle = false;
     buttons.interact = false;
     buttons.inventory = false;
@@ -198,6 +201,9 @@ class Controls {
       case 'KeyI':
         buttons.inventory = true;
         break;
+      case 'KeyO':
+        buttons.codex = true;
+        break;
     }
   }
 
@@ -244,6 +250,9 @@ class Controls {
         break;
       case 'KeyI':
         buttons.inventory = false;
+        break;
+      case 'KeyO':
+        buttons.codex = false;
         break;
     }
   }

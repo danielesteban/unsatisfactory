@@ -8,7 +8,7 @@
   import { onDestroy } from 'svelte';
   import { writable } from 'svelte/store';
   import Transformer from '../../core/transformer';
-  import { Item, ItemName, Recipes, Recipe, Transformer as ItemTrasformer } from '../../objects/items';
+  import { Item, ItemName, Recipes, Recipe, Transformer as ItemTrasformer, TransformerName } from '../../objects/items';
   import Dialog from '../components/dialog.svelte';
   import Grid from '../components/grid.svelte';
   import Hand, { Hand as HandStore } from '../components/hand.svelte';
@@ -30,12 +30,7 @@
 
   const hand: HandStore = writable(undefined);
 
-  const name = {
-    [ItemTrasformer.aggregator]: 'Aggregator',
-    [ItemTrasformer.combinator]: 'Combinator',
-    [ItemTrasformer.fabricator]: 'Fabricator',
-    [ItemTrasformer.smelter]: 'Smelter',
-  }[transformer];
+  const name = TransformerName[transformer];
   const recipes = Recipes.filter((recipe) => recipe.transformer === transformer);
 
   const setRecipe = (recipe: Recipe) => () => {

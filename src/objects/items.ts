@@ -76,6 +76,13 @@ export enum Transformer {
   smelter,
 }
 
+export const TransformerName = {
+  [Transformer.aggregator]: 'Aggregator',
+  [Transformer.combinator]: 'Combinator',
+  [Transformer.fabricator]: 'Fabricator',
+  [Transformer.smelter]: 'Smelter',
+};
+
 export type Recipe = {
   input: { item: Exclude<Item, Item.none>; count: number; }[];
   output: { item: Exclude<Item, Item.none>; count: number; };
@@ -294,6 +301,7 @@ class Items extends Group {
         constructor() { super(); }
         override getPoint(t: number, optionalTarget = new Vector3()) {
           const r = 6;
+          console.log(t * r * 0.04 + (t < (1 / r) ? 0.04 : 0) + (t > (1 - (1 / r)) ? -0.04 : 0));
           return optionalTarget.set(
             Math.sin(Math.PI * 2 * t * r) * 0.15,
             t * r * 0.04 + (t < (1 / r) ? 0.04 : 0) + (t > (1 - (1 / r)) ? -0.04 : 0),

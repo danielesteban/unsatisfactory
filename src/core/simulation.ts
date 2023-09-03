@@ -5,9 +5,11 @@ import Belts, { Belt } from '../objects/belts';
 import { Miner } from '../objects/miners';
 
 class Simulation {
+  public static readonly tps: number = 5;
+  private static readonly rate: number = 1 / Simulation.tps;
+
   private readonly belts: Belts;
   private readonly containers: Instances<Container>[];
-  private static readonly rate: number = 1 / 5;
   private timer: number;
 
   constructor(belts: Belts, containers: Instances<Container>[]) {

@@ -17,6 +17,7 @@ import { Smelter } from '../objects/smelters';
 import { Storage } from '../objects/storages';
 import { Wire } from '../objects/wires';
 import BuildUI from './dialogs/build.svelte';
+import CodexUI from './dialogs/codex.svelte';
 import GeneratorUI from './dialogs/generator.svelte';
 import InventoryUI from './dialogs/inventory.svelte';
 import MinerUI from './dialogs/miner.svelte';
@@ -35,7 +36,7 @@ let current: SvelteComponent | undefined = undefined;
 const target = document.getElementById('ui')!;
 const viewport = document.getElementById('viewport')!;
 
-export default (type: 'build' | 'container' | 'inventory', instance?: Instance) => {
+export default (type: 'build' | 'codex' | 'container' | 'inventory', instance?: Instance) => {
   document.exitPointerLock();
   if (current) {
     current.$destroy();
@@ -51,6 +52,12 @@ export default (type: 'build' | 'container' | 'inventory', instance?: Instance) 
   switch (type) {
     case 'build':
       dialog = new BuildUI({
+        props: { close },
+        target,
+      });
+      break;
+    case 'codex':
+      dialog = new CodexUI({
         props: { close },
         target,
       });
