@@ -14,12 +14,15 @@ import { Item, Transformer as ItemTransformer } from '../objects/items';
 import { Miner } from '../objects/miners';
 import { Sink } from '../objects/sinks';
 import { Smelter } from '../objects/smelters';
+import { Storage } from '../objects/storages';
 import { Wire } from '../objects/wires';
 import BuildUI from './dialogs/build.svelte';
 import GeneratorUI from './dialogs/generator.svelte';
+import InventoryUI from './dialogs/inventory.svelte';
 import MinerUI from './dialogs/miner.svelte';
-import SinkUI from './dialogs/sink.svelte';
 import SettingsUI from './dialogs/settings.svelte';
+import SinkUI from './dialogs/sink.svelte';
+import StorageUI from './dialogs/storage.svelte';
 import TransformerUI from './dialogs/transformer.svelte';
 import Achievements from './achievements.svelte';
 import Alerts from './alerts.svelte';
@@ -32,7 +35,7 @@ let current: SvelteComponent | undefined = undefined;
 const target = document.getElementById('ui')!;
 const viewport = document.getElementById('viewport')!;
 
-export default (type: 'build' | 'container', instance?: Instance) => {
+export default (type: 'build' | 'container' | 'inventory', instance?: Instance) => {
   document.exitPointerLock();
   if (current) {
     current.$destroy();
@@ -88,9 +91,20 @@ export default (type: 'build' | 'container', instance?: Instance) => {
           props: { close, instance },
           target,
         });
+      } else if (instance instanceof Storage) {
+        dialog = new StorageUI({
+          props: { close, instance },
+          target,
+        });
       }
       break;
     }
+    case 'inventory':
+      dialog = new InventoryUI({
+        props: { close },
+        target,
+      });
+      break;
   }
   current = dialog;
 };
@@ -107,9 +121,10 @@ export const setCompass = (orientation: number, position: { x: number; z: number
 
 const cursor = new Cursor({ target });
 export const setTooltip = (
-  action?: 'belt' | 'build' | 'configure' | 'dismantle' | 'invalid' | 'wire' | 'yield',
+  action?: 'belt' | 'build' | 'configure' | 'dismantle' | 'invalid' | 'unaffordable' | 'wire' | 'yield',
   instance?: Instance | Belt | Wire,
   from?: Instance,
+  cost?: { item: Exclude<Item, Item.none>; count: number; }[],
   item?: Item,
   value?: number
 ) => {
@@ -119,6 +134,7 @@ export const setTooltip = (
   }
   cursor.$set({
     action,
+    cost,
     item,
     objectBrush: getFromObject(instance),
     fromBrush: getFromObject(from),

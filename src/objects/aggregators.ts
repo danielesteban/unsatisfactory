@@ -14,6 +14,7 @@ import Instances from '../core/instances';
 import Physics from '../core/physics';
 import SFX from '../core/sfx';
 import Transformer from '../core/transformer';
+import { Item } from './items';
 import { loadTexture } from '../textures';
 import DiffuseMap from '../textures/rust_coarse_01_diff_1k.webp';
 import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.webp';
@@ -21,8 +22,8 @@ import RoughnessMap from '../textures/rust_coarse_01_rough_1k.webp';
 // import Achievements, { Achievement } from '../ui/stores/achievements';
 
 export class Aggregator extends Transformer {
-  constructor(parent: Aggregators, connectors: Connectors, position: Vector3, rotation: number, sfx: SFX) {
-    super(parent, connectors, position, rotation, 50, sfx);
+  constructor(connectors: Connectors, position: Vector3, rotation: number, sfx: SFX) {
+    super(connectors, position, rotation, 50, sfx);
   }
 
   // override process() {
@@ -43,6 +44,12 @@ const connectors = [
 ];
 
 class Aggregators extends Instances<Aggregator> {
+  static override readonly cost: typeof Instances.cost = [
+    { item: Item.ironPlate, count: 5 },
+    { item: Item.ironRod, count: 10 },
+    { item: Item.wire, count: 20 },
+  ];
+
   private static collider: RAPIER.ColliderDesc[] | undefined;
   static getCollider() {
     if (!Aggregators.collider) {
@@ -139,10 +146,11 @@ class Aggregators extends Instances<Aggregator> {
     this.sfx = sfx;
   }
 
-  create(position: Vector3, rotation: number) {
+  create(position: Vector3, rotation: number, withCost: boolean = true) {
     const { sfx } = this;
     const instance = super.addInstance(
-      new Aggregator(this, Aggregators.getConnectors(), position, rotation, sfx)
+      new Aggregator(Aggregators.getConnectors(), position, rotation, sfx),
+      withCost
     );
     return instance;
   }

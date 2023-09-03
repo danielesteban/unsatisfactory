@@ -1,12 +1,10 @@
 <script lang="ts">
   import { readable } from 'svelte/store';
   import Graphics from './graphics.svelte';
+  import Settings from '../stores/settings';
 
   export let play: () => void;
 
-  const GL = document.createElement('canvas').getContext('webgl');
-  const ext = GL?.getExtension('WEBGL_debug_renderer_info');
-  const GPU = GL && ext ? GL.getParameter(ext.UNMASKED_RENDERER_WEBGL) : 'Unknown';
   const fps = readable(0, (set) => {
     let animation: number;
     let count = 0;
@@ -38,7 +36,7 @@
     </p>
     <p>
       <span class="info">Your current GPU:</span><br />
-      {GPU}
+      {$Settings.gpu}
     </p>
     <p>
       <span class="info">Your current framerate:</span><br />
@@ -70,6 +68,7 @@
     width: 100%;
     height: 2.5rem;
     background: rgba(90, 255, 90, 0.5);
+    border-radius: 0.75rem;
   }
   .heading {
     font-size: 1rem;

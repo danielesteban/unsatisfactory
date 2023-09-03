@@ -69,7 +69,7 @@
     justify-content: center;
     border-radius: 0.25rem;
     border: 1px solid transparent;
-    color: #999;
+    color: #aaa;
   }
   .slot.enabled {
     border-color: rgba(90, 255, 90, .5);

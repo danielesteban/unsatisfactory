@@ -21,27 +21,47 @@ import DiffuseMap from '../textures/rust_coarse_01_diff_1k.webp';
 import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.webp';
 import RoughnessMap from '../textures/rust_coarse_01_rough_1k.webp';
 import Achievements, { Achievement } from '../ui/stores/achievements';
+import Inventory from '../ui/stores/inventory';
 
-export class Miner extends PoweredContainer {
+export class Miner extends PoweredContainer<
+  { type: 'buffer'; }
+  | { type: 'progress'; }
+> {
+  private static readonly bufferEvent: { type: 'buffer' } = { type: 'buffer' };
+  private static readonly progressEvent: { type: 'progress' } = { type: 'progress' };
+
+  private static readonly maxBuffer: number = 100;
   private buffer: number;
   private readonly count: number;
-  private readonly item: Item;
+  private readonly item: Exclude<Item, Item.none>;
   private readonly purity: number;
   private readonly rate: number;
   private readonly sfx: SFX;
   private sound?: PositionalAudio;
   private tick: number;
 
-  constructor(parent: Miners, connectors: Connectors, position: Vector3, rotation: number, item: Item, purity: number, sfx: SFX) {
+  constructor(connectors: Connectors, position: Vector3, rotation: number, item: Exclude<Item, Item.none>, purity: number, sfx: SFX) {
     const { consumption, count, rate } = Mining[item] || { consumption: 0, count: 0, rate: 0 };
-    super(parent, connectors, position, rotation, consumption / purity);
+    super(connectors, position, rotation, consumption / purity);
     this.buffer = 0;
-    this.count = count;
+    this.count = count / purity;
     this.item = item;
     this.purity = purity;
-    this.rate = rate * purity;
+    this.rate = rate;
     this.sfx = sfx;
-    this.tick = rate;
+    this.tick = 0;
+  }
+
+  getOutputBuffer() {
+    const { buffer } = this;
+    return buffer;
+  }
+
+  getFromOutputBuffer(count: number) {
+    const c = Math.min(count, this.buffer);
+    this.buffer -= c;
+    this.dispatchEvent(Miner.bufferEvent);
+    return c;
   }
 
   getCount() {
@@ -50,6 +70,11 @@ export class Miner extends PoweredContainer {
 
   getItem() {
     return this.item;
+  }
+
+  getProgress() {
+    const { rate, tick } = this;
+    return tick / (rate - 1);
   }
 
   getPurity() {
@@ -61,7 +86,10 @@ export class Miner extends PoweredContainer {
   }
 
   override dispose() {
-    const { sound } = this;
+    const { buffer, item, sound } = this;
+    if (buffer > 0) {
+      Inventory.input(item, buffer);
+    }
     if (sound) {
       sound.stop();
     }
@@ -83,6 +111,7 @@ export class Miner extends PoweredContainer {
     const { buffer, item } = this;
     if (buffer > 0) {
       this.buffer--;
+      this.dispatchEvent(Miner.bufferEvent);
       return item;
     }
     return Item.none;
@@ -93,9 +122,12 @@ export class Miner extends PoweredContainer {
     if (
       !enabled
       || !powered
-      || buffer >= count
-      || ++this.tick < rate
+      || buffer > (Miner.maxBuffer - count)
     ) {
+      return false;
+    }
+    if (++this.tick < rate) {
+      this.dispatchEvent(Miner.progressEvent);
       return false;
     }
     this.tick = 0;
@@ -112,15 +144,27 @@ export class Miner extends PoweredContainer {
         }
       );
     }
+    this.dispatchEvent(Miner.bufferEvent);
+    this.dispatchEvent(Miner.progressEvent);
     return true;
   }
 
+  setBuffer(serialized: number) {
+    this.buffer = serialized;
+  }
+
+  setTick(tick: number) {
+    this.tick = tick;
+  }
+
   override serialize() {
-    const { item, purity } = this;
+    const { buffer, item, purity, tick } = this;
     return [
       ...super.serialize(),
       item,
       purity,
+      tick,
+      ...(buffer > 0 ? [buffer] : []),
     ];
   }
 }
@@ -133,6 +177,11 @@ const connectors = [
 ];
 
 class Miners extends Instances<Miner> {
+  static override readonly cost: typeof Instances.cost = [
+    { item: Item.ironPlate, count: 10 },
+    { item: Item.wire, count: 5 },
+  ];
+
   private static collider: RAPIER.ColliderDesc | undefined;
   static getCollider() {
     if (!Miners.collider) {
@@ -208,10 +257,11 @@ class Miners extends Instances<Miner> {
     this.sfx = sfx;
   }
 
-  create(position: Vector3, rotation: number, item: Item, purity: number) {
+  create(position: Vector3, rotation: number, item: Item, purity: number, withCost: boolean = true) {
     const { sfx } = this;
     const instance = super.addInstance(
-      new Miner(this, Miners.getConnectors(), position, rotation, item, purity, sfx)
+      new Miner(Miners.getConnectors(), position, rotation, item as Exclude<Item, Item.none>, purity, sfx),
+      withCost
     );
     return instance;
   }

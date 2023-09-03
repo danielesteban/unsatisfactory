@@ -18,6 +18,7 @@ import { ADDITION, Brush, Evaluator } from 'three-bvh-csg';
 import { Connectors, PoweredContainer } from '../core/container';
 import Instances, { Instance } from '../core/instances';
 import Physics from '../core/physics';
+import { Item } from './items';
 import { loadTexture } from '../textures';
 import DiffuseMap from '../textures/rust_coarse_01_diff_1k.webp';
 import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.webp';
@@ -40,8 +41,8 @@ export class Generator extends PoweredContainer<
   private efficiencyReasons: number;
   private readonly power: number;
 
-  constructor(parent: Generators, connectors: Connectors, position: Vector3, rotation: number, power: number) {
-    super(parent, connectors, position, rotation, 0, 4);
+  constructor(connectors: Connectors, position: Vector3, rotation: number, power: number = 100) {
+    super(connectors, position, rotation, 0, 4);
     this.available = power;
     this.efficiency = 1;
     this.efficiencyReasons = 0;
@@ -86,6 +87,11 @@ export class Generator extends PoweredContainer<
 }
 
 class Generators extends Instances<Generator> {
+  static override readonly cost: typeof Instances.cost = [
+    { item: Item.ironPlate, count: 20 },
+    { item: Item.wire, count: 10 },
+  ];
+
   private static collider: RAPIER.ColliderDesc[] | undefined;
   static getCollider() {
     if (!Generators.collider) {
@@ -261,8 +267,11 @@ class Generators extends Instances<Generator> {
     );
   }
 
-  create(position: Vector3, rotation: number, power: number = 100) {
-    const generator = super.addInstance(new Generator(this, Generators.getConnectors(), position, rotation, power));
+  create(position: Vector3, rotation: number, withCost: boolean = true) {
+    const generator = super.addInstance(
+      new Generator(Generators.getConnectors(), position, rotation),
+      withCost
+    );
     this.updateEfficiency();
     return generator;
   }

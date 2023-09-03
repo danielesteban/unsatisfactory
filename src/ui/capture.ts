@@ -140,7 +140,7 @@ const processBrushQueue = () => {
     if (brush === Brush.aggregator) {
       zoom += 3.75;
     }
-    if (brush === Brush.aggregator || brush === Brush.combinator || brush === Brush.fabricator || brush === Brush.smelter) {
+    if (brush === Brush.aggregator || brush === Brush.combinator || brush === Brush.fabricator || brush === Brush.smelter || brush === Brush.storage) {
       rotation = Math.PI * -0.5;
     }
     if (brush === Brush.generator) {
@@ -179,8 +179,15 @@ const processItemQueue = () => {
   );
   scene.add(mesh);
   const capture = [1, 0.75].map((zoom) => {
+    if (item === Item.ironOre || item === Item.copperOre) {
+      zoom *= 1.5;
+    }
     camera.position.set(0, 0.5, 1).multiplyScalar(zoom);
-    camera.lookAt(0, 0, 0);
+    if (item === Item.ironOre || item === Item.copperOre) {
+      camera.lookAt(0, 0.1, 0);
+    } else {
+      camera.lookAt(0, 0, 0);
+    }
     composer.render();
     return renderer.domElement.toDataURL();
   });

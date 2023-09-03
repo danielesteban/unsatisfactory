@@ -13,6 +13,7 @@ import { ADDITION, Brush, Evaluator } from 'three-bvh-csg';
 import { Connectors, PoweredContainer } from '../core/container';
 import Instances from '../core/instances';
 import Physics from '../core/physics';
+import { Item } from './items';
 import { loadTexture } from '../textures';
 import DiffuseMap from '../textures/rust_coarse_01_diff_1k.webp';
 import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.webp';
@@ -26,8 +27,8 @@ import RoughnessMap from '../textures/rust_coarse_01_rough_1k.webp';
 // I should have listened to the ECS evangelists.
 // I'm just too lazy to care for switching to composition at this stage.
 export class Pole extends PoweredContainer {
-  constructor(parent: Poles, connectors: Connectors, position: Vector3, rotation: number) {
-    super(parent, connectors, position, rotation, 0, 4);
+  constructor(connectors: Connectors, position: Vector3, rotation: number) {
+    super(connectors, position, rotation, 0, 4);
   }
 
   override getWireConnector() {
@@ -37,6 +38,11 @@ export class Pole extends PoweredContainer {
 }
 
 class Poles extends Instances<Pole> {
+  static override readonly cost: typeof Instances.cost = [
+    { item: Item.ironRod, count: 5 },
+    { item: Item.wire, count: 5 },
+  ];
+
   private static collider: RAPIER.ColliderDesc | undefined;
   static getCollider() {
     if (!Poles.collider) {
@@ -100,8 +106,11 @@ class Poles extends Instances<Pole> {
     );
   }
 
-  create(position: Vector3, rotation: number) {
-    return super.addInstance(new Pole(this, Poles.getConnectors(), position, rotation));
+  create(position: Vector3, rotation: number, withCost: boolean = true) {
+    return super.addInstance(
+      new Pole(Poles.getConnectors(), position, rotation),
+      withCost
+    );
   }
 }
 

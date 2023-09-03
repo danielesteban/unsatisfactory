@@ -15,15 +15,16 @@ import Instances, { Instance } from '../core/instances';
 import Physics from '../core/physics';
 import SFX from '../core/sfx';
 import Transformer from '../core/transformer';
+import { Item } from './items';
 import { loadTexture } from '../textures';
 import DiffuseMap from '../textures/rust_coarse_01_diff_1k.webp';
 import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.webp';
 import RoughnessMap from '../textures/rust_coarse_01_rough_1k.webp';
-import Achievements, { Achievement } from '../ui/stores/achievements';
+// import Achievements, { Achievement } from '../ui/stores/achievements';
 
 export class Combinator extends Transformer {
-  constructor(parent: Combinators, connectors: Connectors, position: Vector3, rotation: number, sfx: SFX) {
-    super(parent, connectors, position, rotation, 20, sfx);
+  constructor(connectors: Connectors, position: Vector3, rotation: number, sfx: SFX) {
+    super(connectors, position, rotation, 20, sfx);
   }
 
   private static readonly wireConnectorOffset: Vector3 = new Vector3(-1, 0, 0);
@@ -34,13 +35,13 @@ export class Combinator extends Transformer {
       .addScaledVector(Object3D.DEFAULT_UP, 2.5);
   }
 
-  override process() {
-    const hasOutput = super.process();
-    if (hasOutput) {
-      Achievements.complete(Achievement.combinator);
-    }
-    return hasOutput;
-  }
+  // override process() {
+  //   const hasOutput = super.process();
+  //   if (hasOutput) {
+  //     Achievements.complete(Achievement.combinator);
+  //   }
+  //   return hasOutput;
+  // }
 }
 
 const connectors = [
@@ -50,6 +51,11 @@ const connectors = [
 ];
 
 class Combinators extends Instances<Combinator> {
+  static override readonly cost: typeof Instances.cost = [
+    { item: Item.ironRod, count: 10 },
+    { item: Item.wire, count: 20 },
+  ];
+
   private static collider: RAPIER.ColliderDesc[] | undefined;
   static getCollider() {
     if (!Combinators.collider) {
@@ -147,10 +153,11 @@ class Combinators extends Instances<Combinator> {
     this.sfx = sfx;
   }
 
-  create(position: Vector3, rotation: number) {
+  create(position: Vector3, rotation: number, withCost: boolean = true) {
     const { sfx } = this;
     const instance = super.addInstance(
-      new Combinator(this, Combinators.getConnectors(), position, rotation, sfx)
+      new Combinator(Combinators.getConnectors(), position, rotation, sfx),
+      withCost
     );
     return instance;
   }

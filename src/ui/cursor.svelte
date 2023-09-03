@@ -2,8 +2,11 @@
   import { derived } from 'svelte/store';
   import { Brush, names, subscribe } from '../core/brush';
   import { Item, ItemName } from '../objects/items';
+  import Inventory from './stores/inventory';
+  import { captureItem } from './capture';
 
-  export let action: 'belt' | 'build' | 'configure' | 'dismantle' | 'invalid' | 'wire' | 'yield' | undefined;
+  export let action: 'belt' | 'build' | 'configure' | 'dismantle' | 'invalid' | 'unaffordable' | 'wire' | 'yield' | undefined;
+  export let cost: { item: Exclude<Item, Item.none>; count: number; }[] | undefined = undefined;
   export let item: Item = Item.none;
   export let objectBrush: Brush = Brush.none;
   export let fromBrush: Brush = Brush.none;
@@ -37,11 +40,28 @@
         Dismantle <span class="object">{object}</span>
       {:else if action === 'invalid'}
         Invalid placement
+      {:else if action === 'unaffordable'}
+        Can't afford
       {:else if action === 'wire'}
         Wire from <span class="object">{from || object}</span>{#if from} to <span class="object">{object}</span>{/if}
       {:else if action === 'yield'}
         <span class="object">{ItemName[item]}</span> ({value === 1 ? 'Pure' : 'Impure'})
       {/if}
+    </div>
+  {/if}
+  {#if cost && (action === 'belt' || action === 'build' || action === 'invalid' || action === 'unaffordable' || action === 'wire')}
+    <div class="cost">
+      {#each cost as { item, count }}
+        <div class="item">
+          {#await captureItem(item) then images}
+            <!-- svelte-ignore a11y-missing-attribute -->
+            <img src={images[1]} />
+          {/await}
+          <div class="count" class:unaffordable={Inventory.getCount(item) < count}>
+            {Inventory.getCount(item)}/{count}
+          </div>
+        </div>
+      {/each}
     </div>
   {/if}
   {#if $brush}
@@ -74,7 +94,7 @@
     box-shadow: 0 0 0.25rem rgba(0, 0, 0, 0.3);
   }
 
-  .action, .brush {
+  .action, .brush, .cost {
     position: absolute;
     white-space: nowrap;
     padding: 0.25rem 0.5rem;
@@ -96,6 +116,40 @@
     font-size: 1rem;
     bottom: 100%;
     margin-bottom: 0.75rem;
+  }
+
+  .cost {
+    top: 100%;
+    margin-top: 3.25rem;
+    padding: 0.25rem;
+  }
+
+  .item {
+    width: 2rem;
+    height: 2rem;
+    position: relative;
+    background: rgba(0, 0, 0, .2);
+    font-size: 0.625rem;
+    line-height: 1em;
+    border-radius: 0.25rem;
+  }
+  .item > img {
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+  .item .count {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, .2);
+    border-radius: 0 0 0.25rem 0.25rem;
+    text-align: center;
+    pointer-events: none;
+  }
+  .item .count.unaffordable {
+    color: #e55;
   }
 
   .key {

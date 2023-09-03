@@ -10,6 +10,8 @@ export enum Achievement {
   fabricator,
   combinator,
   points,
+  aggregator,
+  inventory,
 }
 
 let achievements: Set<Achievement> = new Set();

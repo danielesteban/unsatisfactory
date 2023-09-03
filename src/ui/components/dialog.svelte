@@ -1,5 +1,9 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte';
+
+  export let bodyClass: string = 'ui';
   export let close: () => void;
+
   let dom: HTMLDivElement;
   const keyup = ({ code, repeat }: KeyboardEvent) => {
     if (code !== 'Escape' || repeat) {
@@ -13,6 +17,9 @@
     }
     close();
   };
+  
+  bodyClass && document.body.classList.add(bodyClass);
+  onDestroy(() => bodyClass && document.body.classList.remove(bodyClass));
 </script>
 
 <svelte:document on:keyup={keyup} />
@@ -43,7 +50,7 @@
     background: rgba(0, 0, 0, 0.2);
     backdrop-filter: blur(2rem);
     border-radius: 1rem;
-    width: 600px;
-    min-height: 400px;
+    width: 680px;
+    min-height: 420px;
   }
 </style>

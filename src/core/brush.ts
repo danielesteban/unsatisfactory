@@ -21,6 +21,7 @@ import Poles, { Pole } from '../objects/poles';
 import Ramps, { Ramp } from '../objects/ramps';
 import Sinks, { Sink } from '../objects/sinks';
 import Smelters, { Smelter } from '../objects/smelters';
+import Storages, { Storage } from '../objects/storages';
 import Walls, { Wall } from '../objects/walls';
 import Wires, { Wire } from '../objects/wires';
 
@@ -40,6 +41,7 @@ export enum Brush {
   ramp,
   sink,
   smelter,
+  storage,
   wall,
   wire,
 };
@@ -98,6 +100,7 @@ export const names: Record<Brush, string> = {
   [Brush.ramp]: 'Ramp',
   [Brush.sink]: 'Sink',
   [Brush.smelter]: 'Smelter',
+  [Brush.storage]: 'Storage',
   [Brush.wall]: 'Wall',
   [Brush.wire]: 'Wire',
 };
@@ -110,6 +113,7 @@ export const groups = [
     Brush.wall,
   ],
   [
+    Brush.miner,
     Brush.smelter,
     Brush.fabricator,
     Brush.combinator,
@@ -118,8 +122,8 @@ export const groups = [
   [
     Brush.belt,
     Brush.buffer,
-    Brush.miner,
     Brush.sink,
+    Brush.storage,
   ],
   [
     Brush.generator,
@@ -127,6 +131,15 @@ export const groups = [
     Brush.wire,
   ],
 ];
+
+export const tiers: Partial<Record<Brush, number>> = {
+  [Brush.aggregator]: 1,
+  [Brush.combinator]: 1,
+  [Brush.pillar]: 1,
+  [Brush.ramp]: 1,
+  [Brush.storage]: 1,
+  [Brush.wall]: 1,
+};
 
 export const getFromObject = (instance?: Instance | Belt | Wire) => {
   if (instance instanceof Aggregator) {
@@ -168,6 +181,9 @@ export const getFromObject = (instance?: Instance | Belt | Wire) => {
   if (instance instanceof Smelter) {
     return Brush.smelter;
   }
+  if (instance instanceof Storage) {
+    return Brush.storage;
+  }
   if (instance instanceof Wall) {
     return Brush.wall;
   }
@@ -203,6 +219,8 @@ export const getGeometry = (brush: Brush) => {
       return Sinks.getGeometry();
     case Brush.smelter:
       return Smelters.getGeometry();
+    case Brush.storage:
+      return Storages.getGeometry();
     case Brush.wall:
       return Walls.getGeometry();
     default:
@@ -238,6 +256,8 @@ export const getMaterial = (brush: Brush) => {
       return Sinks.getMaterial();
     case Brush.smelter:
       return Smelters.getMaterial();
+    case Brush.storage:
+      return Storages.getMaterial();
     case Brush.wall:
       return Walls.getMaterial();
     case Brush.wire:
@@ -276,6 +296,7 @@ const offsets = {
   [Brush.ramp]: new Vector3(2, 1, 2),
   [Brush.sink]: new Vector3(2, 2, 2),
   [Brush.smelter]: new Vector3(2, 2, 1),
+  [Brush.storage]: new Vector3(2, 2, 1),
   [Brush.wall]: new Vector3(2, 2, 0.25),
   [Brush.wire]: new Vector3(),
 };

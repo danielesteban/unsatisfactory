@@ -83,8 +83,11 @@ class Walls extends Instances<Wall> {
     );
   }
 
-  create(position: Vector3, rotation: number) {
-    return super.addInstance(new Wall(this, position, rotation));
+  create(position: Vector3, rotation: number, withCost: boolean = true) {
+    return super.addInstance(
+      new Wall(position, rotation),
+      withCost
+    );
   }
 }
 

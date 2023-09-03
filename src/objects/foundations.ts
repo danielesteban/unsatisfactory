@@ -78,8 +78,11 @@ class Foundations extends Instances<Foundation> {
     );
   }
   
-  create(position: Vector3, rotation: number) {
-    return super.addInstance(new Foundation(this, position, rotation));
+  create(position: Vector3, rotation: number, withCost: boolean = true) {
+    return super.addInstance(
+      new Foundation(position, rotation),
+      withCost
+    );
   }
 }
 

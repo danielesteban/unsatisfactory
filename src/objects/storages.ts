@@ -2,69 +2,107 @@ import RAPIER from '@dimforge/rapier3d-compat';
 import {
   BoxGeometry,
   BufferGeometry,
-  CylinderGeometry,
   MeshStandardMaterial,
   SRGBColorSpace,
   Vector3,
 } from 'three';
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
-import { Connectors } from '../core/container';
+import { SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
+import Container, { Connectors } from '../core/container';
 import Instances from '../core/instances';
+import Inventory from '../core/inventory';
 import Physics from '../core/physics';
-import SFX from '../core/sfx';
-import Transformer from '../core/transformer';
 import { Item } from './items';
 import { loadTexture } from '../textures';
 import DiffuseMap from '../textures/rust_coarse_01_diff_1k.webp';
 import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.webp';
 import RoughnessMap from '../textures/rust_coarse_01_rough_1k.webp';
-import Achievements, { Achievement } from '../ui/stores/achievements';
+import InventoryStore from '../ui/stores/inventory';
 
-export class Fabricator extends Transformer {
-  constructor(connectors: Connectors, position: Vector3, rotation: number, sfx: SFX) {
-    super(connectors, position, rotation, 10, sfx);
+export class Storage extends Container {
+  private readonly inventory: Inventory;
+
+  constructor(connectors: Connectors, position: Vector3, rotation: number) {
+    super(connectors, position, rotation);
+    this.inventory = new Inventory(20, 100);
   }
 
-  override process() {
-    const hasOutput = super.process();
-    if (hasOutput) {
-      Achievements.complete(Achievement.fabricator);
-    }
-    return hasOutput;
+  getInventory() {
+    return this.inventory;
+  }
+
+  setInventory(serialized: [Item, number][]) {
+    this.inventory.deserialize(serialized);
+  }
+
+  override dispose() {
+    const { inventory } = this;
+    inventory.serialize().forEach(([item, count]) => (
+      InventoryStore.input(item, count)
+    ));
+  }
+
+  override acceptsInput(item: Item) {
+    return this.inventory.canInput(item);
+  }
+
+  override canInput() {
+    return !this.inventory.isFull();
+  }
+
+  override input(item: Item) {
+    this.inventory.input(item);
+  }
+  
+  override canOutput() {
+    return !this.inventory.isEmpty();
+  }
+
+  override output() {
+    return this.inventory.outputLast();
+  }
+
+  override serialize() {
+    const inventory = this.inventory.serialize();
+    return [
+      ...super.serialize(),
+      ...(inventory.length ? [inventory] : []),
+    ];
   }
 }
 
 const connectors = [
   { position: new Vector3(2, -1, 0), rotation: Math.PI * 0.5 },
+  { position: new Vector3(2, 1, 0), rotation: Math.PI * 0.5 },
   { position: new Vector3(-2, -1, 0), rotation: Math.PI * -0.5 },
+  { position: new Vector3(-2, 1, 0), rotation: Math.PI * -0.5 },
 ];
 
-class Fabricators extends Instances<Fabricator> {
+class Storages extends Instances<Storage> {
   static override readonly cost: typeof Instances.cost = [
-    { item: Item.ironRod, count: 5 },
-    { item: Item.wire, count: 10 },
+    { item: Item.ironPlate, count: 10 },
+    { item: Item.ironRod, count: 10 },
   ];
 
   private static collider: RAPIER.ColliderDesc | undefined;
   static getCollider() {
-    if (!Fabricators.collider) {
-      Fabricators.collider = RAPIER.ColliderDesc.cuboid(2, 2, 1);
+    if (!Storages.collider) {
+      Storages.collider = RAPIER.ColliderDesc.cuboid(2, 2, 1);
     }
-    return Fabricators.collider;
+    return Storages.collider;
   }
-  
+
   private static connectors: Connectors | undefined;
   static getConnectors() {
-    if (!Fabricators.connectors) {
-      Fabricators.connectors = new Connectors(connectors);
+    if (!Storages.connectors) {
+      Storages.connectors = new Connectors(connectors);
     }
-    return Fabricators.connectors;
+    return Storages.connectors;
   }
 
   private static geometry: BufferGeometry | undefined;
   static getGeometry() {
-    if (!Fabricators.geometry) {
+    if (!Storages.geometry) {
       const csgEvaluator = new Evaluator();
       const base = new Brush(new BoxGeometry(4, 4, 2));
       const opening = new Brush(new BoxGeometry(1.5, 1.5, 0.5));
@@ -87,23 +125,15 @@ class Fabricators extends Instances<Fabricator> {
           brush = csgEvaluator.evaluate(brush, stripe, SUBTRACTION);
         }
       });
-      const pole = new Brush(new CylinderGeometry(0.125, 0.125, 0.25));
-      pole.position.set(0, 2.125, 0);
-      pole.updateMatrixWorld();
-      brush = csgEvaluator.evaluate(brush, pole, ADDITION);
-      const connector = new Brush(new CylinderGeometry(0.25, 0.25, 0.5));
-      connector.position.copy(pole.position).add(new Vector3(0, 0.375, 0));
-      connector.updateMatrixWorld();
-      brush = csgEvaluator.evaluate(brush, connector, ADDITION);
-      Fabricators.geometry = mergeVertices(brush.geometry);
-      Fabricators.geometry.computeBoundingSphere();
+      Storages.geometry = mergeVertices(brush.geometry);
+      Storages.geometry.computeBoundingSphere();
     }
-    return Fabricators.geometry;
+    return Storages.geometry;
   }
 
   private static material: MeshStandardMaterial | undefined;
   static getMaterial() {
-    if (!Fabricators.material) {
+    if (!Storages.material) {
       const material = new MeshStandardMaterial({
         map: loadTexture(DiffuseMap),
         normalMap: loadTexture(NormalMap),
@@ -111,33 +141,28 @@ class Fabricators extends Instances<Fabricator> {
       });
       material.map!.anisotropy = 16;
       material.map!.colorSpace = SRGBColorSpace;
-      Fabricators.material = material;
+      Storages.material = material;
     }
-    return Fabricators.material;
+    return Storages.material;
   }
 
-  private readonly sfx: SFX;
-
-  constructor(physics: Physics, sfx: SFX) {
+  constructor(physics: Physics) {
     super(
       {
-        collider: Fabricators.getCollider(),
-        geometry: Fabricators.getGeometry(),
-        material: Fabricators.getMaterial(),
+        collider: Storages.getCollider(),
+        geometry: Storages.getGeometry(),
+        material: Storages.getMaterial(),
       },
       physics
     );
-    this.sfx = sfx;
   }
 
   create(position: Vector3, rotation: number, withCost: boolean = true) {
-    const { sfx } = this;
-    const instance = super.addInstance(
-      new Fabricator(Fabricators.getConnectors(), position, rotation, sfx),
+    return super.addInstance(
+      new Storage(Storages.getConnectors(), position, rotation),
       withCost
     );
-    return instance;
   }
 }
 
-export default Fabricators;
+export default Storages;

@@ -1,6 +1,6 @@
 import { Base64 } from 'js-base64';
 import { deflateSync, inflateSync, strFromU8, strToU8 } from 'fflate';
-import { Camera, Quaternion, Vector3 } from 'three';
+import { Camera, Vector3 } from 'three';
 import { Brush } from './brush';
 import Container, { PoweredContainer } from './container';
 import Aggregators, { Aggregator } from '../objects/aggregators';
@@ -17,13 +17,15 @@ import Poles, { Pole } from '../objects/poles';
 import Ramps from '../objects/ramps';
 import Sinks, { Sink } from '../objects/sinks';
 import Smelters, { Smelter } from '../objects/smelters';
+import Storages, { Storage } from '../objects/storages';
 import Walls from '../objects/walls';
 import Wires, { Wire } from '../objects/wires';
 import Achievements, { Achievement } from '../ui/stores/achievements';
 import Hotbar from '../ui/stores/hotbar';
+import Inventory from '../ui/stores/inventory';
 import Points from '../ui/stores/points';
 
-const version = 17;
+const version = 18;
 
 export type Objects = {
   aggregators: Aggregators;
@@ -39,32 +41,37 @@ export type Objects = {
   ramps: Ramps;
   sinks: Sinks;
   smelters: Smelters;
+  storages: Storages;
   walls: Walls;
   wires: Wires;
 };
 
+type SerializedBuffers = [number[], number];
 type SerializedContainer = [number, number];
 type SerializedEnabled = 0 | 1;
 type SerializedPosition = [number, number, number];
+type SerializedTransformer = [SerializedPosition, number, SerializedEnabled, number | undefined, number | undefined, SerializedBuffers | undefined];
 
 type Serialized = {
-  aggregators: [SerializedPosition, number, SerializedEnabled, number | undefined][];
+  aggregators: SerializedTransformer[];
   belts: [SerializedContainer, number, SerializedContainer, number, SerializedItems | undefined][];
   buffers: [SerializedPosition, number, Item | undefined][];
-  combinators: [SerializedPosition, number, SerializedEnabled, number | undefined][];
-  fabricators: [SerializedPosition, number, SerializedEnabled, number | undefined][];
+  combinators: SerializedTransformer[];
+  fabricators: SerializedTransformer[];
   foundations: [SerializedPosition, number][];
   generators: [SerializedPosition, number, SerializedEnabled][];
-  miners: [SerializedPosition, number, SerializedEnabled, Item, number][];
+  miners: [SerializedPosition, number, SerializedEnabled, Item, number, number, number | undefined][];
   pillars: [SerializedPosition, number][];
   poles: [SerializedPosition, number][];
   ramps: [SerializedPosition, number][];
   sinks: [SerializedPosition, number, SerializedEnabled][];
-  smelters: [SerializedPosition, number, SerializedEnabled, number | undefined][];
+  smelters: SerializedTransformer[];
+  storages: [SerializedPosition, number, [Item, number][] | undefined][];
   walls: [SerializedPosition, number][];
   wires: [SerializedContainer, SerializedContainer][];
   achievements: Achievement[];
   hotbar: Brush[];
+  inventory: [Item, number][];
   points: number;
   view: [SerializedPosition, [number, number, number]];
   version: number;
@@ -73,11 +80,11 @@ type Serialized = {
 export const serialize = (
   camera: Camera,
   {
-    aggregators, belts, buffers, combinators, fabricators, foundations, generators, miners, pillars, poles, ramps, sinks, smelters, walls, wires,
+    aggregators, belts, buffers, combinators, fabricators, foundations, generators, miners, pillars, poles, ramps, sinks, smelters, storages, walls, wires,
   }: Objects
 ): Serialized => {
   const containers = new WeakMap<Container, number>();
-  const serializeInstances = (instances: Aggregators | Buffers | Combinators | Fabricators | Foundations | Generators | Miners | Pillars | Poles | Ramps | Sinks | Smelters | Walls) => (
+  const serializeInstances = (instances: Aggregators | Buffers | Combinators | Fabricators | Foundations | Generators | Miners | Pillars | Poles | Ramps | Sinks | Smelters | Storages | Walls) => (
     Array.from({ length: instances.getCount() }, (_v, i) => {
       const instance = instances.getInstance(i);
       if (instance instanceof Container) {
@@ -115,6 +122,9 @@ export const serialize = (
     if (instance instanceof Smelter) {
       key = 8;
     }
+    if (instance instanceof Storage) {
+      key = 9;
+    }
     return [key, containers.get(instance)];
   };
   return {
@@ -130,6 +140,7 @@ export const serialize = (
     ramps: serializeInstances(ramps) as Serialized['ramps'],
     sinks: serializeInstances(sinks) as Serialized['sinks'],
     smelters: serializeInstances(smelters) as Serialized['smelters'],
+    storages: serializeInstances(storages) as Serialized['storages'],
     walls: serializeInstances(walls) as Serialized['walls'],
     belts: (belts.children as Belt[]).map((belt) => {
       const items = serializeItems(belt.getItems());
@@ -147,6 +158,7 @@ export const serialize = (
     ]) as Serialized['wires'],
     achievements: Achievements.serialize(),
     hotbar: Hotbar.serialize(),
+    inventory: Inventory.serialize(),
     points: Points.serialize(),
     view: [camera.position.toArray(), camera.rotation.toArray().slice(0, 3)] as Serialized['view'],
     version,
@@ -157,7 +169,7 @@ export const deserialize = (
   serialized: Serialized,
   camera: Camera,
   {
-    aggregators, belts, buffers, combinators, fabricators, foundations, generators, miners, pillars, poles, ramps, sinks, smelters, walls, wires,
+    aggregators, belts, buffers, combinators, fabricators, foundations, generators, miners, pillars, poles, ramps, sinks, smelters, storages, walls, wires,
   }: Objects
 ) => {
   serialized = migrate(serialized);
@@ -166,94 +178,132 @@ export const deserialize = (
   }
   const aux = new Vector3();
   const containers = [
-    serialized.aggregators.map(([position, rotation, enabled, recipe]) => {
-      const aggregator = aggregators.create(aux.fromArray(position), rotation);
+    serialized.aggregators.map(([position, rotation, enabled, recipe, tick, buffers]) => {
+      const aggregator = aggregators.create(aux.fromArray(position), rotation, false);
       if (!enabled) {
         aggregator.setEnabled(false);
       }
       if (recipe !== undefined && Recipes[recipe]) {
         aggregator.setRecipe(Recipes[recipe]);
+        if (buffers) {
+          aggregator.setBuffers(buffers);
+        }
+        if (tick) {
+          aggregator.setTick(tick);
+        }
       }
       return aggregator;
     }),
     serialized.buffers.map(([position, rotation, item]) => {
-      const buffer = buffers.create(aux.fromArray(position), rotation);
+      const buffer = buffers.create(aux.fromArray(position), rotation, false);
       if (item !== undefined) {
         buffer.setItem(item);
       }
       return buffer;
     }),
-    serialized.combinators.map(([position, rotation, enabled, recipe]) => {
-      const combinator = combinators.create(aux.fromArray(position), rotation);
+    serialized.combinators.map(([position, rotation, enabled, recipe, tick, buffers]) => {
+      const combinator = combinators.create(aux.fromArray(position), rotation, false);
       if (!enabled) {
         combinator.setEnabled(false);
       }
       if (recipe !== undefined && Recipes[recipe]) {
         combinator.setRecipe(Recipes[recipe]);
+        if (buffers) {
+          combinator.setBuffers(buffers);
+        }
+        if (tick) {
+          combinator.setTick(tick);
+        }
       }
       return combinator;
     }),
-    serialized.fabricators.map(([position, rotation, enabled, recipe]) => {
-      const fabricator = fabricators.create(aux.fromArray(position), rotation);
+    serialized.fabricators.map(([position, rotation, enabled, recipe, tick, buffers]) => {
+      const fabricator = fabricators.create(aux.fromArray(position), rotation, false);
       if (!enabled) {
         fabricator.setEnabled(false);
       }
       if (recipe !== undefined && Recipes[recipe]) {
         fabricator.setRecipe(Recipes[recipe]);
+        if (buffers) {
+          fabricator.setBuffers(buffers);
+        }
+        if (tick) {
+          fabricator.setTick(tick);
+        }
       }
       return fabricator;
     }),
     serialized.generators.map(([position, rotation, enabled]) => {
-      const generator = generators.create(aux.fromArray(position), rotation)
+      const generator = generators.create(aux.fromArray(position), rotation, false)
       if (!enabled) {
         generator.setEnabled(false);
       }
       return generator;
     }),
-    serialized.miners.map(([position, rotation, enabled, item, purity]) => {
-      const miner = miners.create(aux.fromArray(position), rotation, item, purity);
+    serialized.miners.map(([position, rotation, enabled, item, purity, tick, buffer]) => {
+      const miner = miners.create(aux.fromArray(position), rotation, item, purity, false);
       if (!enabled) {
         miner.setEnabled(false);
+      }
+      if (buffer) {
+        miner.setBuffer(buffer);
+      }
+      if (tick) {
+        miner.setTick(tick);
       }
       return miner;
     }),
     serialized.poles.map(([position, rotation]) => (
-      poles.create(aux.fromArray(position), rotation)
+      poles.create(aux.fromArray(position), rotation, false)
     )),
     serialized.sinks.map(([position, rotation, enabled]) => {
-      const sink = sinks.create(aux.fromArray(position), rotation)
+      const sink = sinks.create(aux.fromArray(position), rotation, false)
       if (!enabled) {
         sink.setEnabled(false);
       }
       return sink;
     }),
-    serialized.smelters.map(([position, rotation, enabled, recipe]) => {
-      const smelter = smelters.create(aux.fromArray(position), rotation);
+    serialized.smelters.map(([position, rotation, enabled, recipe, tick, buffers]) => {
+      const smelter = smelters.create(aux.fromArray(position), rotation, false);
       if (!enabled) {
         smelter.setEnabled(false);
       }
       if (recipe !== undefined && Recipes[recipe]) {
         smelter.setRecipe(Recipes[recipe]);
+        if (buffers) {
+          smelter.setBuffers(buffers);
+        }
+        if (tick) {
+          smelter.setTick(tick);
+        }
       }
       return smelter;
     }),
+    serialized.storages.map(([position, rotation, inventory]) => {
+      const storage = storages.create(aux.fromArray(position), rotation, false);
+      if (inventory?.length) {
+        storage.setInventory(inventory);
+      }
+      return storage;
+    }),
   ];
   serialized.foundations.forEach(([position, rotation]) => (
-    foundations.create(aux.fromArray(position), rotation)
+    foundations.create(aux.fromArray(position), rotation, false)
   ));
   serialized.pillars.forEach(([position, rotation]) => (
-    pillars.create(aux.fromArray(position), rotation)
+    pillars.create(aux.fromArray(position), rotation, false)
   ));
   serialized.ramps.forEach(([position, rotation]) => (
-    ramps.create(aux.fromArray(position), rotation)
+    ramps.create(aux.fromArray(position), rotation, false)
   ));
   serialized.walls.forEach(([position, rotation]) => (
-    walls.create(aux.fromArray(position), rotation)
+    walls.create(aux.fromArray(position), rotation, false)
   ));
   serialized.belts.forEach(([from, fromConnector, to, toConnector, items]) => {
     const belt = belts.create(
       { container: containers[from[0]][from[1]], connector: fromConnector },
       { container: containers[to[0]][to[1]], connector: toConnector },
+      false
     );
     if (items?.length) {
       belt.setItems(deserializeItems(items));
@@ -263,10 +313,12 @@ export const deserialize = (
     wires.create(
       containers[from[0]][from[1]] as PoweredContainer,
       containers[to[0]][to[1]] as PoweredContainer,
+      false
     )
   ));
   Achievements.deserialize(serialized.achievements);
   Hotbar.deserialize(serialized.hotbar);
+  Inventory.deserialize(serialized.inventory);
   Points.deserialize(serialized.points);
   camera.position.fromArray(serialized.view[0]);
   camera.userData.targetPosition.copy(camera.position);
@@ -334,212 +386,6 @@ const migrate = (
 };
 
 const migrations: Record<number, (serialized: Serialized) => Serialized> = {
-  [2]: (serialized: Serialized) => {
-    return {
-      ...serialized,
-      generators: serialized.generators.map(([position, rotation, enabled]) => ([
-        [position[0], position[1] + 5, position[2]],
-        rotation,
-        enabled,
-      ])),
-      poles: serialized.poles.map(([position, rotation]) => ([
-        [position[0], position[1] + 0.5, position[2]],
-        rotation,
-      ])),
-    };
-  },
-  [3]: (serialized: Serialized) => {
-    return {
-      ...serialized,
-      miners: [],
-      belts: serialized.belts.filter(([from, _fromDirection, to]) => from[0] !== 3 && to[0] !== 3),
-      wires: serialized.wires.filter(([from, to]) => from[0] !== 3 && to[0] !== 3),
-    };
-  },
-  [4]: (serialized: Serialized) => {
-    return {
-      ...serialized,
-      camera: [
-        [
-          (serialized as any).camera[0][0],
-          (serialized as any).camera[0][1] + 0.15,
-          (serialized as any).camera[0][2],
-        ],
-        (serialized as any).camera[1],
-      ],
-    };
-  },
-  [5]: (serialized: Serialized) => {
-    const remap = (container: SerializedContainer) => {
-      switch (container[0]) {
-        case 5:
-          return [6, container[1]] as SerializedContainer;
-        default:
-          return container;
-      }
-    };
-    return {
-      ...serialized,
-      sinks: [],
-      belts: serialized.belts.map(([from, fromDirection, to, toDirection]) => [remap(from), fromDirection, remap(to), toDirection, []]),
-      wires: serialized.wires.map(([from, to]) => [remap(from), remap(to)]),
-    };
-  },
-  [6]: (serialized: Serialized) => {
-    return {
-      ...serialized,
-      belts: serialized.belts.map(([from, fromDirection, to, toDirection, items]) => [from, fromDirection, to, toDirection, items || []]),
-    };
-  },
-  [7]: (serialized: Serialized) => {
-    return {
-      ...serialized,
-      ramps: [],
-    };
-  },
-  [8]: (serialized: Serialized) => {
-    return {
-      ...serialized,
-      pillars: [],
-    };
-  },
-  [9]: (serialized: Serialized) => {
-    const stored = localStorage.getItem('achievements');
-    let parsed: string[] | undefined;
-    if (stored) {
-      try {
-        parsed = JSON.parse(stored) as string[];
-      } catch (e) {
-        parsed = undefined;
-      }
-    }
-    const map: Record<string, Achievement> = {
-      'deposit': Achievement.deposit,
-      'build': Achievement.build,
-      'miner': Achievement.miner,
-      'generator': Achievement.generator,
-      'power': Achievement.power,
-      'smelter': Achievement.smelter,
-      'fabricator': Achievement.fabricator,
-      'points': Achievement.points,
-    };
-    return {
-      ...serialized,
-      achievements: (parsed || []).filter((id) => map[id]).map((id) => map[id]),
-    };
-  },
-  [10]: (serialized: Serialized) => {
-    const stored = localStorage.getItem('hotbar');
-    let parsed: Brush[] | undefined;
-    if (stored) {
-      try {
-        parsed = JSON.parse(stored) as Brush[];
-      } catch (e) {
-        parsed = undefined;
-      }
-    }
-    const { camera, ...rest } = serialized as (Serialized & { camera: Serialized['view']; });
-    return {
-      ...rest,
-      hotbar: (parsed || []),
-      view: camera,
-    };
-  },
-  [11]: (serialized: Serialized) => {
-    const aux = new Vector3();
-    const quaternion = new Quaternion();
-    const worldUp = new Vector3(0, 1, 0);
-    const containers = [
-      serialized.buffers,
-      serialized.fabricators,
-      serialized.generators,
-      serialized.miners,
-      serialized.poles,
-      serialized.sinks,
-      serialized.smelters,
-    ];
-    const normals: { default: Vector3[] } & Partial<Record<number, Vector3[]>> = {
-      default: [
-        new Vector3(0, 0, 1),
-        new Vector3(0, 0, -1),
-        new Vector3(1, 0, 0),
-        new Vector3(-1, 0, 0),
-      ],
-      [1]: [
-        new Vector3(1, 0, 0),
-        new Vector3(-1, 0, 0),
-      ],
-      [6]: [
-        new Vector3(1, 0, 0),
-        new Vector3(-1, 0, 0),
-      ],
-    };
-    const remapContainer = (container: SerializedContainer): SerializedContainer => (
-      [container[0] > 0 ? container[0] + 1 : container[0], container[1]]
-    );
-    const remapConnector = (container: SerializedContainer, direction: [number, number, number]) => {
-      aux.fromArray(direction).applyQuaternion(quaternion.setFromAxisAngle(worldUp, -containers[container[0]][container[1]][1])).round();
-      return (normals[container[0]] || normals.default).findIndex((n) => n.equals(aux));
-    };
-    return {
-      ...serialized,
-      combinators: [],
-      achievements: serialized.achievements.map((achievement) => achievement === 8 ? 9 : achievement),
-      wires: serialized.wires.map(([from, to]) => ([
-        remapContainer(from),
-        remapContainer(to),
-      ])),
-      belts: serialized.belts.map(([from, fromDirection, to, toDirection, items]) => ([
-        remapContainer(from),
-        remapConnector(from, fromDirection as any),
-        remapContainer(to),
-        remapConnector(to, toDirection as any),
-        items,
-      ])),
-    };
-  },
-  [12]: (serialized: Serialized) => {
-    const points = serialized.sinks.reduce<number>((points, sink) => {
-      return points + ((sink as any)[3] || 0);
-    }, 0);
-    return {
-      ...serialized,
-      points,
-    };
-  },
-  [13]: (serialized: Serialized) => {
-    const remapRecipe = (transformer: [SerializedPosition, number, SerializedEnabled, number | undefined]) => ([
-      ...transformer.slice(0, 3), (transformer[3] || 0) + 1,
-    ] as [SerializedPosition, number, SerializedEnabled, number | undefined]);
-    return {
-      ...serialized,
-      miners: [],
-      combinators: serialized.combinators.map(remapRecipe),
-      fabricators: serialized.fabricators.map(remapRecipe),
-      smelters: serialized.smelters.map(remapRecipe),
-      belts: serialized.belts.filter(([from, _fromConnector, to]) => from[0] !== 4 && to[0] !== 4),
-      wires: serialized.wires.filter(([from, to]) => from[0] !== 4 && to[0] !== 4),
-    };
-  },
-  [14]: (serialized: Serialized) => {
-    return {
-      ...serialized,
-      buffers: serialized.buffers.map(([position, rotation, items]) => ([
-        position, rotation, ((items as any) || [])[0]
-      ])),
-    };
-  },
-  [15]: (serialized: Serialized) => {
-    const remapRecipe = (transformer: [SerializedPosition, number, SerializedEnabled, number | undefined]) => ([
-      ...transformer.slice(0, 3), transformer[3] !== undefined ? (transformer[3] + (transformer[3] >= 3 ? 1 : 0)) : undefined,
-    ] as [SerializedPosition, number, SerializedEnabled, number | undefined]);
-    return {
-      ...serialized,
-      combinators: serialized.combinators.map(remapRecipe),
-      fabricators: serialized.fabricators.map(remapRecipe),
-      smelters: serialized.smelters.map(remapRecipe),
-    };
-  },
   [16]: (serialized: Serialized) => {
     const remap = (container: SerializedContainer): SerializedContainer => [container[0] + 1, container[1]];
     return {
@@ -547,6 +393,13 @@ const migrations: Record<number, (serialized: Serialized) => Serialized> = {
       aggregators: [],
       belts: serialized.belts.map(([from, fromConnector, to, toConnector, items]) => [remap(from), fromConnector, remap(to), toConnector, items]),
       wires: serialized.wires.map(([from, to]) => [remap(from), remap(to)]),
+    };
+  },
+  [17]: (serialized: Serialized) => {
+    return {
+      ...serialized,
+      storages: [],
+      inventory: [],
     };
   },
 };

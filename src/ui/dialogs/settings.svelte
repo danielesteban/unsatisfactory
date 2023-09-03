@@ -1,5 +1,4 @@
 <script lang="ts">
-  import Settings from '../stores/settings';
   import Autosave from '../components/autosave.svelte';
   import Clipboard from '../components/clipboard.svelte';
   import Dialog from '../components/dialog.svelte';
@@ -10,7 +9,8 @@
   import Graphics from '../modules/graphics.svelte';
   import Help from '../modules/help.svelte';
   import Welcome from '../modules/welcome.svelte';
-  
+  import Settings from '../stores/settings';
+
   export let closeCurrentUI: () => void;
   export let download: () => void;
   export let link: () => string;
@@ -86,7 +86,7 @@
 </div>
 
 {#if isOpen}
-<Dialog close={toggleSettings}>
+<Dialog bodyClass="" close={toggleSettings}>
   <Heading>Unsatisfactory</Heading>
   <Grid>
     {#if isWelcome}

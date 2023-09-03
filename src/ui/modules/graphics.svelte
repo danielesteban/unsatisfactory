@@ -1,6 +1,7 @@
 <script lang="ts">
   import Module from '../components/module.svelte';
   import Settings from '../stores/settings';
+
   const setAntialias = ({ currentTarget: { checked } }: Event & { currentTarget: EventTarget & HTMLInputElement; }) => {
     Settings.setAntialias(checked);
   };

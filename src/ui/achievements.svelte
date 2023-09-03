@@ -14,12 +14,23 @@
     },
     {
       id: Achievement.build,
-      name: 'Open the build menu',
+      name: 'Open the Build menu',
       help: [
-        'Press [Q] to open the build menu.',
+        'Press [Q] to open the Build menu.',
         'Clicking on a blueprint will select it for building.',
         'Pressing the number keys while holding the cursor',
         'over a blueprint will add it the hotbar.',
+      ],
+    },
+    {
+      id: Achievement.inventory,
+      name: 'Open the Inventory',
+      help: [
+        'Press [I] to open the Inventory.',
+        'There\'s a few basic items already in there.',
+        'Should be enough to start a factory.',
+        'You can also manually craft some items in there',
+        'if you have the necessary ingredients.',
       ],
     },
     {
@@ -27,7 +38,7 @@
       name: 'Build a Miner',
       help: [
         'Miners can only be placed on top of Deposits.',
-        'Select the Miner from the build menu [Q] and',
+        'Select the Miner from the Build menu [Q] and',
         'Click over a Deposit to place it on top.',
         'The Miner yield will depend on the deposit purity.',
       ],
@@ -37,7 +48,7 @@
       name: 'Build a Generator',
       help: [
         'Miners and many other machines require power.',
-        'Select the Generator from the build menu [Q] and',
+        'Select the Generator from the Build menu [Q] and',
         'Click over the terrain (or a foundation) to place it on top.',
       ],
     },
@@ -45,7 +56,7 @@
       id: Achievement.power,
       name: 'Power the Miner',
       help: [
-        'Select the Wire from the build menu [Q] and',
+        'Select the Wire from the Build menu [Q] and',
         'Click over the Generator, and then',
         'Click over the Miner to wire them together.',
         'The use of Poles is advised since the Generator',
@@ -54,57 +65,36 @@
     },
     {
       id: Achievement.smelter,
-      name: 'Smelt Ore into Ingots',
+      name: 'Smelting',
       help: [
-        'Select the Smelter from the build menu [Q] and',
+        'Select the Smelter from the Build menu [Q] and',
         'Click over the terrain (or a foundation) to place it on top.',
         '',
-        'Right Click over the Smelter (or press [E] while looking at it)',
-        'and select the Ingot corresponding to the Ore in the Miner.',
-        '',
-        'Then select the Belt (from the build menu, again) and',
+        'Then select the Belt (from the Build menu, again) and',
         'Click over the Miner, and then',
         'Click over the Smelter to belt them together.',
         '',
-        'Finally, wire the Smelter so it gets powered and',
-        'belt the other side of it into a Buffer.',
+        'Finally, Right Click over the Smelter (or press [E] while looking at it)',
+        'and select the Ingot corresponding to the Ore in the Miner.',
+        '',
+        'Remember to wire the Smelter so it gets powered.',
       ],
     },
     {
       id: Achievement.fabricator,
       name: 'Manufacturing',
       help: [
-        'Select the Fabricator from the build menu [Q] and',
+        'Select the Fabricator from the Build menu [Q] and',
         'Click over the terrain (or a foundation) to place it on top.',
         '',
-        'Right Click over the Fabricator (or press [E] while looking at it)',
-        'and select an item for production.',
-        '',
-        'Then select the Belt (from the build menu, again) and',
+        'Then select the Belt (from the Build menu, again) and',
         'Click over the Smelter, and then',
         'Click over the Fabricator to belt them together.',
         '',
-        'Finally, wire the Fabricator so it gets powered and',
-        'belt the other side of it into a Buffer.',
-      ],
-    },
-    {
-      id: Achievement.combinator,
-      name: 'Advanced manufacturing',
-      help: [
-        'Select the Combinator from the build menu [Q] and',
-        'Click over the terrain (or a foundation) to place it on top.',
-        '',
-        'Right Click over the Combinator (or press [E] while looking at it)',
+        'Finally, Right Click over the Fabricator (or press [E] while looking at it)',
         'and select an item for production.',
         '',
-        'You may need need to build an extra production line',
-        'similar to the one you just built for another item.',
-        '',
-        'Remember to wire the Combinator so it gets powered.',
-        'You may need additonal Generators for this.',
-        '',
-        'Finally, belt the other side of the Combinator into a Buffer.',
+        'Remember to wire the Fabricator so it gets powered.',
       ],
     },
     {
@@ -114,7 +104,7 @@
         'Feeding items into the Sink will give you points.',
         'Complex items yield more points than raw materials.',
         '',
-        'Select the Sink from the build menu [Q] and',
+        'Select the Sink from the Build menu [Q] and',
         'Click over the terrain (or a foundation) to place it on top.',
         'Then belt the output of a Smelter or Fabricator into the Sink.',
         '',
@@ -122,6 +112,40 @@
         'You may need additonal Generators for this.',
       ],
     },
+    // {
+    //   id: Achievement.combinator,
+    //   name: 'Advanced manufacturing',
+    //   help: [
+    //     'Select the Combinator from the Build menu [Q] and',
+    //     'Click over the terrain (or a foundation) to place it on top.',
+    //     '',
+    //     'Right Click over the Combinator (or press [E] while looking at it)',
+    //     'and select an item for production.',
+    //     '',
+    //     'You may need need to build an extra production line',
+    //     'similar to the one you just built for another item.',
+    //     '',
+    //     'Remember to wire the Combinator so it gets powered.',
+    //     'You may need additonal Generators for this.',
+    //   ],
+    // },
+    // {
+    //   id: Achievement.aggregator,
+    //   name: 'Industrial manufacturing',
+    //   help: [
+    //     'Select the Aggregator from the Build menu [Q] and',
+    //     'Click over the terrain (or a foundation) to place it on top.',
+    //     '',
+    //     'Right Click over the Aggregator (or press [E] while looking at it)',
+    //     'and select an item for production.',
+    //     '',
+    //     'You may need need to build some extra production lines',
+    //     'similar to the ones you just built for the Aggregator.',
+    //     '',
+    //     'Remember to wire the Aggregator so it gets powered.',
+    //     'You may need additonal Generators for this.',
+    //   ],
+    // },
   ];
   const current = derived([completed], ([$completed]) => Achievements.find((achievement) => !$completed.has(achievement.id)));
   let achievement: (typeof Achievements[0] & { completed: boolean; }) | undefined;
@@ -180,7 +204,7 @@
     z-index: 2;
   }
 
-  :global(body.hotbar) .achievement, :global(body.pointerlock) .achievement {
+  :global(body.pointerlock) .achievement, :global(body.ui) .achievement {
     display: flex;
   }
 

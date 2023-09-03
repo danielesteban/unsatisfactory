@@ -44,6 +44,6 @@
     font-weight: 600;
   }
   .status {
-    color: #999;
+    color: #aaa;
   }
 </style>

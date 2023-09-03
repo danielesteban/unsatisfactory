@@ -8,7 +8,7 @@ import {
   Raycaster,
   Vector3,
 } from 'three';
-import Instances, { Instance } from './instances';
+import { Instance } from './instances';
 import { Belt } from '../objects/belts';
 import { Item } from '../objects/items';
 import { Wire } from '../objects/wires';
@@ -49,8 +49,8 @@ class Container<Events extends BaseEvent = BaseEvent> extends Instance<Events> {
     output: number;
   };
 
-  constructor(parent: Instances<Instance<Events>>, connectors: Connectors, position: Vector3, rotation: number) {
-    super(parent, position, rotation);
+  constructor(connectors: Connectors, position: Vector3, rotation: number) {
+    super(position, rotation);
     this.belts = { input: [], output: [] };
     this.connectors = connectors;
     this.splitter = { input: 0, output: 0 };
@@ -193,8 +193,8 @@ export class PoweredContainer<Events extends BaseEvent = BaseEvent> extends Cont
   protected powered: boolean;
   protected wires: Wire[];
 
-  constructor(parent: Instances<Instance<PoweredContainerEvents | Events>>, connectors: Connectors, position: Vector3, rotation: number, consumption: number, maxConnections: number = 1) {
-    super(parent, connectors, position, rotation);
+  constructor(connectors: Connectors, position: Vector3, rotation: number, consumption: number, maxConnections: number = 1) {
+    super(connectors, position, rotation);
     this.connections = [];
     this.consumption = consumption;
     this.enabled = true;

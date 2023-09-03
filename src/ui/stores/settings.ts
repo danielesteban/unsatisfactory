@@ -3,9 +3,10 @@ import Viewport from '../../core/viewport';
 
 const { subscribe, set, update } = writable<{
   antialias: boolean;
+  gpu: string;
   resolution: number;
   sfx: boolean;
-}>({ antialias: true, resolution: 1, sfx: true });
+}>({ antialias: true, gpu: 'Unknown', resolution: 1, sfx: true });
 
 let viewport: Viewport;
 
@@ -16,8 +17,12 @@ export default {
       throw new Error();
     }
     viewport = instance;
+    const context = viewport.renderer.getContext();
+    const ext = context.getExtension('WEBGL_debug_renderer_info');
+    const gpu = ext ? context.getParameter(ext.UNMASKED_RENDERER_WEBGL) : 'Unknown';
     set({
       antialias: viewport.getAntialias(),
+      gpu: gpu,
       resolution: viewport.getResolution(),
       sfx: !viewport.sfx.getMuted(),
     });

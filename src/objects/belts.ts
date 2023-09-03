@@ -22,6 +22,7 @@ import { loadTexture } from '../textures';
 import DiffuseMap from '../textures/green_metal_rust_diff_1k.webp';
 import NormalMap from '../textures/green_metal_rust_nor_gl_1k.webp';
 import RoughnessMap from '../textures/green_metal_rust_rough_1k.webp';
+import Inventory from '../ui/stores/inventory';
 
 export type Connection = {
   container: Container;
@@ -61,6 +62,12 @@ export class Belt extends Mesh {
     items.dispose();
     from.container.removeBelt(this, 'output');
     to.container.removeBelt(this, 'input');
+    this.getItems()
+      .reduce<Map<Item, number>>((items, item) => {
+        items.set(item, (items.get(item) || 0) + 1);
+        return items;
+      }, new Map())
+      .forEach((count, item) => Inventory.input(item, count));
   }
 
   animate() {
@@ -239,7 +246,22 @@ class Belts extends Group {
     this.physics = physics;
   }
 
-  create(from: Connection, to: Connection) {
+  canAfford() {
+    return !this.getCost().find(({ item, count }) => !Inventory.canOutput(item, count));
+  }
+
+  private static readonly cost: { item: Exclude<Item, Item.none>; count: number; }[] = [
+    // @dani @incomplete
+    // Belts are free for now.
+    // Fist I need to update some stuff in the hover code
+    // so it can multiply the cost by the number of segments to be built.
+    // { item: Item.ironPlate, count: 1 },
+  ];
+  getCost() {
+    return Belts.cost;
+  }
+
+  create(from: Connection, to: Connection, withCost: boolean = true) {
     const { physics } = this;
     const belt = new Belt(Belts.getGeometry(from, to), Belts.getMaterial(), from, to);
     this.add(belt);
@@ -251,12 +273,16 @@ class Belts extends Group {
         belt.geometry.getIndex()!.array as Uint32Array
       )!
     );
+    if (withCost) {
+      this.getCost().forEach(({ item, count }) => Inventory.output(item, count));
+    }
     return belt;
   }
-  
+
   override remove(belt: Belt) {
     const { physics } = this;
     super.remove(belt);
+    this.getCost().forEach(({ item, count }) => Inventory.input(item, count));
     belt.dispose();
     physics.removeBody(belt);
     return this;

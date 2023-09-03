@@ -60,8 +60,11 @@ class Pillars extends Instances<Pillar> {
     );
   }
   
-  create(position: Vector3, rotation: number) {
-    return super.addInstance(new Pillar(this, position, rotation));
+  create(position: Vector3, rotation: number, withCost: boolean = true) {
+    return super.addInstance(
+      new Pillar(position, rotation),
+      withCost
+    );
   }
 }
 

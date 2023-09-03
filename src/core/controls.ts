@@ -14,6 +14,7 @@ export type Buttons = {
   build: boolean;
   dismantle: boolean;
   interact: boolean;
+  inventory: boolean;
 };
 
 enum ControlsMode {
@@ -45,6 +46,7 @@ class Controls {
       build: false,
       dismantle: false,
       interact: false,
+      inventory: false,
     };
     this.camera = camera;
     this.isLocked = false;
@@ -74,6 +76,7 @@ class Controls {
     buttons.build = false;
     buttons.dismantle = false;
     buttons.interact = false;
+    buttons.inventory = false;
   }
 
   lock() {
@@ -192,6 +195,9 @@ class Controls {
       case 'KeyE':
         buttons.interact = true;
         break;
+      case 'KeyI':
+        buttons.inventory = true;
+        break;
     }
   }
 
@@ -235,6 +241,9 @@ class Controls {
         break;
       case 'KeyE':
         buttons.interact = false;
+        break;
+      case 'KeyI':
+        buttons.inventory = false;
         break;
     }
   }

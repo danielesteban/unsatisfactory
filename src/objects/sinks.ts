@@ -26,8 +26,8 @@ export class Sink extends PoweredContainer<
   }
 > {
 
-  constructor(parent: Sinks, connectors: Connectors, position: Vector3, rotation: number) {
-    super(parent, connectors, position, rotation, 100);
+  constructor(connectors: Connectors, position: Vector3, rotation: number) {
+    super(connectors, position, rotation, 100);
   }
 
   override canInput() {
@@ -47,6 +47,11 @@ const connectors = [
 ];
 
 class Sinks extends Instances<Sink> {
+  static override readonly cost: typeof Instances.cost = [
+    { item: Item.ironPlate, count: 10 },
+    { item: Item.wire, count: 20 },
+  ];
+
   private static collider: RAPIER.ColliderDesc | undefined;
   static getCollider() {
     if (!Sinks.collider) {
@@ -116,8 +121,11 @@ class Sinks extends Instances<Sink> {
     );
   }
 
-  create(position: Vector3, rotation: number) {
-    return super.addInstance(new Sink(this, Sinks.getConnectors(), position, rotation));
+  create(position: Vector3, rotation: number, withCost: boolean = true) {
+    return super.addInstance(
+      new Sink(Sinks.getConnectors(), position, rotation),
+      withCost
+    );
   }
 }
 

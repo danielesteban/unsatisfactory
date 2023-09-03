@@ -9,12 +9,13 @@ import {
   brush,
   rotation,
   set as setBrush,
+  getFromObject,
   pick,
   snap,
 } from './core/brush';
 import Container, { PoweredContainer } from './core/container';
 import { Buttons } from './core/controls';
-import { Instance } from './core/instances';
+import Instances, { Instance } from './core/instances';
 import { decode, deserialize, Objects } from './core/loader';
 import { Intersection as PhysicsIntersection } from './core/physics';
 import Simulation from './core/simulation';
@@ -37,6 +38,7 @@ import Poles, { Pole } from './objects/poles';
 import Ramps from './objects/ramps';
 import Sinks from './objects/sinks';
 import Smelters from './objects/smelters';
+import Storages from './objects/storages';
 import Terrain from './objects/terrain';
 import Walls from './objects/walls';
 import Wires, { Wire } from './objects/wires';
@@ -48,6 +50,10 @@ const interactionRadiusSquared = 12 ** 2;
 
 const viewport = new Viewport();
 
+// @dani @incomplete
+// Figure out how to properly feed all this materials
+// and their respective geometries into WebGLRenderer.compile()
+// to avoid the current hitching when uncompiled shaders get into view.
 [
   Aggregators.getMaterial(),
   Belts.getMaterial(),
@@ -64,6 +70,7 @@ const viewport = new Viewport();
   Ramps.getMaterial(),
   Sinks.getMaterial(),
   Smelters.getMaterial(),
+  Storages.getMaterial(),
   Terrain.getMaterial(),
   Walls.getMaterial(),
   Wires.getMaterial(),
@@ -119,6 +126,9 @@ viewport.scene.add(sinks);
 const smelters = new Smelters(viewport.physics, viewport.sfx);
 viewport.scene.add(smelters);
 
+const storages = new Storages(viewport.physics);
+viewport.scene.add(storages);
+
 const walls = new Walls(viewport.physics);
 viewport.scene.add(walls);
 
@@ -133,7 +143,26 @@ const ghost = new Ghost();
 viewport.scene.add(ghost);
 
 const objects: Objects = {
-  aggregators, belts, buffers, combinators, fabricators, foundations, generators, miners, pillars, poles, ramps, sinks, smelters, walls, wires,
+  aggregators, belts, buffers, combinators, fabricators, foundations, generators, miners, pillars, poles, ramps, sinks, smelters, storages, walls, wires,
+};
+
+const brushObjects = {
+  [Brush.aggregator]: aggregators,
+  [Brush.belt]: belts,
+  [Brush.buffer]: buffers,
+  [Brush.combinator]: combinators,
+  [Brush.fabricator]: fabricators,
+  [Brush.foundation]: foundations,
+  [Brush.generator]: generators,
+  [Brush.miner]: miners,
+  [Brush.pillar]: pillars,
+  [Brush.pole]: poles,
+  [Brush.ramp]: ramps,
+  [Brush.sink]: sinks,
+  [Brush.smelter]: smelters,
+  [Brush.storage]: storages,
+  [Brush.wall]: walls,
+  [Brush.wire]: wires,
 };
 
 const connection: { container: Container | PoweredContainer | undefined; connector: number; } = {
@@ -143,7 +172,7 @@ const connection: { container: Container | PoweredContainer | undefined; connect
 
 type Intersection = Omit<PhysicsIntersection, 'object'> & {
   connector: number | false;
-  object?: Instance | Belt | Wire
+  object?: Belt | Deposit | Instance | Wire
 };
 
 const intersection: Intersection = {
@@ -162,7 +191,7 @@ const canInteract = (intersection: Intersection) => (
 
 const canWire = (intersection: Intersection) => (
   intersection.object instanceof PoweredContainer
-  && intersection.object.canWire(connection.container as PoweredContainer)
+  && intersection.object.canWire(connection.container as PoweredContainer | undefined)
 );
 
 const create = (intersection: Intersection) => {
@@ -176,40 +205,33 @@ const create = (intersection: Intersection) => {
   }
   switch (brush) {
     case Brush.aggregator:
-      aggregators.create(snap(intersection), rotation);
-      return;
-    case Brush.belt:
-      if (intersection.connector === false) {
+    case Brush.buffer:
+    case Brush.combinator:
+    case Brush.fabricator:
+    case Brush.foundation:
+    case Brush.generator:
+    case Brush.pillar:
+    case Brush.pole:
+    case Brush.ramp:
+    case Brush.sink:
+    case Brush.smelter:
+    case Brush.storage:
+    case Brush.wall: {
+      const object = brushObjects[brush];
+      if (!object.canAfford()) {
         return 'nope';
       }
-      if (!connection.container) {
-        connection.container = intersection.object as Container;
-        connection.connector = intersection.connector;
-        return 'tap';
+      object.create(snap(intersection), rotation);
+      if (brush === Brush.generator) {
+        Achievements.complete(Achievement.generator);
       }
-      belts.create(
-        connection as Connection,
-        { container: intersection.object as Container, connector: intersection.connector }
-      );
-      return 'tap';
-    case Brush.buffer:
-      buffers.create(snap(intersection), rotation);
       return;
-    case Brush.combinator:
-      combinators.create(snap(intersection), rotation);
-      return;
-    case Brush.fabricator:
-      fabricators.create(snap(intersection), rotation);
-      return;
-    case Brush.foundation:
-      foundations.create(snap(intersection), rotation);
-      return;
-    case Brush.generator:
-      generators.create(snap(intersection), rotation);
-      Achievements.complete(Achievement.generator);
-      return;
+    }
     case Brush.miner: {
-      if (!(intersection.object instanceof Deposit)) {
+      if (
+        !(intersection.object instanceof Deposit)
+        || !miners.canAfford()
+      ) {
         return 'nope';
       }
       const position = snap(intersection);
@@ -223,33 +245,45 @@ const create = (intersection: Intersection) => {
       Achievements.complete(Achievement.miner);
       return;
     }
-    case Brush.pillar:
-      pillars.create(snap(intersection), rotation);
-      return;
-    case Brush.pole:
-      poles.create(snap(intersection), rotation);
-      return;
-    case Brush.ramp:
-      ramps.create(snap(intersection), rotation);
-      return;
-    case Brush.sink:
-      sinks.create(snap(intersection), rotation);
-      return;
-    case Brush.smelter:
-      smelters.create(snap(intersection), rotation);
-      return;
-    case Brush.wall:
-      walls.create(snap(intersection), rotation);
-      return;
+    case Brush.belt:
+      if (
+        intersection.connector === false
+        // @dani @incomplete
+        // Need to add the number of slots in the belt somehow to the intersection
+        // and then adjust the cost based on that.
+        // So... Belts are free for now.
+        // || !belts.canAfford()
+      ) {
+        return 'nope';
+      }
+      if (!connection.container) {
+        connection.container = intersection.object as Container;
+        connection.connector = intersection.connector;
+        return 'tap';
+      }
+      belts.create(
+        connection as Connection,
+        { container: intersection.object as Container, connector: intersection.connector },
+        // @dani @incomplete
+        // Same as above. Free belts.
+        false
+      );
+      return 'tap';
     case Brush.wire:
-      if (!canWire(intersection)) {
+      if (
+        !canWire(intersection)
+        || !wires.canAfford()
+      ) {
         return 'nope';
       }
       if (!connection.container) {
         connection.container = intersection.object as PoweredContainer;
         return 'tap';
       }
-      wires.create(connection.container as PoweredContainer, intersection.object as PoweredContainer);
+      wires.create(
+        connection.container as PoweredContainer,
+        intersection.object as PoweredContainer
+      );
       return 'wire';
   }
 };
@@ -264,7 +298,10 @@ const remove = (intersection: Intersection) => {
     if (instance instanceof PoweredContainer) {
       [...instance.getWires()].forEach((wire) => wires.remove(wire));
     }
-    instance.parent.removeInstance(instance);
+    const parent = brushObjects[
+      getFromObject(instance) as Exclude<Brush, Brush.none | Brush.dismantle>
+    ] as Instances<Instance>;
+    parent.removeInstance(instance);
     return;
   }
   if (intersection.object instanceof Belt) {
@@ -279,7 +316,7 @@ const remove = (intersection: Intersection) => {
 };
 
 const handleInput = (
-  { primary, secondary, tertiary, build, dismantle, interact }: Buttons,
+  { primary, secondary, tertiary, build, dismantle, interact, inventory }: Buttons,
   intersection?: Intersection
 ) => {
   const hasConnection = connection.container !== undefined;
@@ -308,6 +345,11 @@ const handleInput = (
       UI('container', intersection.object as Instance);
     }
   }
+  if (inventory) {
+    setBrush(Brush.none);
+    UI('inventory');
+    Achievements.complete(Achievement.inventory);
+  }
   if (hasConnection) {
     connection.container = undefined;
   }
@@ -318,38 +360,67 @@ const hover = (intersection?: Intersection) => {
   ghost.visible = false;
   
   if (
-    intersection?.object
-    && (brush === Brush.belt && intersection.connector !== false)
-  ) {
-    if (connection.container) {
-      ghost.setBelt(connection as Connection, { container: intersection.object as Container, connector: intersection.connector }, true);
-    } else {
-      ghost.setConnector((intersection.object as Container).getConnector(intersection.connector), true);
-    }
-    setTooltip('belt', intersection.object as Instance, connection.container);
-    return;
-  }
-
-  if (
     brush === Brush.belt
-    && connection.container
   ) {
-    ghost.setConnector(connection.container.getConnector(connection.connector), true);
-    setTooltip('belt', connection.container);
-    return;
+    // @dani @incomplete
+    // Free belts.
+    // const affordable = belts.canAfford();
+    // const cost = belts.getCost();
+    const affordable = true;
+    const cost = undefined;
+    let from = connection.container as PoweredContainer;
+    let to;
+    if (
+      intersection?.object && intersection.connector !== false
+    ) {
+      if (connection.container) {
+        to = intersection.object as PoweredContainer;
+        ghost.setBelt(connection as Connection, { container: intersection.object as Container, connector: intersection.connector }, true);
+      } else {
+        from = intersection.object as PoweredContainer;
+        ghost.setConnector((intersection.object as Container).getConnector(intersection.connector), true);
+      }
+    } else if (connection.container) {
+      ghost.setConnector(connection.container.getConnector(connection.connector), true);
+    }
+    if (from) {
+      // @dani @incomplete
+      // This tooltip logic is fucking nuts!
+      // Should prolly refactor this function to take an object.
+      setTooltip(!affordable ? 'unaffordable' : 'belt', to || from, to ? from : undefined, cost);
+      return;
+    }
   }
 
   if (
-    intersection
-    && !(
-      intersection.object instanceof Belt
-      || intersection.object instanceof Wire
-    )
-    && ![Brush.none, Brush.belt, Brush.dismantle, Brush.wire].includes(brush)
+    brush !== Brush.none
+    && brush !== Brush.belt
+    && brush !== Brush.dismantle
+    && brush !== Brush.wire
   ) {
-    const isValid = brush !== Brush.miner || intersection.object instanceof Deposit;
-    ghost.setBrush(brush, snap(intersection), rotation, isValid);
-    setTooltip(isValid ? 'build' : 'invalid');
+    const object = brushObjects[brush];
+    const affordable = object.canAfford();
+    const cost = object.getCost();
+    let valid = false;
+    if (
+      intersection
+      && !(
+        intersection.object instanceof Belt
+        || intersection.object instanceof Wire
+      )
+    ) {
+      valid = (brush !== Brush.miner || intersection.object instanceof Deposit);
+      ghost.setBrush(brush, snap(intersection), rotation, affordable && valid);
+    }
+    let action: 'build' | 'invalid' | 'unaffordable';
+    if (!valid) {
+      action = 'invalid';
+    } else if (!affordable) {
+      action = 'unaffordable';
+    } else {
+      action = 'build';
+    }
+    setTooltip(action, undefined, undefined, cost);
     return;
   }
 
@@ -380,28 +451,38 @@ const hover = (intersection?: Intersection) => {
     && intersection?.object instanceof Deposit
     && intersection.object.getWorldPosition(aux).distanceToSquared(viewport.camera.position) <= interactionRadiusSquared
   ) {
-    setTooltip('yield', undefined, undefined, intersection.object.getItem(), intersection.object.getPurity());
+    setTooltip('yield', undefined, undefined, undefined, intersection.object.getItem(), intersection.object.getPurity());
     Achievements.complete(Achievement.deposit);
     return;
   }
 
   if (
-    intersection?.object
-    && (brush === Brush.wire && canWire(intersection))
-  ) {
-    if (connection.container) {
-      ghost.setWire(connection.container as PoweredContainer, intersection.object as PoweredContainer, true);
-    }
-    setTooltip('wire', intersection.object as Instance, connection.container);
-    return;
-  }
-
-  if (
     brush === Brush.wire
-    && connection.container
   ) {
-    setTooltip('wire', connection.container);
-    return;
+    const affordable = wires.canAfford();
+    const cost = wires.getCost();
+    let from = connection.container as PoweredContainer;
+    let to;
+    if (
+      intersection?.object
+      && canWire(intersection)
+    ) {
+      if (connection.container) {
+        to = intersection.object as PoweredContainer;
+      } else {
+        from = intersection.object as PoweredContainer;
+      }
+      if (from && to) {
+        ghost.setWire(from, to, affordable);
+      }
+    }
+    if (from) {
+      // @dani @incomplete
+      // This tooltip logic is fucking nuts!
+      // Should prolly refactor this function to take an object.
+      setTooltip(!affordable ? 'unaffordable' : 'wire', to || from, to ? from : undefined, cost);
+      return;
+    }
   }
 
   setTooltip(undefined);
@@ -428,16 +509,13 @@ const raycaster = new Raycaster();
 raycaster.far = viewport.camera.far;
 const simulation = new Simulation(
   belts,
-  [aggregators, buffers, combinators, fabricators, miners, sinks, smelters]
+  [aggregators, buffers, combinators, fabricators, miners, sinks, smelters, storages]
 );
 const animate = (buttons: Buttons, delta: number) => {
   birds.step(delta);
   simulation.step(delta);
   terrain.update(viewport.camera.position, terrainRadius);
   raycaster.setFromCamera(center, viewport.camera);
-  // @dani @incomplete
-  // wires don't have physics colliders implemented yet,
-  // so.. keep using the threejs raycaster for those and merge them in.
   const vertexHit = (brush === Brush.dismantle || buttons.tertiary) && raycaster.intersectObjects<Wire>(wires.children, false)[0];
   const physicsHit = viewport.physics.castRay(intersection, raycaster.ray.origin, raycaster.ray.direction, raycaster.far);
   let hit;
@@ -453,7 +531,7 @@ const animate = (buttons: Buttons, delta: number) => {
     hit.connector = getConnector(hit, raycaster);
   }
   hover(hit);
-  if (buttons.primary || buttons.secondary || buttons.tertiary || buttons.build || buttons.dismantle || buttons.interact) {
+  if (buttons.primary || buttons.secondary || buttons.tertiary || buttons.build || buttons.dismantle || buttons.interact || buttons.inventory) {
     handleInput(buttons, hit);
   }
   setCompass(viewport.camera.rotation.y, viewport.camera.position);

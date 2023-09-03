@@ -12,16 +12,16 @@ import {
   Quaternion,
   Vector3,
 } from 'three';
+import { Item } from '../objects/items';
+import Inventory from '../ui/stores/inventory';
 import Physics from './physics';
 
 export class Instance<Event extends BaseEvent = BaseEvent> extends EventDispatcher<Event> {
-  public readonly parent: Instances<Instance<Event>>;
   public readonly position: Vector3;
   public readonly rotation: number;
 
-  constructor(parent: Instances<Instance<Event>>, position: Vector3, rotation: number) {
+  constructor(position: Vector3, rotation: number) {
     super();
-    this.parent = parent;
     this.position = position.clone();
     this.rotation = rotation;
   }
@@ -135,6 +135,17 @@ class Instances<InstanceType extends Instance> extends Group {
     this.physics = physics;
   }
 
+  canAfford() {
+    return !this.getCost().find(({ item, count }) => !Inventory.canOutput(item, count));
+  }
+
+  protected static readonly cost: { item: Exclude<Item, Item.none>; count: number; }[] = [
+    { item: Item.ironPlate, count: 1 },
+  ];
+  getCost() {
+    return (<typeof Instances<InstanceType>> this.constructor).cost;
+  }
+
   getCount() {
     const { instances } = this;
     return instances.length;
@@ -145,7 +156,7 @@ class Instances<InstanceType extends Instance> extends Group {
     return instances[index]!;
   }
 
-  addInstance(instance: InstanceType) {
+  addInstance(instance: InstanceType, withCost: boolean) {
     const { chunks, instances, instanceChunks, model, physics } = this;
     let { chunk } = chunks.reduce<{ chunk: undefined | InstancesChunk; distance: number; }>((closest, chunk) => {
       const distance = chunk.boundingSphere!.center.distanceToSquared(instance.position);
@@ -170,6 +181,9 @@ class Instances<InstanceType extends Instance> extends Group {
         .setRotation(Instance.getQuaternion(instance)),
       model.collider
     );
+    if (withCost) {
+      this.getCost().forEach(({ item, count }) => Inventory.output(item, count));
+    }
     return instance;
   }
 
@@ -180,6 +194,7 @@ class Instances<InstanceType extends Instance> extends Group {
       return;
     }
     instances.splice(i, 1);
+    this.getCost().forEach(({ item, count }) => Inventory.input(item, count));
     instance.dispose();
     physics.removeBody(instance);
     const chunk = instanceChunks.get(instance);

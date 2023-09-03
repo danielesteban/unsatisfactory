@@ -16,19 +16,27 @@ import { loadTexture } from '../textures';
 import DiffuseMap from '../textures/rust_coarse_01_diff_1k.webp';
 import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.webp';
 import RoughnessMap from '../textures/rust_coarse_01_rough_1k.webp';
+import Inventory from '../ui/stores/inventory';
 
 export class Buffer extends Container {
   private item: Item;
 
-  constructor(parent: Buffers, connectors: Connectors, position: Vector3, rotation: number) {
-    super(parent, connectors, position, rotation);
+  constructor(connectors: Connectors, position: Vector3, rotation: number) {
+    super(connectors, position, rotation);
     this.item = Item.none;
   }
 
   setItem(item: Item) {
     this.item = item;
   }
-    
+
+  override dispose() {
+    const { item } = this;
+    if (item !== Item.none) {
+      Inventory.input(item);
+    }
+  }
+
   override canInput() {
     const { item } = this;
     return item === Item.none;
@@ -66,6 +74,10 @@ const connectors = [
 ];
 
 class Buffers extends Instances<Buffer> {
+  static override readonly cost: typeof Instances.cost = [
+    { item: Item.ironPlate, count: 5 },
+  ];
+
   private static collider: RAPIER.ColliderDesc | undefined;
   static getCollider() {
     if (!Buffers.collider) {
@@ -127,8 +139,11 @@ class Buffers extends Instances<Buffer> {
     );
   }
 
-  create(position: Vector3, rotation: number) {
-    return super.addInstance(new Buffer(this, Buffers.getConnectors(), position, rotation));
+  create(position: Vector3, rotation: number, withCost: boolean = true) {
+    return super.addInstance(
+      new Buffer(Buffers.getConnectors(), position, rotation),
+      withCost
+    );
   }
 }
 

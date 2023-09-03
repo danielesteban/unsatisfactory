@@ -8,8 +8,10 @@ import {
   TubeGeometry,
 } from 'three';
 import { PoweredContainer } from '../core/container';
+import { Item } from '../objects/items';
 import { Generator } from './generators';
 import Alerts, { Alert } from '../ui/stores/alerts';
+import Inventory from '../ui/stores/inventory';
 
 export class Wire extends Mesh {
   public readonly from: PoweredContainer;
@@ -88,8 +90,19 @@ class Wires extends Group {
       generators: [],
     };
   }
-  
-  create(from: PoweredContainer, to: PoweredContainer) {
+
+  canAfford() {
+    return !this.getCost().find(({ item, count }) => !Inventory.canOutput(item, count));
+  }
+
+  private static readonly cost: { item: Exclude<Item, Item.none>; count: number; }[] = [
+    { item: Item.wire, count: 1 },
+  ];
+  getCost() {
+    return Wires.cost;
+  }
+
+  create(from: PoweredContainer, to: PoweredContainer, withCost: boolean = true) {
     const { grid } = this;
     [from, to].forEach((container) => {
       if (container.getConnections().length > 0) {
@@ -105,12 +118,16 @@ class Wires extends Group {
     const wire = new Wire(Wires.getGeometry(from, to), Wires.getMaterial(), from, to);
     this.add(wire);
     this.updatePower();
+    if (withCost) {
+      this.getCost().forEach(({ item, count }) => Inventory.output(item, count));
+    }
     return wire;
   }
 
   override remove(wire: Wire) {
     const { grid } = this;
     super.remove(wire);
+    this.getCost().forEach(({ item, count }) => Inventory.input(item, count));
     wire.dispose();
     [wire.from, wire.to].forEach((container) => {
       if (container.getConnections().length > 0) {
@@ -152,6 +169,15 @@ class Wires extends Group {
           container.setPowered(false);
         }
       });
+      // @dani @incomplete
+      // This code needs a rewrite. It works for now,
+      // but it won't scale and it gets worse with every generator you add.
+      // Specially if you wire them all together.
+      // Also it runs every time you enable/disable a machine etc.
+      //
+      // This should change into a Grid base system.
+      // Updating the grid only at connection/disconnection time,
+      // creating or merging existing grids if needed.
       const overloaded = new Set<PoweredContainer>();
       grid.generators.forEach((generator) => {
         let available = generator.getPower();
