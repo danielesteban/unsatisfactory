@@ -4,7 +4,6 @@ import {
   Curve,
   CylinderGeometry,
   DynamicDrawUsage,
-  IcosahedronGeometry,
   InstancedMesh,
   Group,
   Material,
@@ -19,7 +18,7 @@ import {
   Vector3,
 } from 'three';
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
+import { ADDITION, Brush, Evaluator } from 'three-bvh-csg';
 import { loadTexture } from '../textures';
 import CopperDiffuseMap from '../textures/rock_06_diff_1k.webp';
 import CopperNormalMap from '../textures/rock_06_nor_gl_1k.webp';
@@ -37,7 +36,7 @@ export enum Item {
   ironPlate,
   ironIngot,
   ironOre,
-  artifact,
+  rotor,
   copperIngot,
   copperOre,
   ironRod,
@@ -45,13 +44,13 @@ export enum Item {
 
 export const ItemName = {
   [Item.none]: 'None',
-  [Item.artifact]: 'Artifact',
   [Item.copperIngot]: 'Copper Ingot',
   [Item.copperOre]: 'Copper Ore',
   [Item.ironIngot]: 'Iron Ingot',
   [Item.ironOre]: 'Iron Ore',
   [Item.ironPlate]: 'Iron Plate',
   [Item.ironRod]: 'Iron Rod',
+  [Item.rotor]: 'Rotor',
   [Item.wire]: 'Wire',
 };
 
@@ -61,11 +60,11 @@ export const Mining: Partial<Record<Item, { consumption: number; count: number; 
 };
 
 export const Sinking: Partial<Record<Item, number>> = {
-  [Item.artifact]: 32,
   [Item.copperIngot]: 2,
   [Item.ironIngot]: 2,
   [Item.ironPlate]: 6,
   [Item.ironRod]: 4,
+  [Item.rotor]: 32,
   [Item.wire]: 4,
 };
 
@@ -154,7 +153,7 @@ export const Recipes: Recipe[] = [
   {
     input: [
       {
-        item: Item.ironPlate,
+        item: Item.ironRod,
         count: 3,
       },
       {
@@ -163,7 +162,7 @@ export const Recipes: Recipe[] = [
       }
     ],
     output: {
-      item: Item.artifact,
+      item: Item.rotor,
       count: 1,
     },
     rate: 30,
@@ -173,11 +172,11 @@ export const Recipes: Recipe[] = [
     input: [
       {
         item: Item.ironPlate,
-        count: 2,
+        count: 3,
       },
       {
         item: Item.ironRod,
-        count: 2,
+        count: 3,
       },
       {
         item: Item.wire,
@@ -185,7 +184,7 @@ export const Recipes: Recipe[] = [
       }
     ],
     output: {
-      item: Item.artifact,
+      item: Item.rotor,
       count: 1,
     },
     rate: 10,
@@ -258,12 +257,29 @@ class Items extends Group {
   static setupGeometries() {
     if (!Items.geometries) {
       const csgEvaluator = new Evaluator();
+      let brush: Brush;
 
-      let brush = new Brush(new BoxGeometry(0.3, 0.3, 0.3));
-      brush = csgEvaluator.evaluate(brush, new Brush(new IcosahedronGeometry(0.175, 3)), SUBTRACTION);
-      const artifact = mergeVertices(brush.geometry);
-      artifact.translate(0, 0.15, 0);
-      artifact.computeBoundingSphere();
+      const rotorCap = new Brush(new CylinderGeometry(0.15, 0.15, 0.0625));
+      const rotorRod = new Brush(new CylinderGeometry(0.03, 0.03, 0.3));
+      rotorCap.position.set(0, -0.11875, 0);
+      rotorCap.updateMatrixWorld();
+      rotorRod.scale.set(2, 1, 2);
+      rotorRod.updateMatrixWorld();
+      brush = csgEvaluator.evaluate(rotorCap, rotorRod, ADDITION);
+      rotorCap.position.set(0, 0.11875, 0);
+      rotorCap.updateMatrixWorld();
+      brush = csgEvaluator.evaluate(brush, rotorCap, ADDITION);
+      rotorRod.scale.setScalar(1);
+      for (let i = 0; i < 5; i++) {
+        const r = 0.085;
+        const a = ((Math.PI * 2) / 5) * i;
+        rotorRod.position.set(Math.sin(a) * r, 0, Math.cos(a) * r);
+        rotorRod.updateMatrixWorld();
+        brush = csgEvaluator.evaluate(brush, rotorRod, ADDITION);
+      }
+      const rotor = mergeVertices(brush.geometry);
+      rotor.translate(0, 0.15, 0);
+      rotor.computeBoundingSphere();
 
       const ingot = new BoxGeometry(0.5, 0.125, 0.25);
       ingot.translate(0, 0.0625, 0);
@@ -301,7 +317,6 @@ class Items extends Group {
         constructor() { super(); }
         override getPoint(t: number, optionalTarget = new Vector3()) {
           const r = 6;
-          console.log(t * r * 0.04 + (t < (1 / r) ? 0.04 : 0) + (t > (1 - (1 / r)) ? -0.04 : 0));
           return optionalTarget.set(
             Math.sin(Math.PI * 2 * t * r) * 0.15,
             t * r * 0.04 + (t < (1 / r) ? 0.04 : 0) + (t > (1 - (1 / r)) ? -0.04 : 0),
@@ -313,13 +328,13 @@ class Items extends Group {
       wire.computeBoundingSphere();
 
       Items.geometries = {
-        [Item.artifact]: artifact,
         [Item.copperIngot]: ingot,
         [Item.copperOre]: ore,
         [Item.ironIngot]: ingot,
         [Item.ironOre]: ore,
         [Item.ironPlate]: plate,
         [Item.ironRod]: rod,
+        [Item.rotor]: rotor,
         [Item.wire]: wire,
       };
     }
@@ -353,13 +368,13 @@ class Items extends Group {
         roughness: 0.3,
       });
       Items.materials = {
-        [Item.artifact]: rust,
         [Item.copperIngot]: copper,
         [Item.copperOre]: copper,
         [Item.ironIngot]: iron,
         [Item.ironOre]: iron,
         [Item.ironPlate]: iron,
         [Item.ironRod]: iron,
+        [Item.rotor]: rust,
         [Item.wire]: wire,
       };
     }

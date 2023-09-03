@@ -180,15 +180,12 @@ const processItemQueue = () => {
   scene.add(mesh);
   const capture = [1, 0.75].map((zoom) => {
     let y = 0.1;
-    if (item === Item.artifact) {
-      y = 0.15;
-    }
     if (item === Item.ironIngot || item === Item.copperIngot) {
       y = 0.0625;
     }
     if (item === Item.ironOre || item === Item.copperOre) {
-      zoom *= 1.5;
       y = 0.2;
+      zoom *= 1.5;
     }
     if (item === Item.ironPlate) {
       y = 0.03125;
@@ -196,9 +193,12 @@ const processItemQueue = () => {
     if (item === Item.ironRod) {
       y = 0.08;
     }
+    if (item === Item.rotor) {
+      y = 0.15;
+    }
     camera.position.set(0, 0.5, 1).multiplyScalar(zoom);
-    camera.position.y += y;
-    camera.lookAt(0, y, 0);
+    camera.lookAt(0, 0, 0);
+    mesh.position.y = -y;
     composer.render();
     return renderer.domElement.toDataURL();
   });
