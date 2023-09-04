@@ -25,7 +25,7 @@ import Hotbar from '../ui/stores/hotbar';
 import Inventory from '../ui/stores/inventory';
 import Points from '../ui/stores/points';
 
-const version = 18;
+const version = 19;
 
 export type Objects = {
   aggregators: Aggregators;
@@ -400,6 +400,14 @@ const migrations: Record<number, (serialized: Serialized) => Serialized> = {
       ...serialized,
       storages: [],
       inventory: [],
+    };
+  },
+  [18]: (serialized: Serialized) => {
+    return {
+      ...serialized,
+      aggregators: serialized.aggregators.map(([position, rotation, enabled, recipe, tick, buffers]) => ([
+        position, rotation, enabled, recipe ? recipe + 1 : undefined, tick, buffers,
+      ])),
     };
   },
 };

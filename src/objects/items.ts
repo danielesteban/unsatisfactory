@@ -18,7 +18,7 @@ import {
   Vector3,
 } from 'three';
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { ADDITION, Brush, Evaluator } from 'three-bvh-csg';
+import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 import { loadTexture } from '../textures';
 import CopperDiffuseMap from '../textures/rock_06_diff_1k.webp';
 import CopperNormalMap from '../textures/rock_06_nor_gl_1k.webp';
@@ -40,12 +40,14 @@ export enum Item {
   copperIngot,
   copperOre,
   ironRod,
+  frame,
 }
 
 export const ItemName = {
   [Item.none]: 'None',
   [Item.copperIngot]: 'Copper Ingot',
   [Item.copperOre]: 'Copper Ore',
+  [Item.frame]: 'Frame',
   [Item.ironIngot]: 'Iron Ingot',
   [Item.ironOre]: 'Iron Ore',
   [Item.ironPlate]: 'Iron Plate',
@@ -61,6 +63,7 @@ export const Mining: Partial<Record<Item, { consumption: number; count: number; 
 
 export const Sinking: Partial<Record<Item, number>> = {
   [Item.copperIngot]: 2,
+  [Item.frame]: 32,
   [Item.ironIngot]: 2,
   [Item.ironPlate]: 6,
   [Item.ironRod]: 4,
@@ -172,6 +175,24 @@ export const Recipes: Recipe[] = [
     input: [
       {
         item: Item.ironPlate,
+        count: 12,
+      },
+      {
+        item: Item.ironRod,
+        count: 12,
+      }
+    ],
+    output: {
+      item: Item.frame,
+      count: 1,
+    },
+    rate: 60,
+    transformer: Transformer.combinator,
+  },
+  {
+    input: [
+      {
+        item: Item.ironPlate,
         count: 3,
       },
       {
@@ -259,6 +280,62 @@ class Items extends Group {
       const csgEvaluator = new Evaluator();
       let brush: Brush;
 
+      const ingot = new BoxGeometry(0.5, 0.125, 0.25);
+      ingot.translate(0, 0.0625, 0);
+      ingot.computeBoundingSphere();
+
+      const ore = new TetrahedronGeometry(0.2, 2);
+      ore.scale(1.5, 1, 1);
+      ore.translate(0, 0.2, 0);
+      ore.computeBoundingSphere();
+
+      const plate = new BoxGeometry(0.4, 0.0625, 0.4);
+      plate.translate(0, 0.03125, 0);
+      plate.computeBoundingSphere();
+
+      let frameCap = new Brush(new BoxGeometry(0.36875, 0.03125, 0.36875));
+      frameCap = csgEvaluator.evaluate(frameCap, new Brush(new BoxGeometry(0.30625, 0.03125, 0.30625)), SUBTRACTION);
+      frameCap.position.set(0, 0.03125, 0);
+      frameCap.updateMatrixWorld();
+      brush = frameCap.clone();
+      const frameRod = new Brush(new BoxGeometry(0.0625, 0.4, 0.0625));
+      frameRod.position.set(-0.16875, 0.2, -0.16875);
+      frameRod.updateMatrixWorld();
+      brush = csgEvaluator.evaluate(brush, frameRod, ADDITION);
+      frameRod.position.set(0.16875, 0.2, -0.16875);
+      frameRod.updateMatrixWorld();
+      brush = csgEvaluator.evaluate(brush, frameRod, ADDITION);
+      frameRod.position.set(0.16875, 0.2, 0.16875);
+      frameRod.updateMatrixWorld();
+      brush = csgEvaluator.evaluate(brush, frameRod, ADDITION);
+      frameRod.position.set(-0.16875, 0.2, 0.16875);
+      frameRod.updateMatrixWorld();
+      brush = csgEvaluator.evaluate(brush, frameRod, ADDITION);
+      frameCap.position.set(0, 0.36875, 0);
+      frameCap.updateMatrixWorld();
+      brush = csgEvaluator.evaluate(brush, frameCap, ADDITION);
+      const frame = mergeVertices(brush.geometry);
+      frame.computeBoundingSphere();
+
+      const rodBrush = new Brush(new CylinderGeometry(0.04, 0.04, 0.5));
+      rodBrush.geometry.rotateZ(Math.PI * 0.5);
+      rodBrush.geometry.translate(0, 0.04, 0);
+      brush = rodBrush.clone();
+      rodBrush.position.set(0, 0.08 * 0.9, 0.04 * 0.9);
+      rodBrush.updateMatrixWorld();
+      brush = csgEvaluator.evaluate(brush, rodBrush, ADDITION);
+      rodBrush.position.set(0, 0.08 * 0.9, -0.04 * 0.9);
+      rodBrush.updateMatrixWorld();
+      brush = csgEvaluator.evaluate(brush, rodBrush, ADDITION);
+      rodBrush.position.set(0, 0, 0.08 * 0.9);
+      rodBrush.updateMatrixWorld();
+      brush = csgEvaluator.evaluate(brush, rodBrush, ADDITION);
+      rodBrush.position.set(0, 0, -0.08 * 0.9);
+      rodBrush.updateMatrixWorld();
+      brush = csgEvaluator.evaluate(brush, rodBrush, ADDITION);
+      const rod = mergeVertices(brush.geometry);
+      rod.computeBoundingSphere();
+
       const rotorCap = new Brush(new CylinderGeometry(0.15, 0.15, 0.0625));
       const rotorRod = new Brush(new CylinderGeometry(0.03, 0.03, 0.3));
       rotorCap.position.set(0, -0.11875, 0);
@@ -281,38 +358,6 @@ class Items extends Group {
       rotor.translate(0, 0.15, 0);
       rotor.computeBoundingSphere();
 
-      const ingot = new BoxGeometry(0.5, 0.125, 0.25);
-      ingot.translate(0, 0.0625, 0);
-      ingot.computeBoundingSphere();
-
-      const ore = new TetrahedronGeometry(0.2, 2);
-      ore.scale(1.5, 1, 1);
-      ore.translate(0, 0.2, 0);
-      ore.computeBoundingSphere();
-
-      const plate = new BoxGeometry(0.4, 0.0625, 0.4);
-      plate.translate(0, 0.03125, 0);
-      plate.computeBoundingSphere();
-
-      const rodBrush = new Brush(new CylinderGeometry(0.04, 0.04, 0.5));
-      rodBrush.geometry.rotateZ(Math.PI * 0.5);
-      rodBrush.geometry.translate(0, 0.04, 0);
-      brush = rodBrush.clone();
-      rodBrush.position.set(0, 0.08 * 0.9, 0.04 * 0.9);
-      rodBrush.updateMatrixWorld();
-      brush = csgEvaluator.evaluate(brush, rodBrush, ADDITION);
-      rodBrush.position.set(0, 0.08 * 0.9, -0.04 * 0.9);
-      rodBrush.updateMatrixWorld();
-      brush = csgEvaluator.evaluate(brush, rodBrush, ADDITION);
-      rodBrush.position.set(0, 0, 0.08 * 0.9);
-      rodBrush.updateMatrixWorld();
-      brush = csgEvaluator.evaluate(brush, rodBrush, ADDITION);
-      rodBrush.position.set(0, 0, -0.08 * 0.9);
-      rodBrush.updateMatrixWorld();
-      brush = csgEvaluator.evaluate(brush, rodBrush, ADDITION);
-      const rod = mergeVertices(brush.geometry);
-      rod.computeBoundingSphere();
-
       class WireCurve extends Curve<Vector3> {
         constructor() { super(); }
         override getPoint(t: number, optionalTarget = new Vector3()) {
@@ -330,6 +375,7 @@ class Items extends Group {
       Items.geometries = {
         [Item.copperIngot]: ingot,
         [Item.copperOre]: ore,
+        [Item.frame]: frame,
         [Item.ironIngot]: ingot,
         [Item.ironOre]: ore,
         [Item.ironPlate]: plate,
@@ -370,6 +416,7 @@ class Items extends Group {
       Items.materials = {
         [Item.copperIngot]: copper,
         [Item.copperOre]: copper,
+        [Item.frame]: rust,
         [Item.ironIngot]: iron,
         [Item.ironOre]: iron,
         [Item.ironPlate]: iron,
