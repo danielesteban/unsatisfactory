@@ -10,6 +10,7 @@ import { Intersection } from './physics';
 import Aggregators, { Aggregator }  from '../objects/aggregators';
 import Belts, { Belt } from '../objects/belts';
 import Buffers, { Buffer } from '../objects/buffers';
+import Columns, { Column } from '../objects/columns';
 import Deposit from '../objects/deposit';
 import Combinators, { Combinator }  from '../objects/combinators';
 import Fabricators, { Fabricator }  from '../objects/fabricators';
@@ -30,6 +31,7 @@ export enum Brush {
   aggregator,
   belt,
   buffer,
+  column,
   combinator,
   dismantle,
   fabricator,
@@ -89,6 +91,7 @@ export const names: Record<Brush, string> = {
   [Brush.aggregator]: 'Aggregator',
   [Brush.belt]: 'Belt',
   [Brush.buffer]: 'Buffer',
+  [Brush.column]: 'Column',
   [Brush.dismantle]: 'Dismantle',
   [Brush.combinator]: 'Combinator',
   [Brush.fabricator]: 'Fabricator',
@@ -110,6 +113,7 @@ export const groups: Exclude<Brush, Brush.none>[][] = [
     Brush.foundation,
     Brush.pillar,
     Brush.ramp,
+    Brush.column,
     Brush.wall,
   ],
   [
@@ -134,6 +138,7 @@ export const groups: Exclude<Brush, Brush.none>[][] = [
 
 export const tiers: Partial<Record<Brush, number>> = {
   [Brush.aggregator]: 1,
+  [Brush.column]: 1,
   [Brush.combinator]: 1,
   [Brush.pillar]: 1,
   [Brush.ramp]: 1,
@@ -150,6 +155,9 @@ export const getFromObject = (instance?: Instance | Belt | Wire) => {
   }
   if (instance instanceof Buffer) {
     return Brush.buffer;
+  }
+  if (instance instanceof Column) {
+    return Brush.column;
   }
   if (instance instanceof Combinator) {
     return Brush.combinator;
@@ -199,6 +207,8 @@ export const getGeometry = (brush: Brush) => {
       return Aggregators.getGeometry();
     case Brush.buffer:
       return Buffers.getGeometry();
+    case Brush.column:
+      return Columns.getGeometry();
     case Brush.combinator:
       return Combinators.getGeometry();
     case Brush.fabricator:
@@ -236,6 +246,8 @@ export const getMaterial = (brush: Brush) => {
       return Belts.getMaterial();
     case Brush.buffer:
       return Buffers.getMaterial();
+    case Brush.column:
+      return Columns.getMaterial();
     case Brush.combinator:
       return Combinators.getMaterial();
     case Brush.fabricator:
@@ -285,6 +297,7 @@ const offsets = {
   [Brush.aggregator]: new Vector3(4, 2, 4),
   [Brush.belt]: new Vector3(),
   [Brush.buffer]: new Vector3(1, 1, 1),
+  [Brush.column]: new Vector3(0.5, 2, 0.5),
   [Brush.combinator]: new Vector3(2, 2, 2),
   [Brush.dismantle]: new Vector3(),
   [Brush.fabricator]: new Vector3(2, 2, 1),

@@ -6,6 +6,7 @@ import Container, { PoweredContainer } from './container';
 import Aggregators, { Aggregator } from '../objects/aggregators';
 import Belts, { Belt } from '../objects/belts';
 import Buffers, { Buffer } from '../objects/buffers';
+import Columns from '../objects/columns';
 import Combinators, { Combinator } from '../objects/combinators';
 import Fabricators, { Fabricator } from '../objects/fabricators';
 import Foundations from '../objects/foundations';
@@ -25,12 +26,13 @@ import Hotbar from '../ui/stores/hotbar';
 import Inventory from '../ui/stores/inventory';
 import Points from '../ui/stores/points';
 
-const version = 19;
+const version = 20;
 
 export type Objects = {
   aggregators: Aggregators;
   belts: Belts;
   buffers: Buffers;
+  columns: Columns;
   combinators: Combinators;
   fabricators: Fabricators;
   foundations: Foundations;
@@ -56,6 +58,7 @@ type Serialized = {
   aggregators: SerializedTransformer[];
   belts: [SerializedContainer, number, SerializedContainer, number, SerializedItems | undefined][];
   buffers: [SerializedPosition, number, Item | undefined][];
+  columns: [SerializedPosition, number][];
   combinators: SerializedTransformer[];
   fabricators: SerializedTransformer[];
   foundations: [SerializedPosition, number][];
@@ -80,11 +83,11 @@ type Serialized = {
 export const serialize = (
   camera: Camera,
   {
-    aggregators, belts, buffers, combinators, fabricators, foundations, generators, miners, pillars, poles, ramps, sinks, smelters, storages, walls, wires,
+    aggregators, belts, buffers, columns, combinators, fabricators, foundations, generators, miners, pillars, poles, ramps, sinks, smelters, storages, walls, wires,
   }: Objects
 ): Serialized => {
   const containers = new WeakMap<Container, number>();
-  const serializeInstances = (instances: Aggregators | Buffers | Combinators | Fabricators | Foundations | Generators | Miners | Pillars | Poles | Ramps | Sinks | Smelters | Storages | Walls) => (
+  const serializeInstances = (instances: Aggregators | Buffers | Columns | Combinators | Fabricators | Foundations | Generators | Miners | Pillars | Poles | Ramps | Sinks | Smelters | Storages | Walls) => (
     Array.from({ length: instances.getCount() }, (_v, i) => {
       const instance = instances.getInstance(i);
       if (instance instanceof Container) {
@@ -130,6 +133,7 @@ export const serialize = (
   return {
     aggregators: serializeInstances(aggregators) as Serialized['aggregators'],
     buffers: serializeInstances(buffers) as Serialized['buffers'],
+    columns: serializeInstances(columns) as Serialized['columns'],
     combinators: serializeInstances(combinators) as Serialized['combinators'],
     fabricators: serializeInstances(fabricators) as Serialized['fabricators'],
     foundations: serializeInstances(foundations) as Serialized['foundations'],
@@ -169,7 +173,7 @@ export const deserialize = (
   serialized: Serialized,
   camera: Camera,
   {
-    aggregators, belts, buffers, combinators, fabricators, foundations, generators, miners, pillars, poles, ramps, sinks, smelters, storages, walls, wires,
+    aggregators, belts, buffers, columns, combinators, fabricators, foundations, generators, miners, pillars, poles, ramps, sinks, smelters, storages, walls, wires,
   }: Objects
 ) => {
   serialized = migrate(serialized);
@@ -287,6 +291,9 @@ export const deserialize = (
       return storage;
     }),
   ];
+  serialized.columns.forEach(([position, rotation]) => (
+    columns.create(aux.fromArray(position), rotation, false)
+  ));
   serialized.foundations.forEach(([position, rotation]) => (
     foundations.create(aux.fromArray(position), rotation, false)
   ));
@@ -408,6 +415,12 @@ const migrations: Record<number, (serialized: Serialized) => Serialized> = {
       aggregators: serialized.aggregators.map(([position, rotation, enabled, recipe, tick, buffers]) => ([
         position, rotation, enabled, recipe ? recipe + 1 : undefined, tick, buffers,
       ])),
+    };
+  },
+  [19]: (serialized: Serialized) => {
+    return {
+      ...serialized,
+      columns: [],
     };
   },
 };

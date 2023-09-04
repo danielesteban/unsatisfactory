@@ -24,6 +24,7 @@ import Aggregators  from './objects/aggregators';
 import Belts, { Belt, Connection } from './objects/belts';
 import Birds from './objects/birds';
 import Buffers, { Buffer } from './objects/buffers';
+import Columns from './objects/columns';
 import Combinators from './objects/combinators';
 import Deposit from './objects/deposit';
 import Fabricators from './objects/fabricators';
@@ -58,6 +59,7 @@ const viewport = new Viewport();
   Aggregators.getMaterial(),
   Belts.getMaterial(),
   Buffers.getMaterial(),
+  Columns.getMaterial(),
   Combinators.getMaterial(),
   ...Deposit.getMaterials(),
   Fabricators.getMaterial(),
@@ -95,6 +97,9 @@ viewport.scene.add(belts);
 
 const buffers = new Buffers(viewport.physics);
 viewport.scene.add(buffers);
+
+const columns = new Columns(viewport.physics);
+viewport.scene.add(columns);
 
 const combinators = new Combinators(viewport.physics, viewport.sfx);
 viewport.scene.add(combinators);
@@ -143,13 +148,14 @@ const ghost = new Ghost();
 viewport.scene.add(ghost);
 
 const objects: Objects = {
-  aggregators, belts, buffers, combinators, fabricators, foundations, generators, miners, pillars, poles, ramps, sinks, smelters, storages, walls, wires,
+  aggregators, belts, buffers, columns, combinators, fabricators, foundations, generators, miners, pillars, poles, ramps, sinks, smelters, storages, walls, wires,
 };
 
 const brushObjects = {
   [Brush.aggregator]: aggregators,
   [Brush.belt]: belts,
   [Brush.buffer]: buffers,
+  [Brush.column]: columns,
   [Brush.combinator]: combinators,
   [Brush.fabricator]: fabricators,
   [Brush.foundation]: foundations,
@@ -206,6 +212,7 @@ const create = (intersection: Intersection) => {
   switch (brush) {
     case Brush.aggregator:
     case Brush.buffer:
+    case Brush.column:
     case Brush.combinator:
     case Brush.fabricator:
     case Brush.foundation:
