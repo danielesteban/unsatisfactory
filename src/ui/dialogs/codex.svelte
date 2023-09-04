@@ -1,75 +1,74 @@
 <script context="module" lang="ts">
   import { writable } from 'svelte/store';
+  import { Brush, names as BrushName } from '../../core/brush';
   import { Item, ItemName } from '../../objects/items';
 
-  const items = [
+  enum Groups {
+    items,
+    brushes,
+  }
+
+  const getName = (group: Groups, id: number) => {
+    if (group === Groups.brushes) {
+      return BrushName[id as Exclude<Brush, Brush.none | Brush.dismantle>];
+    }
+    return ItemName[id as Exclude<Item, Item.none>];
+  };
+
+  const entries = [
     Object.keys(ItemName)
       .filter((item) => parseInt(item, 10) !== Item.none)
-      .map((item) => ({ id: parseInt(item, 10) as Exclude<Item, Item.none>, name: ItemName[parseInt(item, 10) as Exclude<Item, Item.none>] }))
-      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((item) => ({ group: Groups.items, id: parseInt(item, 10) as Exclude<Item, Item.none>, name: ItemName[parseInt(item, 10) as Exclude<Item, Item.none>] }))
+      .sort((a, b) => a.name.localeCompare(b.name)),
+    Object.keys(BrushName)
+      .filter((brush) => ![Brush.none, Brush.dismantle].includes(parseInt(brush, 10)))
+      .map((brush) => ({ group: Groups.brushes, id: parseInt(brush, 10) as Exclude<Brush, Brush.none | Brush.dismantle>, name: BrushName[parseInt(brush, 10) as Exclude<Brush, Brush.none | Brush.dismantle>] }))
+      .sort((a, b) => a.name.localeCompare(b.name)),
   ];
-  const selected = writable<Exclude<Item, Item.none>>(items[0][0].id);
-  const select = (item: Exclude<Item, Item.none>) => () => (
-    selected.set(item)
+  const selected = writable<{ group: Groups; id: number; }>({ group: Groups.items, id: entries[Groups.items][0].id });
+  const select = (group: Groups, id: number) => () => (
+    selected.set({ group, id })
   );
 </script>
 
 <script lang="ts">
-  import Simulation from '../../core/simulation';
-  import { Recipes, TransformerName } from '../../objects/items';
+  import BrushImage from '../components/brush.svelte';
   import Dialog from '../components/dialog.svelte';
   import Filter from '../components/filter.svelte';
   import ItemImage from '../components/item.svelte';
+  import ItemRecipes from '../modules/item.svelte';
 
   export let close: () => void;
-
-  $: recipes = Recipes
-    .filter(({ output: { item } }) => item === $selected);
 </script>
 
 <Dialog close={close}>
-  <Filter groups={items} let:filtered>
+  <Filter groups={entries} let:filtered>
     <div class="grid">
       <div class="items">
         {#each filtered as group}
-          {#each group as item (item.id)}
-            <button class:selected={$selected === item.id} on:click={select(item.id)}>
-              {item.name}
+          {#each group as entry (entry.id)}
+            <button class:selected={$selected.group === entry.group && $selected.id === entry.id} on:click={select(entry.group, entry.id)}>
+              {entry.name}
             </button>
           {/each}
         {/each}
       </div>
       <div class="codex">
         <div class="heading">
-          {ItemName[$selected]}
+          {getName($selected.group, $selected.id)}
         </div>
         <div class="info">
-          <div class="image">
-            <ItemImage item={$selected} />
-          </div>
-          <div class="recipes">
-            {#each recipes as recipe}
-              <div class="recipe">
-                <div class="transformer">
-                  {TransformerName[recipe.transformer]}
-                </div>
-                <div class="io">
-                  <div>
-                    {#each recipe.input as input}
-                      <div class="item">
-                        <div><span class="count">{input.count}</span> {ItemName[input.item]}</div>
-                        <div class="rate">{60 * (Simulation.tps / recipe.rate) * input.count} / min</div>
-                      </div>
-                    {/each}
-                  </div>
-                  <div class="item">
-                    <div><span class="count">{recipe.output.count}</span> {ItemName[recipe.output.item]}</div>
-                    <div class="rate">{60 * (Simulation.tps / recipe.rate) * recipe.output.count} / min</div>
-                  </div>
-                </div>
-              </div>
-            {/each}
-          </div>
+          {#if $selected.group === Groups.brushes}
+            <div class="image">
+              <BrushImage brush={$selected.id} />
+            </div>
+          {/if}
+          {#if $selected.group === Groups.items}
+            <div class="image">
+              <ItemImage item={$selected.id} />
+            </div>
+            <ItemRecipes item={$selected.id} />
+          {/if}
         </div>
       </div>
     </div>
@@ -82,10 +81,8 @@
     grid-template-columns: auto 1fr;
   }
   .items {
-    box-sizing: border-box;
-    width: 128px;
+    width: 180px;
     height: 420px;
-    padding: 1rem;
     background: rgba(0, 0, 0, .2);
     border-radius: 0 0 0 1rem;
     display: flex;
@@ -95,9 +92,16 @@
   }
   .items > button {
     flex-shrink: 0;
+    background: rgba(0, 0, 0, .2);
+    border-radius: 0;
+    color: #aaa;
+  }
+  .items > button:hover {
+    color: #eee;
   }
   .items > button.selected {
     background: rgba(90, 255, 90, 0.5);
+    color: #eee;
   }
   .codex {
     display: grid;
@@ -119,36 +123,5 @@
     height: 10rem;
     background: rgba(0, 0, 0, .2);
     border-radius: 0.5rem;
-  }
-  .recipes {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-  .recipe {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  .io {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-  }
-  .transformer {
-    font-size: 1rem;
-    line-height: 1em;
-    color: #aaa;
-  }
-  .item {
-    display: flex;
-    justify-content: space-between;
-  }
-  .count {
-    font-weight: 600;
-  }
-  .rate {
-    color: #aaa;
-    font-size: 0.6875rem;
   }
 </style>

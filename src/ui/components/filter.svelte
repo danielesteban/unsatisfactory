@@ -1,6 +1,5 @@
 <script lang="ts" context="module">
   type Groups = {
-    id: number;
     name: string;
   }[][];
 </script>

@@ -46,7 +46,7 @@ export enum Brush {
   storage,
   wall,
   wire,
-};
+}
 
 export let brush: Brush = Brush.none;
 export let rotation: number = 0;
