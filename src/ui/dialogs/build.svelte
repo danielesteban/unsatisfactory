@@ -3,6 +3,7 @@
   import { Brush, names, groups, tiers, set as setBrush } from '../../core/brush';
   import BrushImage from '../components/brush.svelte';
   import Dialog from '../components/dialog.svelte';
+  import Filter from '../components/filter.svelte';
   import Achievements, { Achievement } from '../stores/achievements';
   import Hotbar from '../stores/hotbar';
 
@@ -21,35 +22,6 @@
   $: brushesInTier = brushes.map((group) => (
     group.map((brush) => ({ ...brush, locked: tier < (tiers[brush.id] || 0)}))
   ));
-
-  const filter = (brushes: typeof brushesInTier, search: string) => {
-    if (!search) {
-      return brushes;
-    }
-    search = search.toLocaleLowerCase();
-    return brushes.reduce<{ id: Exclude<Brush, Brush.none>; name: string; locked: boolean; }[][]>((groups, group) => {
-      group = group.filter(({ name }) => name.toLocaleLowerCase().indexOf(search) !== -1);
-      if (group.length) {
-        groups.push(group);
-      }
-      return groups;
-    }, []);
-  };
-
-  let search = '';
-  $: filteredBrushes = filter(brushesInTier, search);
-
-  $: result = (() => {
-    let result = undefined;
-    if (search.trim() && !/[a-z]/i.test(search)) {
-      try {
-        result = (new Function(`return parseFloat(${search});`))();
-      } catch (e) {
-        result = undefined;
-      }
-    }
-    return result;
-  })();
 
   let hover: Brush | undefined;
   const setHover = (brush: Brush | undefined) => ({ target }: PointerEvent) => {
@@ -74,22 +46,9 @@
 <svelte:document on:keydown={keydown} />
 
 <Dialog close={close}>
-  <div class="search">
-    <input
-      type="text"
-      class="input"
-      placeholder="Search..."
-      bind:value={search}
-    />
-    {#if result}
-      <div class="result">
-        {result}
-      </div>
-    {/if}
-  </div>
-  <div class="wrapper">
+  <Filter groups={brushesInTier} let:filtered>
     <div class="grid">
-      {#each filteredBrushes as group}
+      {#each filtered as group}
         <div class="group">
           {#each group as brush (brush.id)}
             <button
@@ -118,43 +77,10 @@
         </div>
       {/each}
     </div>
-  </div>
+  </Filter>
 </Dialog>
 
 <style>
-  .search {
-    position: relative;
-    font-size: 1.375rem;
-    line-height: 1em;
-  }
-  .search .input {
-    box-sizing: border-box;
-    border: 0;
-    margin: 0;
-    padding: 1rem;
-    outline: 0;
-    color: inherit;
-    font-family: inherit;
-    font-size: inherit;
-    line-height: inherit;
-    background: transparent;
-    width: 100%;
-    border-bottom: 2px solid rgba(255, 255, 255, 0.05);
-  }
-  .search .input::placeholder {
-    color: #aaa;
-  }
-  .result {
-    position: absolute;
-    right: 1rem;
-    top: 50%;
-    transform: translate(0, -50%);
-    color: #aaa;
-  }
-  .wrapper {
-    border-radius: 0 0 1rem 1rem;
-    overflow: hidden;
-  }
   .grid {
     box-sizing: border-box;
     padding: 1rem;

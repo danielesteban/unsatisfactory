@@ -1,14 +1,14 @@
 <script context="module" lang="ts">
   import { writable } from 'svelte/store';
   import { Item, ItemName } from '../../objects/items';
-  import ItemImage from '../components/item.svelte';
 
-  const items = Object.keys(ItemName)
-    .map((item) => parseInt(item, 10) as Item)
-    .filter((item) => item !== Item.none)
-    .sort((a, b) => ItemName[a].localeCompare(ItemName[b])) as Exclude<Item, Item.none>[];
-
-  const selected = writable<Exclude<Item, Item.none>>(items[0]);
+  const items = [
+    Object.keys(ItemName)
+      .filter((item) => parseInt(item, 10) !== Item.none)
+      .map((item) => ({ id: parseInt(item, 10) as Exclude<Item, Item.none>, name: ItemName[parseInt(item, 10) as Exclude<Item, Item.none>] }))
+      .sort((a, b) => a.name.localeCompare(b.name))
+  ];
+  const selected = writable<Exclude<Item, Item.none>>(items[0][0].id);
   const select = (item: Exclude<Item, Item.none>) => () => (
     selected.set(item)
   );
@@ -18,7 +18,8 @@
   import Simulation from '../../core/simulation';
   import { Recipes, TransformerName } from '../../objects/items';
   import Dialog from '../components/dialog.svelte';
-  import Heading from '../components/heading.svelte';
+  import Filter from '../components/filter.svelte';
+  import ItemImage from '../components/item.svelte';
 
   export let close: () => void;
 
@@ -27,49 +28,52 @@
 </script>
 
 <Dialog close={close}>
-  <Heading>Codex</Heading>
-  <div class="grid">
-    <div class="items">
-      {#each items as item}
-        <button class:selected={$selected === item} on:click={select(item)}>
-          {ItemName[item]}
-        </button>
-      {/each}
-    </div>
-    <div class="codex">
-      <div class="heading">
-        {ItemName[$selected]}
-      </div>
-      <div class="info">
-        <div class="image">
-          <ItemImage item={$selected} />
-        </div>
-        <div class="recipes">
-          {#each recipes as recipe}
-            <div class="recipe">
-              <div class="transformer">
-                {TransformerName[recipe.transformer]}
-              </div>
-              <div class="io">
-                <div>
-                  {#each recipe.input as input}
-                    <div class="item">
-                      <div><span class="count">{input.count}</span> {ItemName[input.item]}</div>
-                      <div class="rate">{60 * (Simulation.tps / recipe.rate) * input.count} / min</div>
-                    </div>
-                  {/each}
-                </div>
-                <div class="item">
-                  <div><span class="count">{recipe.output.count}</span> {ItemName[recipe.output.item]}</div>
-                  <div class="rate">{60 * (Simulation.tps / recipe.rate) * recipe.output.count} / min</div>
-                </div>
-              </div>
-            </div>
+  <Filter groups={items} let:filtered>
+    <div class="grid">
+      <div class="items">
+        {#each filtered as group}
+          {#each group as item (item.id)}
+            <button class:selected={$selected === item.id} on:click={select(item.id)}>
+              {item.name}
+            </button>
           {/each}
+        {/each}
+      </div>
+      <div class="codex">
+        <div class="heading">
+          {ItemName[$selected]}
+        </div>
+        <div class="info">
+          <div class="image">
+            <ItemImage item={$selected} />
+          </div>
+          <div class="recipes">
+            {#each recipes as recipe}
+              <div class="recipe">
+                <div class="transformer">
+                  {TransformerName[recipe.transformer]}
+                </div>
+                <div class="io">
+                  <div>
+                    {#each recipe.input as input}
+                      <div class="item">
+                        <div><span class="count">{input.count}</span> {ItemName[input.item]}</div>
+                        <div class="rate">{60 * (Simulation.tps / recipe.rate) * input.count} / min</div>
+                      </div>
+                    {/each}
+                  </div>
+                  <div class="item">
+                    <div><span class="count">{recipe.output.count}</span> {ItemName[recipe.output.item]}</div>
+                    <div class="rate">{60 * (Simulation.tps / recipe.rate) * recipe.output.count} / min</div>
+                  </div>
+                </div>
+              </div>
+            {/each}
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  </Filter>
 </Dialog>
 
 <style>
