@@ -440,7 +440,7 @@ class Items extends Group {
         [Item.computer]: rust,
         [Item.copperIngot]: copper,
         [Item.copperOre]: copper,
-        [Item.frame]: rust,
+        [Item.frame]: iron,
         [Item.ironIngot]: iron,
         [Item.ironOre]: iron,
         [Item.ironPlate]: iron,
