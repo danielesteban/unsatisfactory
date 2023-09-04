@@ -45,9 +45,9 @@ const connectors = [
 
 class Aggregators extends Instances<Aggregator> {
   static override readonly cost: typeof Instances.cost = [
-    { item: Item.ironPlate, count: 5 },
-    { item: Item.ironRod, count: 10 },
-    { item: Item.wire, count: 20 },
+    { item: Item.rotor, count: 5 },
+    { item: Item.frame, count: 10 },
+    { item: Item.wire, count: 50 },
   ];
 
   private static collider: RAPIER.ColliderDesc[] | undefined;

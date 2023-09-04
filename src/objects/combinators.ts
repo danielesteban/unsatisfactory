@@ -52,6 +52,7 @@ const connectors = [
 
 class Combinators extends Instances<Combinator> {
   static override readonly cost: typeof Instances.cost = [
+    { item: Item.ironPlate, count: 10 },
     { item: Item.ironRod, count: 10 },
     { item: Item.wire, count: 20 },
   ];
