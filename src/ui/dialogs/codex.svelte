@@ -112,7 +112,7 @@
   .info {
     display: grid;
     grid-template-columns: auto 1fr;
-    gap: 2rem;
+    gap: 1rem;
   }
   .heading {
     font-size: 1.125rem;
