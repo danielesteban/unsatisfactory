@@ -41,10 +41,12 @@ export enum Item {
   copperOre,
   ironRod,
   frame,
+  computer,
 }
 
 export const ItemName = {
   [Item.none]: 'None',
+  [Item.computer]: 'Computer',
   [Item.copperIngot]: 'Copper Ingot',
   [Item.copperOre]: 'Copper Ore',
   [Item.frame]: 'Frame',
@@ -62,6 +64,7 @@ export const Mining: Partial<Record<Item, { consumption: number; count: number; 
 };
 
 export const Sinking: Partial<Record<Item, number>> = {
+  [Item.computer]: 64,
   [Item.copperIngot]: 2,
   [Item.frame]: 32,
   [Item.ironIngot]: 2,
@@ -192,23 +195,23 @@ export const Recipes: Recipe[] = [
   {
     input: [
       {
-        item: Item.ironPlate,
-        count: 3,
+        item: Item.frame,
+        count: 4,
       },
       {
-        item: Item.ironRod,
-        count: 3,
+        item: Item.rotor,
+        count: 8,
       },
       {
         item: Item.wire,
-        count: 3,
+        count: 12,
       }
     ],
     output: {
-      item: Item.rotor,
+      item: Item.computer,
       count: 1,
     },
-    rate: 10,
+    rate: 120,
     transformer: Transformer.aggregator,
   },
 ];
@@ -293,6 +296,25 @@ class Items extends Group {
       plate.translate(0, 0.03125, 0);
       plate.computeBoundingSphere();
 
+      const computerBase = new Brush(new BoxGeometry(0.3, 0.4, 0.3));
+      const computerCarving = new Brush(new BoxGeometry(0.125, 0.2, 0.15));
+      computerCarving.position.set(0, 0, 0.15);
+      computerCarving.updateMatrixWorld();
+      brush = csgEvaluator.evaluate(computerBase, computerCarving, SUBTRACTION);
+      computerCarving.position.set(0, 0, -0.15);
+      computerCarving.updateMatrixWorld();
+      brush = csgEvaluator.evaluate(brush, computerCarving, SUBTRACTION);
+      computerCarving.rotation.set(0, Math.PI * 0.5, 0);
+      computerCarving.position.set(0.15, 0, 0);
+      computerCarving.updateMatrixWorld();
+      brush = csgEvaluator.evaluate(brush, computerCarving, SUBTRACTION);
+      computerCarving.position.set(-0.15, 0, 0);
+      computerCarving.updateMatrixWorld();
+      brush = csgEvaluator.evaluate(brush, computerCarving, SUBTRACTION);
+      const computer = mergeVertices(brush.geometry);
+      computer.translate(0, 0.2, 0);
+      computer.computeBoundingSphere();
+
       let frameCap = new Brush(new BoxGeometry(0.36875, 0.03125, 0.36875));
       frameCap = csgEvaluator.evaluate(frameCap, new Brush(new BoxGeometry(0.30625, 0.03125, 0.30625)), SUBTRACTION);
       frameCap.position.set(0, 0.03125, 0);
@@ -373,6 +395,7 @@ class Items extends Group {
       wire.computeBoundingSphere();
 
       Items.geometries = {
+        [Item.computer]: computer,
         [Item.copperIngot]: ingot,
         [Item.copperOre]: ore,
         [Item.frame]: frame,
@@ -414,6 +437,7 @@ class Items extends Group {
         roughness: 0.3,
       });
       Items.materials = {
+        [Item.computer]: rust,
         [Item.copperIngot]: copper,
         [Item.copperOre]: copper,
         [Item.frame]: rust,

@@ -180,13 +180,10 @@ const processItemQueue = () => {
   scene.add(mesh);
   const capture = [1, 0.75].map((zoom) => {
     let y = 0.1;
-    if (item === Item.frame) {
-      y = 0.2;
-    }
     if (item === Item.ironIngot || item === Item.copperIngot) {
       y = 0.0625;
     }
-    if (item === Item.ironOre || item === Item.copperOre) {
+    if (item === Item.computer || item === Item.ironOre || item === Item.copperOre || item === Item.frame) {
       y = 0.2;
       zoom *= 1.5;
     }
