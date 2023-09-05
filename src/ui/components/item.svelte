@@ -1,9 +1,8 @@
-
 <script context="module" lang="ts">
   import { writable, Readable } from 'svelte/store';
+  import { captureItem } from '../../core/capture';
   import { Item } from '../../objects/items';
-  import { captureItem } from '../capture';
-  
+
   const items = new Map<Exclude<Item, Item.none>, Readable<string[]>>();
   const getImages = (item: Exclude<Item, Item.none>) => {
     let images = items.get(item);

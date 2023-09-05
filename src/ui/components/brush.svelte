@@ -1,9 +1,8 @@
-
 <script context="module" lang="ts">
   import { writable, Readable } from 'svelte/store';
   import { Brush } from '../../core/brush';
-  import { captureBrush } from '../capture';
-  
+  import { captureBrush } from '../../core/capture';
+
   const brushes = new Map<Exclude<Brush, Brush.none>, Readable<string[]>>();
   const getImages = (brush: Exclude<Brush, Brush.none>) => {
     let images = brushes.get(brush);
