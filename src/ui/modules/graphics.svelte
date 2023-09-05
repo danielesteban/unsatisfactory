@@ -2,8 +2,14 @@
   import Module from '../components/module.svelte';
   import Settings from '../stores/settings';
 
+  export let basic:boolean = false;
+
   const setAntialias = ({ currentTarget: { checked } }: Event & { currentTarget: EventTarget & HTMLInputElement; }) => {
     Settings.setAntialias(checked);
+  };
+  const setFOV = ({ currentTarget: { value } }: Event & { currentTarget: EventTarget & HTMLInputElement; }) => {
+    const fov = parseInt(value, 10);
+    Settings.setFOV(fov);
   };
   const setResolution = ({ currentTarget: { value } }: Event & { currentTarget: EventTarget & HTMLInputElement; }) => {
     const resolution = parseFloat(value);
@@ -39,7 +45,19 @@
     </label>
   </Module>
 </div>
-
+{#if !basic}
+  <Module>
+    <div slot="name">FOV <span class="info">({$Settings.fov}°)</span></div>
+    <input
+      type="range"
+      min={60}
+      max={110}
+      step={5}
+      value={$Settings.fov}
+      on:input={setFOV}
+    />
+  </Module>
+{/if}
 <style>
   .graphics {
     display: grid;

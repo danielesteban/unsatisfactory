@@ -21,7 +21,6 @@ import { loadEnvironment } from '../textures';
 import Environment from '../textures/industrial_sunset_puresky_1k.exr';
 
 class Viewport extends EventDispatcher {
-  private static readonly ResizeEvent = { type: 'resize' };
   private animate?: (buttons: Buttons, delta: number, time: number) => void;
   private readonly antialias: SMAAPass;
   private readonly clock: Clock;
@@ -44,7 +43,12 @@ class Viewport extends EventDispatcher {
       throw new Error('Couldn\'t get viewport');
     }
     this.dom = dom;
-    this.camera = new PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 128);
+    this.camera = new PerspectiveCamera(
+      parseInt(localStorage.getItem('viewport:fov') || '75', 10),
+      window.innerWidth / window.innerHeight,
+      0.1,
+      128
+    );
     this.clock = new Clock();
     this.physics = new Physics();
     this.controls = new Controls(this.camera, this.physics, dom);
@@ -113,6 +117,19 @@ class Viewport extends EventDispatcher {
     localStorage.setItem('viewport:antialias', enabled ? '1' : '0');
   }
 
+  getFOV() {
+    const { camera: { fov } } = this;
+    return fov;
+  }
+
+  setFOV(fov: number) {
+    const { camera, csm } = this;
+    camera.fov = fov;
+    camera.updateProjectionMatrix();
+    csm.updateFrustums();
+    localStorage.setItem('viewport:fov', `${fov}`);
+  }
+
   getResolution() {
     const { resolution } = this;
     return resolution;
@@ -122,7 +139,6 @@ class Viewport extends EventDispatcher {
     const { composer } = this;
     const ratio = (window.devicePixelRatio || 1) * scale;
     composer.setPixelRatio(ratio);
-    this.resize();
     localStorage.setItem('viewport:resolution', `${scale}`);
   }
 
@@ -170,7 +186,6 @@ class Viewport extends EventDispatcher {
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
     csm.updateFrustums();
-    this.dispatchEvent(Viewport.ResizeEvent);
   }
 }
 

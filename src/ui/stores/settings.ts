@@ -3,10 +3,11 @@ import Viewport from '../../core/viewport';
 
 const { subscribe, set, update } = writable<{
   antialias: boolean;
+  fov: number;
   gpu: string;
   resolution: number;
   sfx: boolean;
-}>({ antialias: true, gpu: 'Unknown', resolution: 1, sfx: true });
+}>({ antialias: true, fov: 75, gpu: 'Unknown', resolution: 1, sfx: true });
 
 let viewport: Viewport;
 
@@ -22,6 +23,7 @@ export default {
     const gpu = ext ? context.getParameter(ext.UNMASKED_RENDERER_WEBGL) : 'Unknown';
     set({
       antialias: viewport.getAntialias(),
+      fov: viewport.getFOV(),
       gpu: gpu,
       resolution: viewport.getResolution(),
       sfx: !viewport.sfx.getMuted(),
@@ -32,6 +34,13 @@ export default {
     update((settings) => ({
       ...settings,
       antialias: enabled,
+    }));
+  },
+  setFOV(fov: number) {
+    viewport.setFOV(fov);
+    update((settings) => ({
+      ...settings,
+      fov,
     }));
   },
   setResolution(scale: number) {

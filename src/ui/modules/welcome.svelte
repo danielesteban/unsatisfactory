@@ -44,7 +44,7 @@
     </p>
   </div>
   <div class="settings">
-    <Graphics />
+    <Graphics basic />
     <button class="play" on:click={play}>
       Play
     </button>
