@@ -4,22 +4,17 @@ import {
   BufferGeometry,
   ConeGeometry,
   CylinderGeometry,
-  MeshStandardMaterial,
   PositionalAudio,
-  SRGBColorSpace,
   Vector3,
 } from 'three';
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 import { Connectors, PoweredContainer } from '../core/container';
 import Instances from '../core/instances';
+import { ContainerMaterials } from '../core/materials';
 import Physics from '../core/physics';
 import SFX from '../core/sfx';
 import { Item, Mining } from './items';
-import { loadTexture } from '../textures';
-import DiffuseMap from '../textures/rust_coarse_01_diff_1k.webp';
-import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.webp';
-import RoughnessMap from '../textures/rust_coarse_01_rough_1k.webp';
 import Achievements, { Achievement } from '../ui/stores/achievements';
 import Inventory from '../ui/stores/inventory';
 
@@ -201,46 +196,39 @@ class Miners extends Instances<Miner> {
   private static geometry: BufferGeometry | undefined;
   static getGeometry() {
     if (!Miners.geometry) {
-      const csgEvaluator = new Evaluator();
-      const base = new Brush(new BoxGeometry(2, 4, 2));
-      const opening = new Brush(new BoxGeometry(1.5, 1.5, 0.5));
-      const drill = new Brush(new ConeGeometry(1, 1));
+      const csg = new Evaluator();
+      const materials = ContainerMaterials();
+      const base = new Brush(new BoxGeometry(2, 4, 2), materials[0]);
+      const drill = new Brush(new ConeGeometry(1, 1), materials[0]);
       drill.geometry.rotateX(Math.PI);
       drill.geometry.translate(0, -2.5, 0);
-      let brush = csgEvaluator.evaluate(base, drill, ADDITION);
+      let brush = csg.evaluate(base, drill, ADDITION);
+
+      const pole = new Brush(new CylinderGeometry(0.125, 0.125, 0.25), materials[1]);
+      pole.position.set(0, 2.125, 0);
+      pole.updateMatrixWorld();
+      brush = csg.evaluate(brush, pole, ADDITION);
+      const cap = new Brush(new CylinderGeometry(0.25, 0.25, 0.5), materials[0]);
+      cap.position.copy(pole.position).add(new Vector3(0, 0.375, 0));
+      cap.updateMatrixWorld();
+      brush = csg.evaluate(brush, cap, ADDITION);
+
+      const opening = new Brush(new BoxGeometry(1.5, 1.5, 0.5), materials[1]);
       connectors.forEach(({ position, rotation }) => {
         opening.position.copy(position);
         opening.rotation.y = rotation || 0;
         opening.updateMatrixWorld();
-        brush = csgEvaluator.evaluate(brush, opening, SUBTRACTION);
+        brush = csg.evaluate(brush, opening, SUBTRACTION);
       });
-      const pole = new Brush(new CylinderGeometry(0.125, 0.125, 0.25));
-      pole.position.set(0, 2.125, 0);
-      pole.updateMatrixWorld();
-      brush = csgEvaluator.evaluate(brush, pole, ADDITION);
-      const connector = new Brush(new CylinderGeometry(0.25, 0.25, 0.5));
-      connector.position.copy(pole.position).add(new Vector3(0, 0.375, 0));
-      connector.updateMatrixWorld();
-      brush = csgEvaluator.evaluate(brush, connector, ADDITION);
+
       Miners.geometry = mergeVertices(brush.geometry);
       Miners.geometry.computeBoundingSphere();
     }
     return Miners.geometry;
   }
 
-  private static material: MeshStandardMaterial | undefined;
   static getMaterial() {
-    if (!Miners.material) {
-      const material = new MeshStandardMaterial({
-        map: loadTexture(DiffuseMap),
-        normalMap: loadTexture(NormalMap),
-        roughnessMap: loadTexture(RoughnessMap),
-      });
-      material.map!.anisotropy = 16;
-      material.map!.colorSpace = SRGBColorSpace;
-      Miners.material = material;
-    }
-    return Miners.material;
+    return ContainerMaterials();
   }
 
   private readonly sfx: SFX;

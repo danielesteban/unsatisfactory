@@ -33,7 +33,8 @@ export class Deposit extends Mesh {
   private static geometry: BufferGeometry | undefined;
   static getGeometry() {
     if (!Deposit.geometry) {
-      const csgEvaluator = new Evaluator();
+      const csg = new Evaluator();
+      csg.useGroups = false;
       let model = new Brush(new SphereGeometry(4));
       model.geometry.scale(1, 0.5, 1);
       const brush = new Brush(new BoxGeometry(1, 1, 1));
@@ -57,19 +58,19 @@ export class Deposit extends Mesh {
           i / 16 * Math.PI * 2
         );
         brush.updateMatrixWorld();
-        model = csgEvaluator.evaluate(model, brush, ADDITION);
+        model = csg.evaluate(model, brush, ADDITION);
       }
 
       brush.position.set(0, -2, 0);
       brush.scale.set(10, 4, 10);
       brush.rotation.set(0, 0, 0);
       brush.updateMatrixWorld();
-      model = csgEvaluator.evaluate(model, brush, SUBTRACTION);
+      model = csg.evaluate(model, brush, SUBTRACTION);
 
       const carving = new Brush(new CylinderGeometry(2, 1.5, 0.625));
       carving.position.set(0, 2, 0);
       carving.updateMatrixWorld();
-      model = csgEvaluator.evaluate(model, carving, SUBTRACTION);
+      model = csg.evaluate(model, carving, SUBTRACTION);
 
       Deposit.geometry = mergeVertices(model.geometry);
       Deposit.geometry.computeBoundingSphere();

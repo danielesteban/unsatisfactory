@@ -3,20 +3,15 @@ import {
   BoxGeometry,
   CylinderGeometry,
   BufferGeometry,
-  MeshStandardMaterial,
-  SRGBColorSpace,
   Vector3,
 } from 'three';
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 import { Connectors, PoweredContainer } from '../core/container';
 import Instances from '../core/instances';
+import { ContainerMaterials } from '../core/materials';
 import Physics from '../core/physics';
 import { Item, Sinking } from './items';
-import { loadTexture } from '../textures';
-import DiffuseMap from '../textures/rust_coarse_01_diff_1k.webp';
-import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.webp';
-import RoughnessMap from '../textures/rust_coarse_01_rough_1k.webp';
 import Points from '../ui/stores/points';
 
 export class Sink extends PoweredContainer<
@@ -25,7 +20,6 @@ export class Sink extends PoweredContainer<
     count: number;
   }
 > {
-
   constructor(connectors: Connectors, position: Vector3, rotation: number) {
     super(connectors, position, rotation, 100);
   }
@@ -71,43 +65,36 @@ class Sinks extends Instances<Sink> {
   private static geometry: BufferGeometry | undefined;
   static getGeometry() {
     if (!Sinks.geometry) {
-      const csgEvaluator = new Evaluator();
-      const base = new Brush(new CylinderGeometry(2, 2, 4));
-      const opening = new Brush(new BoxGeometry(1.5, 1.5, 0.5));
+      const csg = new Evaluator();
+      const material = Sinks.getMaterial();
+      const base = new Brush(new CylinderGeometry(2, 2, 4), material[0]);
       let brush: Brush = base;
+
+      const pole = new Brush(new CylinderGeometry(0.125, 0.125, 0.25), material[1]);
+      pole.position.set(0, 2.125, 0);
+      pole.updateMatrixWorld();
+      brush = csg.evaluate(brush, pole, ADDITION);
+      const cap = new Brush(new CylinderGeometry(0.25, 0.25, 0.5), material[0]);
+      cap.position.copy(pole.position).add(new Vector3(0, 0.375, 0));
+      cap.updateMatrixWorld();
+      brush = csg.evaluate(brush, cap, ADDITION);
+
+      const opening = new Brush(new BoxGeometry(1.5, 1.5, 0.5), material[1]);
       connectors.forEach(({ position, rotation }) => {
         opening.position.copy(position);
         opening.rotation.y = rotation || 0;
         opening.updateMatrixWorld();
-        brush = csgEvaluator.evaluate(brush, opening, SUBTRACTION);
+        brush = csg.evaluate(brush, opening, SUBTRACTION);
       });
-      const pole = new Brush(new CylinderGeometry(0.125, 0.125, 0.25));
-      pole.position.set(0, 2.125, 0);
-      pole.updateMatrixWorld();
-      brush = csgEvaluator.evaluate(brush, pole, ADDITION);
-      const connector = new Brush(new CylinderGeometry(0.25, 0.25, 0.5));
-      connector.position.copy(pole.position).add(new Vector3(0, 0.375, 0));
-      connector.updateMatrixWorld();
-      brush = csgEvaluator.evaluate(brush, connector, ADDITION);
+
       Sinks.geometry = mergeVertices(brush.geometry);
       Sinks.geometry.computeBoundingSphere();
     }
     return Sinks.geometry;
   }
 
-  private static material: MeshStandardMaterial | undefined;
   static getMaterial() {
-    if (!Sinks.material) {
-      const material = new MeshStandardMaterial({
-        map: loadTexture(DiffuseMap),
-        normalMap: loadTexture(NormalMap),
-        roughnessMap: loadTexture(RoughnessMap),
-      });
-      material.map!.anisotropy = 16;
-      material.map!.colorSpace = SRGBColorSpace;
-      Sinks.material = material;
-    }
-    return Sinks.material;
+    return ContainerMaterials();
   }
 
   constructor(physics: Physics) {

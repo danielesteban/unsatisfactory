@@ -2,17 +2,12 @@ import RAPIER from '@dimforge/rapier3d-compat';
 import {
   BoxGeometry,
   BufferAttribute,
-  MeshStandardMaterial,
-  SRGBColorSpace,
   Vector2,
   Vector3,
 } from 'three';
 import Instances, { Instance } from '../core/instances';
+import { ConcreteMaterial } from '../core/materials';
 import Physics from '../core/physics';
-import { loadTexture } from '../textures';
-import DiffuseMap from '../textures/hexagonal_concrete_paving_diff_1k.webp';
-import NormalMap from '../textures/hexagonal_concrete_paving_nor_gl_1k.webp';
-import RoughnessMap from '../textures/hexagonal_concrete_paving_rough_1k.webp';
 
 export class Column extends Instance {
   
@@ -57,19 +52,8 @@ class Columns extends Instances<Column> {
     return Columns.geometry;
   }
 
-  private static material: MeshStandardMaterial | undefined;
   static getMaterial() {
-    if (!Columns.material) {
-      const material = new MeshStandardMaterial({
-        map: loadTexture(DiffuseMap),
-        normalMap: loadTexture(NormalMap),
-        roughnessMap: loadTexture(RoughnessMap),
-      });
-      material.map!.anisotropy = 16;
-      material.map!.colorSpace = SRGBColorSpace;
-      Columns.material = material;
-    }
-    return Columns.material;
+    return ConcreteMaterial();
   }
 
   constructor(physics: Physics) {
@@ -82,7 +66,7 @@ class Columns extends Instances<Column> {
       physics
     );
   }
-  
+
   create(position: Vector3, rotation: number, withCost: boolean = true) {
     return super.addInstance(
       new Column(position, rotation),

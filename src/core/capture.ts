@@ -93,18 +93,20 @@ const queues: {
   item: [],
 };
 
-const isLoading = (material: MeshStandardMaterial) => (
-  (
-    material.map
-    && !material.map?.image
-  )
-  || (
-    material.normalMap
-    && !material.normalMap?.image
-  ) || (
-    material.roughnessMap
-    && !material.roughnessMap?.image
-  )
+const isLoading = (material: Material | Material[]) => (
+  !!((Array.isArray(material) ? material : [material]) as MeshStandardMaterial[]).find((material) => (
+    (
+      material.map
+      && !material.map?.image
+    )
+    || (
+      material.normalMap
+      && !material.normalMap?.image
+    ) || (
+      material.roughnessMap
+      && !material.roughnessMap?.image
+    )
+  ))
 );
 
 const processBrushQueue = () => {
@@ -113,8 +115,8 @@ const processBrushQueue = () => {
     return;
   }
   const { brush, promises } = queued;
-  const material: Material = getMaterial(brush);
-  if (isLoading(material as MeshStandardMaterial)) {
+  const material: Material | Material[] = getMaterial(brush);
+  if (isLoading(material)) {
     queues.brush.unshift(queued);
     requestAnimationFrame(processBrushQueue);
     return;
@@ -166,8 +168,8 @@ const processItemQueue = () => {
     return;
   }
   const { item, promises } = queued;
-  const material: Material = Items.setupMaterials()[item];
-  if (isLoading(material as MeshStandardMaterial)) {
+  const material: Material | Material[] = Items.setupMaterials()[item];
+  if (isLoading(material)) {
     queues.item.unshift(queued);
     requestAnimationFrame(processItemQueue);
     return;

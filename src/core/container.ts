@@ -15,7 +15,6 @@ import { Wire } from '../objects/wires';
 
 export class Connectors extends Group {
   private static defaultGeometry: BufferGeometry | undefined;
-
   static getDefaultGeometry() {
     if (!Connectors.defaultGeometry) {
       Connectors.defaultGeometry = new BoxGeometry(1.5, 1.5, 0.25);

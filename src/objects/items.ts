@@ -10,16 +10,14 @@ import {
   Matrix4,
   MeshStandardMaterial,
   Object3D,
-  RepeatWrapping,
   Sphere,
-  SRGBColorSpace,
   TetrahedronGeometry,
   TubeGeometry,
   Vector3,
 } from 'three';
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
-import { loadTexture } from '../textures';
+import { TexturedMaterial } from '../core/materials';
 import CopperDiffuseMap from '../textures/rock_06_diff_1k.webp';
 import CopperNormalMap from '../textures/rock_06_nor_gl_1k.webp';
 import CopperRoughnessMap from '../textures/rock_06_rough_1k.webp';
@@ -280,7 +278,8 @@ class Items extends Group {
   private static geometries: Record<Exclude<Item, Item.none>, BufferGeometry> | undefined;
   static setupGeometries() {
     if (!Items.geometries) {
-      const csgEvaluator = new Evaluator();
+      const csg = new Evaluator();
+      csg.useGroups = false;
       let brush: Brush;
 
       const ingot = new BoxGeometry(0.5, 0.125, 0.25);
@@ -300,42 +299,42 @@ class Items extends Group {
       const computerCarving = new Brush(new BoxGeometry(0.125, 0.2, 0.15));
       computerCarving.position.set(0, 0, 0.15);
       computerCarving.updateMatrixWorld();
-      brush = csgEvaluator.evaluate(computerBase, computerCarving, SUBTRACTION);
+      brush = csg.evaluate(computerBase, computerCarving, SUBTRACTION);
       computerCarving.position.set(0, 0, -0.15);
       computerCarving.updateMatrixWorld();
-      brush = csgEvaluator.evaluate(brush, computerCarving, SUBTRACTION);
+      brush = csg.evaluate(brush, computerCarving, SUBTRACTION);
       computerCarving.rotation.set(0, Math.PI * 0.5, 0);
       computerCarving.position.set(0.15, 0, 0);
       computerCarving.updateMatrixWorld();
-      brush = csgEvaluator.evaluate(brush, computerCarving, SUBTRACTION);
+      brush = csg.evaluate(brush, computerCarving, SUBTRACTION);
       computerCarving.position.set(-0.15, 0, 0);
       computerCarving.updateMatrixWorld();
-      brush = csgEvaluator.evaluate(brush, computerCarving, SUBTRACTION);
+      brush = csg.evaluate(brush, computerCarving, SUBTRACTION);
       const computer = mergeVertices(brush.geometry);
       computer.translate(0, 0.2, 0);
       computer.computeBoundingSphere();
 
       let frameCap = new Brush(new BoxGeometry(0.36875, 0.03125, 0.36875));
-      frameCap = csgEvaluator.evaluate(frameCap, new Brush(new BoxGeometry(0.30625, 0.03125, 0.30625)), SUBTRACTION);
+      frameCap = csg.evaluate(frameCap, new Brush(new BoxGeometry(0.30625, 0.03125, 0.30625)), SUBTRACTION);
       frameCap.position.set(0, 0.03125, 0);
       frameCap.updateMatrixWorld();
       brush = frameCap.clone();
       const frameRod = new Brush(new BoxGeometry(0.0625, 0.4, 0.0625));
       frameRod.position.set(-0.16875, 0.2, -0.16875);
       frameRod.updateMatrixWorld();
-      brush = csgEvaluator.evaluate(brush, frameRod, ADDITION);
+      brush = csg.evaluate(brush, frameRod, ADDITION);
       frameRod.position.set(0.16875, 0.2, -0.16875);
       frameRod.updateMatrixWorld();
-      brush = csgEvaluator.evaluate(brush, frameRod, ADDITION);
+      brush = csg.evaluate(brush, frameRod, ADDITION);
       frameRod.position.set(0.16875, 0.2, 0.16875);
       frameRod.updateMatrixWorld();
-      brush = csgEvaluator.evaluate(brush, frameRod, ADDITION);
+      brush = csg.evaluate(brush, frameRod, ADDITION);
       frameRod.position.set(-0.16875, 0.2, 0.16875);
       frameRod.updateMatrixWorld();
-      brush = csgEvaluator.evaluate(brush, frameRod, ADDITION);
+      brush = csg.evaluate(brush, frameRod, ADDITION);
       frameCap.position.set(0, 0.36875, 0);
       frameCap.updateMatrixWorld();
-      brush = csgEvaluator.evaluate(brush, frameCap, ADDITION);
+      brush = csg.evaluate(brush, frameCap, ADDITION);
       const frame = mergeVertices(brush.geometry);
       frame.computeBoundingSphere();
 
@@ -345,16 +344,16 @@ class Items extends Group {
       brush = rodBrush.clone();
       rodBrush.position.set(0, 0.08 * 0.9, 0.04 * 0.9);
       rodBrush.updateMatrixWorld();
-      brush = csgEvaluator.evaluate(brush, rodBrush, ADDITION);
+      brush = csg.evaluate(brush, rodBrush, ADDITION);
       rodBrush.position.set(0, 0.08 * 0.9, -0.04 * 0.9);
       rodBrush.updateMatrixWorld();
-      brush = csgEvaluator.evaluate(brush, rodBrush, ADDITION);
+      brush = csg.evaluate(brush, rodBrush, ADDITION);
       rodBrush.position.set(0, 0, 0.08 * 0.9);
       rodBrush.updateMatrixWorld();
-      brush = csgEvaluator.evaluate(brush, rodBrush, ADDITION);
+      brush = csg.evaluate(brush, rodBrush, ADDITION);
       rodBrush.position.set(0, 0, -0.08 * 0.9);
       rodBrush.updateMatrixWorld();
-      brush = csgEvaluator.evaluate(brush, rodBrush, ADDITION);
+      brush = csg.evaluate(brush, rodBrush, ADDITION);
       const rod = mergeVertices(brush.geometry);
       rod.computeBoundingSphere();
 
@@ -364,17 +363,17 @@ class Items extends Group {
       rotorCap.updateMatrixWorld();
       rotorRod.scale.set(2, 1, 2);
       rotorRod.updateMatrixWorld();
-      brush = csgEvaluator.evaluate(rotorCap, rotorRod, ADDITION);
+      brush = csg.evaluate(rotorCap, rotorRod, ADDITION);
       rotorCap.position.set(0, 0.11875, 0);
       rotorCap.updateMatrixWorld();
-      brush = csgEvaluator.evaluate(brush, rotorCap, ADDITION);
+      brush = csg.evaluate(brush, rotorCap, ADDITION);
       rotorRod.scale.setScalar(1);
       for (let i = 0; i < 5; i++) {
         const r = 0.085;
         const a = ((Math.PI * 2) / 5) * i;
         rotorRod.position.set(Math.sin(a) * r, 0, Math.cos(a) * r);
         rotorRod.updateMatrixWorld();
-        brush = csgEvaluator.evaluate(brush, rotorRod, ADDITION);
+        brush = csg.evaluate(brush, rotorRod, ADDITION);
       }
       const rotor = mergeVertices(brush.geometry);
       rotor.translate(0, 0.15, 0);
@@ -413,25 +412,20 @@ class Items extends Group {
   private static materials: Record<Exclude<Item, Item.none>, MeshStandardMaterial> | undefined;
   static setupMaterials() {
     if (!Items.materials) {
-      const getMaterial = (diffuse: string, normal: string, roughness: string) => {
-        const material = new MeshStandardMaterial({
-          map: loadTexture(diffuse),
-          normalMap: loadTexture(normal),
-          roughnessMap: loadTexture(roughness),
-        });
-        material.map!.anisotropy = 16;
-        material.map!.colorSpace = SRGBColorSpace;
-        material.map!.repeat.set(0.2, 0.2);
-        [material.map!, material.normalMap!, material.roughnessMap!].forEach((map) => {
-          map.wrapS = map.wrapT = RepeatWrapping;
-        });
-        return material;
-      };
-      const iron = getMaterial(IronDiffuseMap, IronNormalMap, IronRoughnessMap);
+      const iron = TexturedMaterial(IronDiffuseMap, IronNormalMap, IronRoughnessMap);
       iron.roughness = 0.7;
-      const copper = getMaterial(CopperDiffuseMap, CopperNormalMap, CopperRoughnessMap);
+      [iron.map!, iron.normalMap!, iron.roughnessMap!].forEach((map) => (
+        map!.repeat.set(0.2, 0.2)
+      ));
+      const copper = TexturedMaterial(CopperDiffuseMap, CopperNormalMap, CopperRoughnessMap);
       copper.roughness = 0.7;
-      const rust = getMaterial(RustDiffuseMap, RustNormalMap, RustRoughnessMap);
+      [copper.map!, copper.normalMap!, copper.roughnessMap!].forEach((map) => (
+        map!.repeat.set(0.2, 0.2)
+      ));
+      const rust = TexturedMaterial(RustDiffuseMap, RustNormalMap, RustRoughnessMap);
+      [rust.map!, rust.normalMap!, rust.roughnessMap!].forEach((map) => (
+        map!.repeat.set(0.2, 0.2)
+      ));
       const wire = new MeshStandardMaterial({
         color: 0,
         roughness: 0.3,

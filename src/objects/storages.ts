@@ -2,8 +2,6 @@ import RAPIER from '@dimforge/rapier3d-compat';
 import {
   BoxGeometry,
   BufferGeometry,
-  MeshStandardMaterial,
-  SRGBColorSpace,
   Vector3,
 } from 'three';
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
@@ -11,12 +9,9 @@ import { SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 import Container, { Connectors } from '../core/container';
 import Instances from '../core/instances';
 import Inventory from '../core/inventory';
+import { ContainerMaterials } from '../core/materials';
 import Physics from '../core/physics';
 import { Item } from './items';
-import { loadTexture } from '../textures';
-import DiffuseMap from '../textures/rust_coarse_01_diff_1k.webp';
-import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.webp';
-import RoughnessMap from '../textures/rust_coarse_01_rough_1k.webp';
 import InventoryStore from '../ui/stores/inventory';
 
 export class Storage extends Container {
@@ -103,17 +98,19 @@ class Storages extends Instances<Storage> {
   private static geometry: BufferGeometry | undefined;
   static getGeometry() {
     if (!Storages.geometry) {
-      const csgEvaluator = new Evaluator();
-      const base = new Brush(new BoxGeometry(4, 4, 2));
-      const opening = new Brush(new BoxGeometry(1.5, 1.5, 0.5));
-      const stripe = new Brush(new BoxGeometry(0.25, 3.5, 0.25));
+      const csg = new Evaluator();
+      const material = Storages.getMaterial();
+      const base = new Brush(new BoxGeometry(4, 4, 2), material[0]);
       let brush: Brush = base;
+
+      const opening = new Brush(new BoxGeometry(1.5, 1.5, 0.5), material[1]);
       connectors.forEach(({ position, rotation }) => {
         opening.position.copy(position);
         opening.rotation.y = rotation;
         opening.updateMatrixWorld();
-        brush = csgEvaluator.evaluate(brush, opening, SUBTRACTION);
+        brush = csg.evaluate(brush, opening, SUBTRACTION);
       });
+      const stripe = new Brush(new BoxGeometry(0.25, 3.5, 0.25), material[1]);
       ([
         new Vector3(0, 0, 0.875),
         new Vector3(0, 0, -0.875),
@@ -122,28 +119,18 @@ class Storages extends Instances<Storage> {
           stripe.position.copy(position);
           stripe.position.x += 0.625 * (i == 0 ? 1 : -1);
           stripe.updateMatrixWorld();
-          brush = csgEvaluator.evaluate(brush, stripe, SUBTRACTION);
+          brush = csg.evaluate(brush, stripe, SUBTRACTION);
         }
       });
+
       Storages.geometry = mergeVertices(brush.geometry);
       Storages.geometry.computeBoundingSphere();
     }
     return Storages.geometry;
   }
 
-  private static material: MeshStandardMaterial | undefined;
   static getMaterial() {
-    if (!Storages.material) {
-      const material = new MeshStandardMaterial({
-        map: loadTexture(DiffuseMap),
-        normalMap: loadTexture(NormalMap),
-        roughnessMap: loadTexture(RoughnessMap),
-      });
-      material.map!.anisotropy = 16;
-      material.map!.colorSpace = SRGBColorSpace;
-      Storages.material = material;
-    }
-    return Storages.material;
+    return ContainerMaterials();
   }
 
   constructor(physics: Physics) {

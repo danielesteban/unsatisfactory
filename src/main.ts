@@ -17,6 +17,7 @@ import Container, { PoweredContainer } from './core/container';
 import { Buttons } from './core/controls';
 import Instances, { Instance } from './core/instances';
 import { decode, deserialize, Objects } from './core/loader';
+import { ConcreteMaterial, ConnectorsMaterial, MetalMaterial, RustMaterial } from './core/materials';
 import { Intersection as PhysicsIntersection } from './core/physics';
 import Simulation from './core/simulation';
 import Viewport from './core/viewport';
@@ -56,32 +57,21 @@ const viewport = new Viewport();
 // and their respective geometries into WebGLRenderer.compile()
 // to avoid the current hitching when uncompiled shaders get into view.
 [
-  Aggregators.getMaterial(),
-  Belts.getMaterial(),
-  Buffers.getMaterial(),
-  Columns.getMaterial(),
-  Combinators.getMaterial(),
+  ConcreteMaterial(),
+  ConnectorsMaterial(),
+  MetalMaterial(),
+  RustMaterial(),
   ...Deposit.getMaterials(),
-  Fabricators.getMaterial(),
-  Foundations.getMaterial(),
-  Generators.getMaterial(),
+  Generators.getRotorMaterial(),
   ...Items.getMaterials(),
-  Miners.getMaterial(),
-  Pillars.getMaterial(),
-  Poles.getMaterial(),
-  Ramps.getMaterial(),
-  Sinks.getMaterial(),
-  Smelters.getMaterial(),
-  Storages.getMaterial(),
   Terrain.getMaterial(),
-  Walls.getMaterial(),
   Wires.getMaterial(),
 ].forEach(viewport.setupMaterialCSM.bind(viewport));
 
 [
   Birds.getMaterial(),
-  Generators.getMaterial(),
   Generators.getDepthMaterial(),
+  Generators.getRotorMaterial(),
   Ghost.getMaterial(),
   Grass.getMaterial(),
 ].forEach(viewport.setupMaterialTime.bind(viewport));

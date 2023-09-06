@@ -7,21 +7,15 @@ import {
   Group,
   Material,
   Mesh,
-  MeshStandardMaterial,
   Object3D,
-  RepeatWrapping,
   Shape,
-  SRGBColorSpace,
   Vector3,
 } from 'three';
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import Container from '../core/container';
+import { MetalMaterial } from '../core/materials';
 import Physics from '../core/physics';
 import Items, { Item } from './items';
-import { loadTexture } from '../textures';
-import DiffuseMap from '../textures/green_metal_rust_diff_1k.webp';
-import NormalMap from '../textures/green_metal_rust_nor_gl_1k.webp';
-import RoughnessMap from '../textures/green_metal_rust_rough_1k.webp';
 import Inventory from '../ui/stores/inventory';
 
 export type Connection = {
@@ -196,23 +190,8 @@ class Belts extends Group {
     return { geometry, path };
   };
 
-  private static material: MeshStandardMaterial | undefined;
   static getMaterial() {
-    if (!Belts.material) {
-      const material = new MeshStandardMaterial({
-        map: loadTexture(DiffuseMap),
-        normalMap: loadTexture(NormalMap),
-        roughnessMap: loadTexture(RoughnessMap),
-        metalness: 0.3,
-      });
-      material.map!.anisotropy = 16;
-      material.map!.colorSpace = SRGBColorSpace;
-      [material.map!, material.normalMap!, material.roughnessMap!].forEach((map) => {
-        map.wrapS = map.wrapT = RepeatWrapping;
-      });
-      Belts.material = material;
-    }
-    return Belts.material;
+    return MetalMaterial();
   }
 
   private static shape: Shape | undefined;

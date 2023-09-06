@@ -3,20 +3,14 @@ import {
   BoxGeometry,
   BufferAttribute,
   BufferGeometry,
-  MeshStandardMaterial,
-  RepeatWrapping,
-  SRGBColorSpace,
   Vector2,
   Vector3,
 } from 'three';
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 import Instances, { Instance } from '../core/instances';
+import { ConcreteMaterial } from '../core/materials';
 import Physics from '../core/physics';
-import { loadTexture } from '../textures';
-import DiffuseMap from '../textures/hexagonal_concrete_paving_diff_1k.webp';
-import NormalMap from '../textures/hexagonal_concrete_paving_nor_gl_1k.webp';
-import RoughnessMap from '../textures/hexagonal_concrete_paving_rough_1k.webp';
 
 export class Ramp extends Instance {
   
@@ -37,7 +31,8 @@ class Ramps extends Instances<Ramp> {
   static getGeometry() {
     if (!Ramps.geometry) {
       const aux = new Vector2();
-      const csgEvaluator = new Evaluator();
+      const csg = new Evaluator();
+      csg.useGroups = false;
       const base = new Brush(new BoxGeometry(4, 2, 4));
       const index = base.geometry.getIndex()!;
       {
@@ -80,28 +75,14 @@ class Ramps extends Instances<Ramp> {
       carving.geometry.translate(0, 1, 0);
       carving.rotation.set(Math.atan2(2, 4), 0, 0);
       carving.updateMatrixWorld();
-      Ramps.geometry = mergeVertices(csgEvaluator.evaluate(base, carving, SUBTRACTION).geometry);
+      Ramps.geometry = mergeVertices(csg.evaluate(base, carving, SUBTRACTION).geometry);
       Ramps.geometry.computeBoundingSphere();
     }
     return Ramps.geometry;
   }
 
-  private static material: MeshStandardMaterial | undefined;
   static getMaterial() {
-    if (!Ramps.material) {
-      const material = new MeshStandardMaterial({
-        map: loadTexture(DiffuseMap),
-        normalMap: loadTexture(NormalMap),
-        roughnessMap: loadTexture(RoughnessMap),
-      });
-      material.map!.anisotropy = 16;
-      material.map!.colorSpace = SRGBColorSpace;
-      [material.map!, material.normalMap!, material.roughnessMap!].forEach((map) => {
-        map.wrapS = map.wrapT = RepeatWrapping;
-      });
-      Ramps.material = material;
-    }
-    return Ramps.material;
+    return ConcreteMaterial();
   }
 
   constructor(physics: Physics) {

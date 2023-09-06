@@ -48,7 +48,7 @@ class InstancesChunk extends InstancedMesh {
   private readonly instances: Instance[];
   private maxInstanceCount: number;
 
-  constructor(geometry: BufferGeometry, material: Material, depthMaterial?: Material) {
+  constructor(geometry: BufferGeometry, material: Material | Material[], depthMaterial?: Material) {
     super(geometry, material, 16);
     this.castShadow = this.receiveShadow = true;
     this.customDepthMaterial = depthMaterial;
@@ -112,7 +112,7 @@ type InstanceModel = {
   collider: RAPIER.ColliderDesc | RAPIER.ColliderDesc[];
   geometry: BufferGeometry;
   depthMaterial?: Material;
-  material: Material;
+  material: Material | Material[];
 };
 
 class Instances<InstanceType extends Instance> extends Group {

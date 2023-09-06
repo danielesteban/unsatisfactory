@@ -10,19 +10,18 @@ import {
   Object3D,
   RGBADepthPacking,
   Shader,
-  SRGBColorSpace,
   Vector3,
 } from 'three';
-import { mergeGeometries, mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { ADDITION, Brush, Evaluator } from 'three-bvh-csg';
 import { Connectors, PoweredContainer } from '../core/container';
 import Instances, { Instance } from '../core/instances';
+import { ConnectorsMaterial, RustMaterial, TexturedMaterial } from '../core/materials';
 import Physics from '../core/physics';
 import { Item } from './items';
-import { loadTexture } from '../textures';
-import DiffuseMap from '../textures/rust_coarse_01_diff_1k.webp';
-import NormalMap from '../textures/rust_coarse_01_nor_gl_1k.webp';
-import RoughnessMap from '../textures/rust_coarse_01_rough_1k.webp';
+import RotorDiffuseMap from '../textures/rock_boulder_dry_diff_1k.webp';
+import RotorNormalMap from '../textures/rock_boulder_dry_nor_gl_1k.webp';
+import RotorRoughnessMap from '../textures/rock_boulder_dry_rough_1k.webp';
 
 export enum GeneratorEfficiencyReason {
   altitude = 1,
@@ -114,42 +113,52 @@ class Generators extends Instances<Generator> {
   }
 
   private static geometry: BufferGeometry | undefined;
-  private static readonly rotorOffset: Vector3 = new Vector3(0, 5.25, 0);
+  private static readonly rotorOffset: Vector3 = new Vector3(1, 0, 0);
+  private static readonly rotorPosition: Vector3 = new Vector3(-1, 5.25, 0);
   static getGeometry() {
     if (!Generators.geometry) {
-      const csgEvaluator = new Evaluator();
-      let base = new Brush(new BoxGeometry(4, 2, 4));
-      base.position.set(0, -5, 0);
-      base.updateMatrixWorld();
-      const pole = new Brush(new CylinderGeometry(0.125, 0.125, 0.25));
-      pole.position.set(-1, -5 + 1.125, 0);
-      pole.updateMatrixWorld();
-      base = csgEvaluator.evaluate(base, pole, ADDITION);
-      const connector = new Brush(new CylinderGeometry(0.25, 0.25, 0.5));
-      connector.position.copy(pole.position).add(new Vector3(0, 0.375, 0));
-      connector.updateMatrixWorld();
-      base = csgEvaluator.evaluate(base, connector, ADDITION);
-      const pilar = new Brush(new CylinderGeometry(0.5, 0.5, 12));
-      pilar.position.set(1, 0, 0);
-      pilar.updateMatrixWorld();
-      base = csgEvaluator.evaluate(base, pilar, ADDITION);
-      base.geometry.setAttribute('bone', new BufferAttribute(new Int32Array(base.geometry.getAttribute('position').count), 1));
+      const csg = new Evaluator();
+      const material = Generators.getMaterial();
 
-      let rotor = new Brush(new CylinderGeometry(0.5, 0.5, 1));
-      rotor.position.copy(Generators.rotorOffset);
+      let rotor = new Brush(new CylinderGeometry(0.5, 0.5, 1.5), material[0]);
+      rotor.position.copy(Generators.rotorPosition);
       rotor.rotation.z = Math.PI * -0.5;
       rotor.updateMatrixWorld();
-      const blade = new Brush(new CylinderGeometry(0.4, 0.2, 6));
-      blade.position.copy(Generators.rotorOffset);
+      const blade = new Brush(new CylinderGeometry(0.4, 0.2, 6), material[0]);
+      blade.position.copy(Generators.rotorPosition);
       blade.geometry.translate(0, -3, 0);
       for (let i = 0; i < 3; i++) {
         blade.rotation.x = (Math.PI * 2 / 3) * i;
         blade.updateMatrixWorld();
-        rotor = csgEvaluator.evaluate(rotor, blade, ADDITION);
+        rotor = csg.evaluate(rotor, blade, ADDITION);
       }
-      rotor.geometry.setAttribute('bone', new BufferAttribute((new Int32Array(rotor.geometry.getAttribute('position').count)).fill(1), 1));
 
-      Generators.geometry = mergeVertices(mergeGeometries([base.geometry, rotor.geometry]));
+      let base = new Brush(new BoxGeometry(4, 2, 4), material[1]);
+      base.position.set(0, -5, 0);
+      base.updateMatrixWorld();
+
+      const pilar = new Brush(new CylinderGeometry(0.5, 0.5, 12), material[1]);
+      pilar.position.set(1, 0, 0);
+      pilar.updateMatrixWorld();
+      base = csg.evaluate(base, pilar, ADDITION);
+
+      const pole = new Brush(new CylinderGeometry(0.125, 0.125, 0.25), material[2]);
+      pole.position.set(-1, -5 + 1.125, 0);
+      pole.updateMatrixWorld();
+      base = csg.evaluate(base, pole, ADDITION);
+      const cap = new Brush(new CylinderGeometry(0.25, 0.25, 0.5), material[1]);
+      cap.position.copy(pole.position).add(new Vector3(0, 0.375, 0));
+      cap.updateMatrixWorld();
+      base = csg.evaluate(base, cap, ADDITION);
+
+      const merged = mergeVertices(csg.evaluate(rotor, base, ADDITION).geometry);
+      const bone = new BufferAttribute(new Int32Array(merged.getAttribute('position').count), 1);
+      const index = merged.getIndex()!;
+      for (let i = 0; i < merged.groups[0].count; i++) {
+        bone.setX(index.getX(i), 1);
+      }
+      merged.setAttribute('bone', bone);
+      Generators.geometry = merged;
       Generators.geometry.computeBoundingSphere();
     }
     return Generators.geometry;
@@ -157,6 +166,7 @@ class Generators extends Instances<Generator> {
 
   private static readonly animationChunk = /* glsl */`
   vec3 boneOffset = vec3(0, 0, 0);
+  vec3 bonePosition = vec3(0, 0, 0);
   mat3 boneRotation = mat3(
     1, 0, 0,
     0, 1, 0,
@@ -164,6 +174,7 @@ class Generators extends Instances<Generator> {
   );
   if (bone == 1) {
     boneOffset = vec3(${Generators.rotorOffset.x}, ${Generators.rotorOffset.y}, ${Generators.rotorOffset.z});
+    bonePosition = vec3(${Generators.rotorPosition.x}, ${Generators.rotorPosition.y}, ${Generators.rotorPosition.z});
     float a = float(gl_InstanceID) + time * 0.7;
     float c = cos(a);
     float s = sin(a);
@@ -175,16 +186,18 @@ class Generators extends Instances<Generator> {
   }
   `;
 
-  private static material: MeshStandardMaterial | undefined;
-  static getMaterial() {
-    if (!Generators.material) {
-      const material = new MeshStandardMaterial({
-        map: loadTexture(DiffuseMap),
-        normalMap: loadTexture(NormalMap),
-        roughnessMap: loadTexture(RoughnessMap),
-      });
-      material.map!.anisotropy = 16;
-      material.map!.colorSpace = SRGBColorSpace;
+  private static rotorMaterial: MeshStandardMaterial | undefined;
+  static getRotorMaterial() {
+    if (!Generators.rotorMaterial) {
+      const material = TexturedMaterial(
+        RotorDiffuseMap,
+        RotorNormalMap,
+        RotorRoughnessMap,
+      );
+      [material.map!, material.normalMap!, material.roughnessMap!].forEach((map) => (
+        map!.repeat.set(0.2, 0.2)
+      ));
+      material.metalness = 0.3;
       material.customProgramCacheKey = () => 'Generator';
       material.onBeforeCompile = (shader: Shader) => {
         shader.vertexShader = shader.vertexShader
@@ -211,14 +224,26 @@ class Generators extends Instances<Generator> {
             '#include <begin_vertex>',
             /* glsl */`
             #include <begin_vertex>
-            transformed = boneRotation * (transformed - boneOffset) + boneOffset;
+            transformed = boneRotation * (transformed - bonePosition) + bonePosition + boneOffset;
             #ifdef USE_ALPHAHASH
-            vPosition = boneRotation * (vPosition - boneOffset) + boneOffset;
+            vPosition = boneRotation * (vPosition - bonePosition) + bonePosition + boneOffset;
             #endif
             `
           );
       };
-      Generators.material = material;
+      Generators.rotorMaterial = material;
+    }
+    return Generators.rotorMaterial;
+  }
+
+  private static material: MeshStandardMaterial[] | undefined;
+  static getMaterial() {
+    if (!Generators.material) {
+      Generators.material = [
+        Generators.getRotorMaterial(),
+        RustMaterial(),
+        ConnectorsMaterial(),
+      ];
     }
     return Generators.material;
   }
@@ -243,9 +268,9 @@ class Generators extends Instances<Generator> {
             /* glsl */`
             #include <begin_vertex>
             ${Generators.animationChunk}
-            transformed = boneRotation * (transformed - boneOffset) + boneOffset;
+            transformed = boneRotation * (transformed - bonePosition) + bonePosition + boneOffset;
             #ifdef USE_ALPHAHASH
-            vPosition = boneRotation * (vPosition - boneOffset) + boneOffset;
+            vPosition = boneRotation * (vPosition - bonePosition) + bonePosition + boneOffset;
             #endif
             `
           );
@@ -260,8 +285,8 @@ class Generators extends Instances<Generator> {
       {
         collider: Generators.getCollider(),
         geometry: Generators.getGeometry(),
-        depthMaterial: Generators.getDepthMaterial(),
         material: Generators.getMaterial(),
+        depthMaterial: Generators.getDepthMaterial(),
       },
       physics
     );
