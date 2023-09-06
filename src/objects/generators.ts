@@ -113,19 +113,21 @@ class Generators extends Instances<Generator> {
   }
 
   private static geometry: BufferGeometry | undefined;
-  private static readonly rotorOffset: Vector3 = new Vector3(1, 0, 0);
+  private static readonly rotorOffset: Vector3 = new Vector3(0.75, 0, 0);
   private static readonly rotorPosition: Vector3 = new Vector3(-1, 5.25, 0);
   static getGeometry() {
     if (!Generators.geometry) {
       const csg = new Evaluator();
       const material = Generators.getMaterial();
 
-      let rotor = new Brush(new CylinderGeometry(0.5, 0.5, 1.5), material[0]);
+      let rotor = new Brush(new CylinderGeometry(0.25, 0.5, 2), material[0]);
       rotor.position.copy(Generators.rotorPosition);
+      rotor.position.x += 0.25;
       rotor.rotation.z = Math.PI * -0.5;
       rotor.updateMatrixWorld();
       const blade = new Brush(new CylinderGeometry(0.4, 0.2, 6), material[0]);
       blade.position.copy(Generators.rotorPosition);
+      blade.geometry.scale(1.5, 1, 1);
       blade.geometry.translate(0, -3, 0);
       for (let i = 0; i < 3; i++) {
         blade.rotation.x = (Math.PI * 2 / 3) * i;
@@ -138,7 +140,7 @@ class Generators extends Instances<Generator> {
       base.updateMatrixWorld();
 
       const pilar = new Brush(new CylinderGeometry(0.5, 0.5, 12), material[1]);
-      pilar.position.set(1, 0, 0);
+      pilar.position.set(1, 0.001, 0);
       pilar.updateMatrixWorld();
       base = csg.evaluate(base, pilar, ADDITION);
 
