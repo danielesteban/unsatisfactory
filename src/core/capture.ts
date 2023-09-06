@@ -128,13 +128,23 @@ const processBrushQueue = () => {
     material
   );
   scene.add(mesh);
+  const time = (Array.isArray(material) ? material : [material]).find((material) => !!material.userData.time);
+  if (time) {
+    time.userData.time.current = time.userData.time.value;
+    time.userData.time.value = 1;
+  }
   const capture = [6.5, 5.5].map((zoom) => {
     let rotation = 0;
+    let y = 0;
     if (brush === Brush.belt || brush === Brush.buffer) {
       zoom -= 1.5;
     }
     if (brush === Brush.generator) {
+      y = 3.5;
       zoom *= 3.0;
+    }
+    if (brush === Brush.pole) {
+      y = 0.5;
     }
     if (brush === Brush.pillar || brush === Brush.pole || brush === Brush.sink) {
       zoom += 0.5;
@@ -148,12 +158,17 @@ const processBrushQueue = () => {
     if (brush === Brush.generator) {
       rotation = Math.PI * 0.5;
     }
+    mesh.position.y = -y;
     mesh.rotation.y = rotation;
     camera.position.set(0, 0.5, 1).multiplyScalar(zoom);
     camera.lookAt(0, 0, 0);
     composer.render();
     return renderer.domElement.toDataURL();
   });
+  if (time) {
+    time.userData.time.value = time.userData.time.current;
+    delete time.userData.time.current;
+  }
   scene.remove(mesh);
   captures.brush.set(brush, capture);
   promises.forEach((resolve) => resolve(capture));

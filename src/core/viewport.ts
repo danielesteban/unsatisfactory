@@ -160,6 +160,7 @@ class Viewport extends EventDispatcher {
       shader.uniforms.time = time;
       obc(shader, renderer);
     };
+    material.userData.time = time;
   }
 
   private render() {
