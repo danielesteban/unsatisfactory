@@ -4,7 +4,6 @@ import {
   BufferGeometry,
   CylinderGeometry,
   Mesh,
-  MeshStandardMaterial,
   SphereGeometry,
   Vector3,
 } from 'three';
@@ -71,7 +70,7 @@ export class Deposit extends Mesh {
     return Deposit.geometry;
   }
 
-  private static readonly materials: Record<Item.copperOre | Item.ironOre, MeshStandardMaterial> = {
+  private static readonly materials = {
     [Item.copperOre]: CopperMaterial,
     [Item.ironOre]: IronMaterial,
   };

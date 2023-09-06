@@ -10,7 +10,6 @@ import {
   Material,
   Matrix3,
   Matrix4,
-  MeshStandardMaterial,
   Object3D,
   Sphere,
   TetrahedronGeometry,
@@ -20,7 +19,13 @@ import {
 } from 'three';
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
-import { CopperMaterial, IronMaterial, RustMaterial, WireMaterial } from '../core/materials';
+import {
+  ConnectorsMaterial,
+  CopperMaterial,
+  IronMaterial,
+  RustMaterial,
+  WireMaterial,
+} from '../core/materials';
 
 export enum Item {
   none,
@@ -284,9 +289,8 @@ class Items extends Group {
         return geometry;
       };
 
-      const csg = new Evaluator();
-      csg.useGroups = false;
       let brush: Brush;
+      const csg = new Evaluator();
 
       const ingot = applyUVTransform(new BoxGeometry(0.5, 0.125, 0.25));
       ingot.translate(0, 0.0625, 0);
@@ -301,85 +305,100 @@ class Items extends Group {
       plate.translate(0, 0.03125, 0);
       plate.computeBoundingSphere();
 
-      const computerBase = new Brush(new BoxGeometry(0.3, 0.4, 0.3));
-      const computerCarving = new Brush(new BoxGeometry(0.125, 0.2, 0.15));
-      computerCarving.position.set(0, 0, 0.15);
-      computerCarving.updateMatrixWorld();
-      brush = csg.evaluate(computerBase, computerCarving, SUBTRACTION);
-      computerCarving.position.set(0, 0, -0.15);
-      computerCarving.updateMatrixWorld();
-      brush = csg.evaluate(brush, computerCarving, SUBTRACTION);
-      computerCarving.rotation.set(0, Math.PI * 0.5, 0);
-      computerCarving.position.set(0.15, 0, 0);
-      computerCarving.updateMatrixWorld();
-      brush = csg.evaluate(brush, computerCarving, SUBTRACTION);
-      computerCarving.position.set(-0.15, 0, 0);
-      computerCarving.updateMatrixWorld();
-      brush = csg.evaluate(brush, computerCarving, SUBTRACTION);
+      {
+        csg.useGroups = true;
+        const material = Items.materials[Item.computer];
+        const base = new Brush(new BoxGeometry(0.3, 0.4, 0.3), material[0]);
+        const carving = new Brush(new BoxGeometry(0.125, 0.2, 0.15), material[1]);
+        carving.position.set(0, 0, 0.15);
+        carving.updateMatrixWorld();
+        brush = csg.evaluate(base, carving, SUBTRACTION);
+        carving.position.set(0, 0, -0.15);
+        carving.updateMatrixWorld();
+        brush = csg.evaluate(brush, carving, SUBTRACTION);
+        carving.rotation.set(0, Math.PI * 0.5, 0);
+        carving.position.set(0.15, 0, 0);
+        carving.updateMatrixWorld();
+        brush = csg.evaluate(brush, carving, SUBTRACTION);
+        carving.position.set(-0.15, 0, 0);
+        carving.updateMatrixWorld();
+        brush = csg.evaluate(brush, carving, SUBTRACTION);
+      }
       const computer = applyUVTransform(mergeVertices(brush.geometry));
       computer.translate(0, 0.2, 0);
       computer.computeBoundingSphere();
 
-      let frameCap = new Brush(new BoxGeometry(0.36875, 0.03125, 0.36875));
-      frameCap = csg.evaluate(frameCap, new Brush(new BoxGeometry(0.30625, 0.03125, 0.30625)), SUBTRACTION);
-      frameCap.position.set(0, 0.03125, 0);
-      frameCap.updateMatrixWorld();
-      brush = frameCap.clone();
-      const frameRod = new Brush(new BoxGeometry(0.0625, 0.4, 0.0625));
-      frameRod.position.set(-0.16875, 0.2, -0.16875);
-      frameRod.updateMatrixWorld();
-      brush = csg.evaluate(brush, frameRod, ADDITION);
-      frameRod.position.set(0.16875, 0.2, -0.16875);
-      frameRod.updateMatrixWorld();
-      brush = csg.evaluate(brush, frameRod, ADDITION);
-      frameRod.position.set(0.16875, 0.2, 0.16875);
-      frameRod.updateMatrixWorld();
-      brush = csg.evaluate(brush, frameRod, ADDITION);
-      frameRod.position.set(-0.16875, 0.2, 0.16875);
-      frameRod.updateMatrixWorld();
-      brush = csg.evaluate(brush, frameRod, ADDITION);
-      frameCap.position.set(0, 0.36875, 0);
-      frameCap.updateMatrixWorld();
-      brush = csg.evaluate(brush, frameCap, ADDITION);
+      {
+        csg.useGroups = false;
+        let cap = new Brush(new BoxGeometry(0.36875, 0.03125, 0.36875));
+        cap = csg.evaluate(cap, new Brush(new BoxGeometry(0.30625, 0.03125, 0.30625)), SUBTRACTION);
+        cap.position.set(0, 0.03125, 0);
+        cap.updateMatrixWorld();
+        brush = cap.clone();
+        const rod = new Brush(new BoxGeometry(0.0625, 0.4, 0.0625));
+        rod.position.set(-0.16875, 0.2, -0.16875);
+        rod.updateMatrixWorld();
+        brush = csg.evaluate(brush, rod, ADDITION);
+        rod.position.set(0.16875, 0.2, -0.16875);
+        rod.updateMatrixWorld();
+        brush = csg.evaluate(brush, rod, ADDITION);
+        rod.position.set(0.16875, 0.2, 0.16875);
+        rod.updateMatrixWorld();
+        brush = csg.evaluate(brush, rod, ADDITION);
+        rod.position.set(-0.16875, 0.2, 0.16875);
+        rod.updateMatrixWorld();
+        brush = csg.evaluate(brush, rod, ADDITION);
+        cap.position.set(0, 0.36875, 0);
+        cap.updateMatrixWorld();
+        brush = csg.evaluate(brush, cap, ADDITION);
+      }
       const frame = applyUVTransform(mergeVertices(brush.geometry));
       frame.computeBoundingSphere();
 
-      const rodBrush = new Brush(new CylinderGeometry(0.04, 0.04, 0.5));
-      rodBrush.geometry.rotateZ(Math.PI * 0.5);
-      rodBrush.geometry.translate(0, 0.04, 0);
-      brush = rodBrush.clone();
-      rodBrush.position.set(0, 0.08 * 0.9, 0.04 * 0.9);
-      rodBrush.updateMatrixWorld();
-      brush = csg.evaluate(brush, rodBrush, ADDITION);
-      rodBrush.position.set(0, 0.08 * 0.9, -0.04 * 0.9);
-      rodBrush.updateMatrixWorld();
-      brush = csg.evaluate(brush, rodBrush, ADDITION);
-      rodBrush.position.set(0, 0, 0.08 * 0.9);
-      rodBrush.updateMatrixWorld();
-      brush = csg.evaluate(brush, rodBrush, ADDITION);
-      rodBrush.position.set(0, 0, -0.08 * 0.9);
-      rodBrush.updateMatrixWorld();
-      brush = csg.evaluate(brush, rodBrush, ADDITION);
+      {
+        csg.useGroups = false;
+        const rod = new Brush(new CylinderGeometry(0.04, 0.04, 0.5));
+        rod.geometry.rotateZ(Math.PI * 0.5);
+        rod.geometry.translate(0, 0.04, 0);
+        brush = rod.clone();
+        rod.position.set(0, 0.08 * 0.9, 0.04 * 0.9);
+        rod.updateMatrixWorld();
+        brush = csg.evaluate(brush, rod, ADDITION);
+        rod.position.set(0, 0.08 * 0.9, -0.04 * 0.9);
+        rod.updateMatrixWorld();
+        brush = csg.evaluate(brush, rod, ADDITION);
+        rod.position.set(0, 0, 0.08 * 0.9);
+        rod.updateMatrixWorld();
+        brush = csg.evaluate(brush, rod, ADDITION);
+        rod.position.set(0, 0, -0.08 * 0.9);
+        rod.updateMatrixWorld();
+        brush = csg.evaluate(brush, rod, ADDITION);
+      }
       const rod = applyUVTransform(mergeVertices(brush.geometry));
       rod.computeBoundingSphere();
 
-      const rotorCap = new Brush(new CylinderGeometry(0.15, 0.15, 0.0625));
-      const rotorRod = new Brush(new CylinderGeometry(0.03, 0.03, 0.3));
-      rotorCap.position.set(0, -0.11875, 0);
-      rotorCap.updateMatrixWorld();
-      rotorRod.scale.set(2, 1, 2);
-      rotorRod.updateMatrixWorld();
-      brush = csg.evaluate(rotorCap, rotorRod, ADDITION);
-      rotorCap.position.set(0, 0.11875, 0);
-      rotorCap.updateMatrixWorld();
-      brush = csg.evaluate(brush, rotorCap, ADDITION);
-      rotorRod.scale.setScalar(1);
-      for (let i = 0; i < 5; i++) {
-        const r = 0.085;
-        const a = ((Math.PI * 2) / 5) * i;
-        rotorRod.position.set(Math.sin(a) * r, 0, Math.cos(a) * r);
-        rotorRod.updateMatrixWorld();
-        brush = csg.evaluate(brush, rotorRod, ADDITION);
+      {
+        csg.useGroups = true;
+        const material = Items.materials[Item.rotor];
+        const cap = new Brush(new CylinderGeometry(0.15, 0.15, 0.0625), material[0]);
+        const rod = new Brush(new CylinderGeometry(0.03, 0.03, 0.3), material[0]);
+        cap.position.set(0, -0.11875, 0);
+        cap.updateMatrixWorld();
+        rod.scale.set(2, 1, 2);
+        rod.updateMatrixWorld();
+        brush = csg.evaluate(cap, rod, ADDITION);
+        cap.position.set(0, 0.11875, 0);
+        cap.updateMatrixWorld();
+        brush = csg.evaluate(brush, cap, ADDITION);
+        rod.scale.setScalar(1);
+        rod.material = material[1];
+        for (let i = 0; i < 5; i++) {
+          const r = 0.085;
+          const a = ((Math.PI * 2) / 5) * i;
+          rod.position.set(Math.sin(a) * r, 0, Math.cos(a) * r);
+          rod.updateMatrixWorld();
+          brush = csg.evaluate(brush, rod, ADDITION);
+        }
       }
       const rotor = applyUVTransform(mergeVertices(brush.geometry));
       rotor.translate(0, 0.15, 0);
@@ -419,8 +438,8 @@ class Items extends Group {
     return Items.setupGeometries()[item];
   }
 
-  private static readonly materials: Record<Exclude<Item, Item.none>, MeshStandardMaterial | MeshStandardMaterial[]> = {
-    [Item.computer]: RustMaterial,
+  private static readonly materials = {
+    [Item.computer]: [RustMaterial, ConnectorsMaterial],
     [Item.copperIngot]: CopperMaterial,
     [Item.copperOre]: CopperMaterial,
     [Item.frame]: IronMaterial,
@@ -428,7 +447,7 @@ class Items extends Group {
     [Item.ironOre]: IronMaterial,
     [Item.ironPlate]: IronMaterial,
     [Item.ironRod]: IronMaterial,
-    [Item.rotor]: RustMaterial,
+    [Item.rotor]: [RustMaterial, IronMaterial],
     [Item.wire]: WireMaterial,
   };
 
