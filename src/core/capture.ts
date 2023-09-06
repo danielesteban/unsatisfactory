@@ -17,7 +17,7 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { N8AOPass } from 'n8ao';
 import { SMAAPass } from 'three/examples/jsm/postprocessing/SMAAPass.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
-import { Brush, getGeometry, getMaterial } from '../core/brush';
+import { Brush, getGeometry as getBrushGeometry, getMaterial as getBrushMaterial } from '../core/brush';
 import Belts from '../objects/belts';
 import Items, { Item } from '../objects/items';
 
@@ -115,7 +115,7 @@ const processBrushQueue = () => {
     return;
   }
   const { brush, promises } = queued;
-  const material: Material | Material[] = getMaterial(brush);
+  const material: Material | Material[] = getBrushMaterial(brush);
   if (isLoading(material)) {
     queues.brush.unshift(queued);
     requestAnimationFrame(processBrushQueue);
@@ -124,7 +124,7 @@ const processBrushQueue = () => {
   setupGeometries();
   setupRenderer();
   const mesh = new Mesh(
-    geometries[brush] || getGeometry(brush),
+    geometries[brush] || getBrushGeometry(brush),
     material
   );
   scene.add(mesh);
@@ -168,7 +168,7 @@ const processItemQueue = () => {
     return;
   }
   const { item, promises } = queued;
-  const material: Material | Material[] = Items.setupMaterials()[item];
+  const material: Material | Material[] = Items.getMaterial(item);
   if (isLoading(material)) {
     queues.item.unshift(queued);
     requestAnimationFrame(processItemQueue);
@@ -176,7 +176,7 @@ const processItemQueue = () => {
   }
   setupRenderer();
   const mesh = new Mesh(
-    Items.setupGeometries()[item],
+    Items.getGeometry(item),
     material
   );
   scene.add(mesh);

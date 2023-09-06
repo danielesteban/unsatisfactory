@@ -130,7 +130,7 @@ class Storages extends Instances<Storage> {
   }
 
   static getMaterial() {
-    return ContainerMaterials();
+    return ContainerMaterials;
   }
 
   constructor(physics: Physics) {

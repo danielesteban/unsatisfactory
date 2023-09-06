@@ -48,7 +48,7 @@ class Foundations extends Instances<Foundation> {
   }
 
   static getMaterial() {
-    return ConcreteMaterial();
+    return ConcreteMaterial;
   }
 
   constructor(physics: Physics) {

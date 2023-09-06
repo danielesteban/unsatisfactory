@@ -101,7 +101,7 @@ class Fabricators extends Instances<Fabricator> {
   }
 
   static getMaterial() {
-    return ContainerMaterials();
+    return ContainerMaterials;
   }
 
   private readonly sfx: SFX;

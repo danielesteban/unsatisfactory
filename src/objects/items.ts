@@ -270,7 +270,7 @@ class InstancedItems extends InstancedMesh {
 
 class Items extends Group {
   private static geometries: Record<Exclude<Item, Item.none>, BufferGeometry>;
-  static setupGeometries() {
+  private static setupGeometries() {
     if (!Items.geometries) {
       const aux = new Vector2();
       const uvTransform = (new Matrix3()).setUvTransform(0, 0, 0.2, 0.2, 0, 0, 0);
@@ -415,23 +415,25 @@ class Items extends Group {
     return Items.geometries;
   }
 
-  private static materials: Record<Exclude<Item, Item.none>, MeshStandardMaterial | MeshStandardMaterial[]>;
-  static setupMaterials() {
-    if (!Items.materials) {
-      Items.materials = {
-        [Item.computer]: RustMaterial(),
-        [Item.copperIngot]: CopperMaterial(),
-        [Item.copperOre]: CopperMaterial(),
-        [Item.frame]: IronMaterial(),
-        [Item.ironIngot]: IronMaterial(),
-        [Item.ironOre]: IronMaterial(),
-        [Item.ironPlate]: IronMaterial(),
-        [Item.ironRod]: IronMaterial(),
-        [Item.rotor]: RustMaterial(),
-        [Item.wire]: WireMaterial(),
-      };
-    }
-    return Items.materials;
+  static getGeometry(item: Exclude<Item, Item.none>) {
+    return Items.setupGeometries()[item];
+  }
+
+  private static readonly materials: Record<Exclude<Item, Item.none>, MeshStandardMaterial | MeshStandardMaterial[]> = {
+    [Item.computer]: RustMaterial,
+    [Item.copperIngot]: CopperMaterial,
+    [Item.copperOre]: CopperMaterial,
+    [Item.frame]: IronMaterial,
+    [Item.ironIngot]: IronMaterial,
+    [Item.ironOre]: IronMaterial,
+    [Item.ironPlate]: IronMaterial,
+    [Item.ironRod]: IronMaterial,
+    [Item.rotor]: RustMaterial,
+    [Item.wire]: WireMaterial,
+  };
+
+  static getMaterial(item: Exclude<Item, Item.none>) {
+    return Items.materials[item];
   }
 
   private readonly bounds: Sphere;
@@ -450,7 +452,6 @@ class Items extends Group {
     const { tangents } = path.computeFrenetFrames(count, false);
     this.tangents = tangents;
     Items.setupGeometries();
-    Items.setupMaterials();
   }
 
   dispose() {

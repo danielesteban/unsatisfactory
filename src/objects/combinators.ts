@@ -120,7 +120,7 @@ class Combinators extends Instances<Combinator> {
   }
 
   static getMaterial() {
-    return ContainerMaterials();
+    return ContainerMaterials;
   }
 
   private readonly sfx: SFX;

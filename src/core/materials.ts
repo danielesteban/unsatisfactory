@@ -1,5 +1,6 @@
 import {
   MeshStandardMaterial,
+  MeshStandardMaterialParameters,
   RepeatWrapping,
   SRGBColorSpace,
 } from 'three';
@@ -20,11 +21,12 @@ import RustDiffuseMap from '../textures/rust_coarse_01_diff_1k.webp';
 import RustNormalMap from '../textures/rust_coarse_01_nor_gl_1k.webp';
 import RustRoughnessMap from '../textures/rust_coarse_01_rough_1k.webp';
 
-export const TexturedMaterial = (diffuse: string, normal: string, roughness: string) => {
+export const TexturedMaterial = (diffuse: string, normal: string, roughness: string, params: MeshStandardMaterialParameters = {}) => {
   const material = new MeshStandardMaterial({
     map: loadTexture(diffuse),
     normalMap: loadTexture(normal),
     roughnessMap: loadTexture(roughness),
+    ...params,
   });
   material.map!.anisotropy = 16;
   material.map!.colorSpace = SRGBColorSpace;
@@ -34,95 +36,47 @@ export const TexturedMaterial = (diffuse: string, normal: string, roughness: str
   return material;
 };
 
-let belt: MeshStandardMaterial | undefined;
-export const BeltMaterial = () => {
-  if (!belt) {
-    belt = TexturedMaterial(
-      BeltDiffuseMap,
-      BeltNormalMap,
-      BeltRoughnessMap
-    );
-    belt.metalness = 0.3;
-  }
-  return belt;
-};
+export const BeltMaterial = TexturedMaterial(
+  BeltDiffuseMap,
+  BeltNormalMap,
+  BeltRoughnessMap,
+  { metalness: 0.3 }
+);
 
-let concrete: MeshStandardMaterial | undefined;
-export const ConcreteMaterial = () => {
-  if (!concrete) {
-    concrete = TexturedMaterial(
-      ConcreteDiffuseMap,
-      ConcreteNormalMap,
-      ConcreteRoughnessMap
-    );
-  }
-  return concrete;
-};
+export const ConcreteMaterial = TexturedMaterial(
+  ConcreteDiffuseMap,
+  ConcreteNormalMap,
+  ConcreteRoughnessMap
+);
 
-let connectors: MeshStandardMaterial | undefined;
-export const ConnectorsMaterial = () => {
-  if (!connectors) {
-    connectors = new MeshStandardMaterial({
-      color: 0x111111,
-      roughness: 0.7,
-    });
-  }
-  return connectors;
-};
+export const ConnectorsMaterial = new MeshStandardMaterial({
+  color: 0x111111,
+  roughness: 0.7,
+});
 
-let copper: MeshStandardMaterial | undefined;
-export const CopperMaterial = () => {
-  if (!copper) {
-    copper = TexturedMaterial(
-      CopperDiffuseMap,
-      CopperNormalMap,
-      CopperRoughnessMap
-    );
-    copper.roughness = 0.7;
-  }
-  return copper;
-};
+export const CopperMaterial = TexturedMaterial(
+  CopperDiffuseMap,
+  CopperNormalMap,
+  CopperRoughnessMap,
+  { roughness: 0.7 }
+);
 
-let container: MeshStandardMaterial[] | undefined;
-export const ContainerMaterials = () => {
-  if (!container) {
-    container = [RustMaterial(), ConnectorsMaterial()]
-  }
-  return container;
-};
+export const IronMaterial = TexturedMaterial(
+  IronDiffuseMap,
+  IronNormalMap,
+  IronRoughnessMap,
+  { roughness: 0.7 }
+);
 
-let iron: MeshStandardMaterial | undefined;
-export const IronMaterial = () => {
-  if (!iron) {
-    iron = TexturedMaterial(
-      IronDiffuseMap,
-      IronNormalMap,
-      IronRoughnessMap
-    );
-    iron.roughness = 0.7;
-  }
-  return iron;
-};
+export const RustMaterial = TexturedMaterial(
+  RustDiffuseMap,
+  RustNormalMap,
+  RustRoughnessMap
+);
 
-let rust: MeshStandardMaterial | undefined;
-export const RustMaterial = () => {
-  if (!rust) {
-    rust = TexturedMaterial(
-      RustDiffuseMap,
-      RustNormalMap,
-      RustRoughnessMap
-    );
-  }
-  return rust;
-};
+export const WireMaterial = new MeshStandardMaterial({
+  color: 0,
+  roughness: 0.3,
+});
 
-let wire: MeshStandardMaterial | undefined;
-export const WireMaterial = () => {
-  if (!wire) {
-    wire = new MeshStandardMaterial({
-      color: 0,
-      roughness: 0.3,
-    });
-  }
-  return wire;
-};
+export const ContainerMaterials = [RustMaterial, ConnectorsMaterial];

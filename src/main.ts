@@ -64,13 +64,13 @@ const viewport = new Viewport();
 // and their respective geometries into WebGLRenderer.compile()
 // to avoid the current hitching when uncompiled shaders get into view.
 [
-  BeltMaterial(),
-  ConcreteMaterial(),
-  ConnectorsMaterial(),
-  CopperMaterial(),
-  IronMaterial(),
-  RustMaterial(),
-  WireMaterial(),
+  BeltMaterial,
+  ConcreteMaterial,
+  ConnectorsMaterial,
+  CopperMaterial,
+  IronMaterial,
+  RustMaterial,
+  WireMaterial,
   Generators.getRotorMaterial(),
   Terrain.getMaterial(),
 ].forEach(viewport.setupMaterialCSM.bind(viewport));

@@ -112,7 +112,7 @@ class Buffers extends Instances<Buffer> {
   }
 
   static getMaterial() {
-    return ContainerMaterials();
+    return ContainerMaterials;
   }
 
   constructor(physics: Physics) {

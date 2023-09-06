@@ -197,7 +197,7 @@ class Miners extends Instances<Miner> {
   static getGeometry() {
     if (!Miners.geometry) {
       const csg = new Evaluator();
-      const materials = ContainerMaterials();
+      const materials = Miners.getMaterial();
       const base = new Brush(new BoxGeometry(2, 4, 2), materials[0]);
       const drill = new Brush(new ConeGeometry(1, 1), materials[0]);
       drill.geometry.rotateX(Math.PI);
@@ -228,7 +228,7 @@ class Miners extends Instances<Miner> {
   }
 
   static getMaterial() {
-    return ContainerMaterials();
+    return ContainerMaterials;
   }
 
   private readonly sfx: SFX;

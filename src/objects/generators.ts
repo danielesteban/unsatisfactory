@@ -193,11 +193,11 @@ class Generators extends Instances<Generator> {
         RotorDiffuseMap,
         RotorNormalMap,
         RotorRoughnessMap,
+        { metalness: 0.3 }
       );
       [material.map!, material.normalMap!, material.roughnessMap!].forEach((map) => (
         map!.repeat.set(0.2, 0.2)
       ));
-      material.metalness = 0.3;
       material.customProgramCacheKey = () => 'Generator';
       material.onBeforeCompile = (shader: Shader) => {
         shader.vertexShader = shader.vertexShader
@@ -241,8 +241,8 @@ class Generators extends Instances<Generator> {
     if (!Generators.material) {
       Generators.material = [
         Generators.getRotorMaterial(),
-        RustMaterial(),
-        ConnectorsMaterial(),
+        RustMaterial,
+        ConnectorsMaterial,
       ];
     }
     return Generators.material;

@@ -53,7 +53,7 @@ class Columns extends Instances<Column> {
   }
 
   static getMaterial() {
-    return ConcreteMaterial();
+    return ConcreteMaterial;
   }
 
   constructor(physics: Physics) {

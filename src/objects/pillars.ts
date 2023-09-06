@@ -30,7 +30,7 @@ class Pillars extends Instances<Pillar> {
   }
 
   static getMaterial() {
-    return ConcreteMaterial();
+    return ConcreteMaterial;
   }
 
   constructor(physics: Physics) {

@@ -94,7 +94,7 @@ class Sinks extends Instances<Sink> {
   }
 
   static getMaterial() {
-    return ContainerMaterials();
+    return ContainerMaterials;
   }
 
   constructor(physics: Physics) {

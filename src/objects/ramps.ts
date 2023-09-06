@@ -82,7 +82,7 @@ class Ramps extends Instances<Ramp> {
   }
 
   static getMaterial() {
-    return ConcreteMaterial();
+    return ConcreteMaterial;
   }
 
   constructor(physics: Physics) {

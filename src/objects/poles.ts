@@ -80,7 +80,7 @@ class Poles extends Instances<Pole> {
   }
 
   static getMaterial() {
-    return ContainerMaterials();
+    return ContainerMaterials;
   }
 
   constructor(physics: Physics) {

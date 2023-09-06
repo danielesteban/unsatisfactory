@@ -121,7 +121,7 @@ class Smelters extends Instances<Smelter> {
   }
 
   static getMaterial() {
-    return ContainerMaterials();
+    return ContainerMaterials;
   }
 
   private readonly sfx: SFX;

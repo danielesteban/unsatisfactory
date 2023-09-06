@@ -191,7 +191,7 @@ class Belts extends Group {
   };
 
   static getMaterial() {
-    return BeltMaterial();
+    return BeltMaterial;
   }
 
   private static shape: Shape | undefined;

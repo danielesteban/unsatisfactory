@@ -71,16 +71,10 @@ export class Deposit extends Mesh {
     return Deposit.geometry;
   }
 
-  private static materials: Record<Item.copperOre | Item.ironOre, MeshStandardMaterial>;
-  static setupMaterials() {
-    if (!Deposit.materials) {
-      Deposit.materials = {
-        [Item.copperOre]: CopperMaterial(),
-        [Item.ironOre]: IronMaterial(),
-      };
-    }
-    return Deposit.materials;
-  }
+  private static readonly materials: Record<Item.copperOre | Item.ironOre, MeshStandardMaterial> = {
+    [Item.copperOre]: CopperMaterial,
+    [Item.ironOre]: IronMaterial,
+  };
 
   private item: Item;
   private purity: number;
@@ -91,7 +85,6 @@ export class Deposit extends Mesh {
     this.matrixAutoUpdate = false;
     this.item = Item.none;
     this.purity = 0;
-    Deposit.setupMaterials();
   }
 
   getItem() {

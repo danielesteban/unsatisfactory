@@ -65,7 +65,7 @@ class Wires extends Group {
   }
 
   static getMaterial() {
-    return WireMaterial();
+    return WireMaterial;
   }
 
   private readonly grid: {

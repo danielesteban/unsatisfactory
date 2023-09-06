@@ -53,7 +53,7 @@ class Walls extends Instances<Wall> {
   }
 
   static getMaterial() {
-    return ConcreteMaterial();
+    return ConcreteMaterial;
   }
 
   constructor(physics: Physics) {
