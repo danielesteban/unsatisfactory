@@ -194,15 +194,15 @@ export const Recipes: Recipe[] = [
     input: [
       {
         item: Item.frame,
-        count: 4,
+        count: 2,
       },
       {
         item: Item.rotor,
-        count: 8,
+        count: 2,
       },
       {
         item: Item.wire,
-        count: 12,
+        count: 24,
       }
     ],
     output: {
