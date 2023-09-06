@@ -4,10 +4,10 @@ import {
   Group,
   Material,
   Mesh,
-  MeshStandardMaterial,
   TubeGeometry,
 } from 'three';
 import { PoweredContainer } from '../core/container';
+import { WireMaterial } from '../core/materials';
 import { Item } from '../objects/items';
 import { Generator } from './generators';
 import Alerts, { Alert } from '../ui/stores/alerts';
@@ -64,15 +64,8 @@ class Wires extends Group {
     return new TubeGeometry(path, segments, 0.0625, 4, false);
   }
 
-  private static material: MeshStandardMaterial | undefined;
   static getMaterial() {
-    if (!Wires.material) {
-      Wires.material = new MeshStandardMaterial({
-        color: 0,
-        roughness: 0.3,
-      });
-    }
-    return Wires.material;
+    return WireMaterial();
   }
 
   private readonly grid: {

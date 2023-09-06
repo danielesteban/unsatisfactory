@@ -5,21 +5,14 @@ import {
   CylinderGeometry,
   Mesh,
   MeshStandardMaterial,
-  SRGBColorSpace,
   SphereGeometry,
   Vector3,
 } from 'three';
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 import seedrandom from 'seedrandom';
+import { CopperMaterial, IronMaterial } from '../core/materials';
 import { Item } from './items';
-import { loadTexture } from '../textures';
-import CopperDiffuseMap from '../textures/rock_06_diff_1k.webp';
-import CopperNormalMap from '../textures/rock_06_nor_gl_1k.webp';
-import CopperRoughnessMap from '../textures/rock_06_rough_1k.webp';
-import IronDiffuseMap from '../textures/rock_boulder_dry_diff_1k.webp';
-import IronNormalMap from '../textures/rock_boulder_dry_nor_gl_1k.webp';
-import IronRoughnessMap from '../textures/rock_boulder_dry_rough_1k.webp'
 
 export class Deposit extends Mesh {
   private static collider: RAPIER.ColliderDesc | undefined;
@@ -78,25 +71,15 @@ export class Deposit extends Mesh {
     return Deposit.geometry;
   }
 
-  private static materials: Partial<Record<Item, MeshStandardMaterial>> = {};
-  static getMaterial(item: Item.copperOre | Item.ironOre) {
-    let material = Deposit.materials[item];
-    if (!material) {
-      material = new MeshStandardMaterial({
-        map: loadTexture(item === Item.copperOre ? CopperDiffuseMap : IronDiffuseMap),
-        normalMap: loadTexture(item === Item.copperOre ? CopperNormalMap : IronNormalMap),
-        roughnessMap: loadTexture(item === Item.copperOre ? CopperRoughnessMap : IronRoughnessMap),
-        roughness: 0.7,
-      });
-      material.map!.anisotropy = 16;
-      material.map!.colorSpace = SRGBColorSpace;
-      Deposit.materials[item] = material;
+  private static materials: Record<Item.copperOre | Item.ironOre, MeshStandardMaterial>;
+  static setupMaterials() {
+    if (!Deposit.materials) {
+      Deposit.materials = {
+        [Item.copperOre]: CopperMaterial(),
+        [Item.ironOre]: IronMaterial(),
+      };
     }
-    return material;
-  }
-
-  static getMaterials() {
-    return [Deposit.getMaterial(Item.copperOre), Deposit.getMaterial(Item.ironOre)];
+    return Deposit.materials;
   }
 
   private item: Item;
@@ -108,6 +91,7 @@ export class Deposit extends Mesh {
     this.matrixAutoUpdate = false;
     this.item = Item.none;
     this.purity = 0;
+    Deposit.setupMaterials();
   }
 
   getItem() {
@@ -168,7 +152,7 @@ export class Deposit extends Mesh {
         this.item = Item.ironOre;
         this.purity = deposit > 0.25 ? 1 : 2;
       }
-      this.material = Deposit.getMaterial(this.item);
+      this.material = Deposit.materials[this.item];
     } else {
       this.visible = false;
     }

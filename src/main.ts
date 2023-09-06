@@ -17,7 +17,15 @@ import Container, { PoweredContainer } from './core/container';
 import { Buttons } from './core/controls';
 import Instances, { Instance } from './core/instances';
 import { decode, deserialize, Objects } from './core/loader';
-import { ConcreteMaterial, ConnectorsMaterial, MetalMaterial, RustMaterial } from './core/materials';
+import {
+  BeltMaterial,
+  ConcreteMaterial,
+  ConnectorsMaterial,
+  CopperMaterial,
+  IronMaterial,
+  RustMaterial,
+  WireMaterial,
+} from './core/materials';
 import { Intersection as PhysicsIntersection } from './core/physics';
 import Simulation from './core/simulation';
 import Viewport from './core/viewport';
@@ -33,7 +41,6 @@ import Foundations from './objects/foundations';
 import Generators, { Generator } from './objects/generators';
 import Ghost from './objects/ghost';
 import Grass from './objects/grass';
-import Items from './objects/items';
 import Miners from './objects/miners';
 import Pillars from './objects/pillars';
 import Poles, { Pole } from './objects/poles';
@@ -57,15 +64,15 @@ const viewport = new Viewport();
 // and their respective geometries into WebGLRenderer.compile()
 // to avoid the current hitching when uncompiled shaders get into view.
 [
+  BeltMaterial(),
   ConcreteMaterial(),
   ConnectorsMaterial(),
-  MetalMaterial(),
+  CopperMaterial(),
+  IronMaterial(),
   RustMaterial(),
-  ...Deposit.getMaterials(),
+  WireMaterial(),
   Generators.getRotorMaterial(),
-  ...Items.getMaterials(),
   Terrain.getMaterial(),
-  Wires.getMaterial(),
 ].forEach(viewport.setupMaterialCSM.bind(viewport));
 
 [

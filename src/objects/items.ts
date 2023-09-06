@@ -1,5 +1,6 @@
 import {
   BoxGeometry,
+  BufferAttribute,
   BufferGeometry,
   Curve,
   CylinderGeometry,
@@ -7,26 +8,19 @@ import {
   InstancedMesh,
   Group,
   Material,
+  Matrix3,
   Matrix4,
   MeshStandardMaterial,
   Object3D,
   Sphere,
   TetrahedronGeometry,
   TubeGeometry,
+  Vector2,
   Vector3,
 } from 'three';
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
-import { TexturedMaterial } from '../core/materials';
-import CopperDiffuseMap from '../textures/rock_06_diff_1k.webp';
-import CopperNormalMap from '../textures/rock_06_nor_gl_1k.webp';
-import CopperRoughnessMap from '../textures/rock_06_rough_1k.webp';
-import IronDiffuseMap from '../textures/rock_boulder_dry_diff_1k.webp';
-import IronNormalMap from '../textures/rock_boulder_dry_nor_gl_1k.webp';
-import IronRoughnessMap from '../textures/rock_boulder_dry_rough_1k.webp';
-import RustDiffuseMap from '../textures/rust_coarse_01_diff_1k.webp';
-import RustNormalMap from '../textures/rust_coarse_01_nor_gl_1k.webp';
-import RustRoughnessMap from '../textures/rust_coarse_01_rough_1k.webp';
+import { CopperMaterial, IronMaterial, RustMaterial, WireMaterial } from '../core/materials';
 
 export enum Item {
   none,
@@ -245,7 +239,7 @@ export const deserializeItems = (items: SerializedItems) => items.reduce<Item[]>
 }, []);
 
 class InstancedItems extends InstancedMesh {
-  constructor(bounds: Sphere, geometry: BufferGeometry, material: Material, count: number) {
+  constructor(bounds: Sphere, geometry: BufferGeometry, material: Material | Material[], count: number) {
     super(geometry, material, count);
     this.boundingSphere = bounds;
     this.instanceMatrix.setUsage(DynamicDrawUsage);
@@ -275,23 +269,35 @@ class InstancedItems extends InstancedMesh {
 }
 
 class Items extends Group {
-  private static geometries: Record<Exclude<Item, Item.none>, BufferGeometry> | undefined;
+  private static geometries: Record<Exclude<Item, Item.none>, BufferGeometry>;
   static setupGeometries() {
     if (!Items.geometries) {
+      const aux = new Vector2();
+      const uvTransform = (new Matrix3()).setUvTransform(0, 0, 0.2, 0.2, 0, 0, 0);
+      const applyUVTransform = (geometry: BufferGeometry) => {
+        const uv = geometry.getAttribute('uv') as BufferAttribute;
+        for (let i = 0, l = uv.count; i < l; i++) {
+          aux.fromBufferAttribute(uv, i);
+          aux.applyMatrix3(uvTransform);
+          uv.setXY(i, aux.x, aux.y);
+        }
+        return geometry;
+      };
+
       const csg = new Evaluator();
       csg.useGroups = false;
       let brush: Brush;
 
-      const ingot = new BoxGeometry(0.5, 0.125, 0.25);
+      const ingot = applyUVTransform(new BoxGeometry(0.5, 0.125, 0.25));
       ingot.translate(0, 0.0625, 0);
       ingot.computeBoundingSphere();
 
-      const ore = new TetrahedronGeometry(0.2, 2);
+      const ore = applyUVTransform(new TetrahedronGeometry(0.2, 2));
       ore.scale(1.5, 1, 1);
       ore.translate(0, 0.2, 0);
       ore.computeBoundingSphere();
 
-      const plate = new BoxGeometry(0.4, 0.0625, 0.4);
+      const plate = applyUVTransform(new BoxGeometry(0.4, 0.0625, 0.4));
       plate.translate(0, 0.03125, 0);
       plate.computeBoundingSphere();
 
@@ -310,7 +316,7 @@ class Items extends Group {
       computerCarving.position.set(-0.15, 0, 0);
       computerCarving.updateMatrixWorld();
       brush = csg.evaluate(brush, computerCarving, SUBTRACTION);
-      const computer = mergeVertices(brush.geometry);
+      const computer = applyUVTransform(mergeVertices(brush.geometry));
       computer.translate(0, 0.2, 0);
       computer.computeBoundingSphere();
 
@@ -335,7 +341,7 @@ class Items extends Group {
       frameCap.position.set(0, 0.36875, 0);
       frameCap.updateMatrixWorld();
       brush = csg.evaluate(brush, frameCap, ADDITION);
-      const frame = mergeVertices(brush.geometry);
+      const frame = applyUVTransform(mergeVertices(brush.geometry));
       frame.computeBoundingSphere();
 
       const rodBrush = new Brush(new CylinderGeometry(0.04, 0.04, 0.5));
@@ -354,7 +360,7 @@ class Items extends Group {
       rodBrush.position.set(0, 0, -0.08 * 0.9);
       rodBrush.updateMatrixWorld();
       brush = csg.evaluate(brush, rodBrush, ADDITION);
-      const rod = mergeVertices(brush.geometry);
+      const rod = applyUVTransform(mergeVertices(brush.geometry));
       rod.computeBoundingSphere();
 
       const rotorCap = new Brush(new CylinderGeometry(0.15, 0.15, 0.0625));
@@ -375,7 +381,7 @@ class Items extends Group {
         rotorRod.updateMatrixWorld();
         brush = csg.evaluate(brush, rotorRod, ADDITION);
       }
-      const rotor = mergeVertices(brush.geometry);
+      const rotor = applyUVTransform(mergeVertices(brush.geometry));
       rotor.translate(0, 0.15, 0);
       rotor.computeBoundingSphere();
 
@@ -409,53 +415,23 @@ class Items extends Group {
     return Items.geometries;
   }
 
-  private static materials: Record<Exclude<Item, Item.none>, MeshStandardMaterial> | undefined;
+  private static materials: Record<Exclude<Item, Item.none>, MeshStandardMaterial | MeshStandardMaterial[]>;
   static setupMaterials() {
     if (!Items.materials) {
-      const iron = TexturedMaterial(IronDiffuseMap, IronNormalMap, IronRoughnessMap);
-      iron.roughness = 0.7;
-      [iron.map!, iron.normalMap!, iron.roughnessMap!].forEach((map) => (
-        map!.repeat.set(0.2, 0.2)
-      ));
-      const copper = TexturedMaterial(CopperDiffuseMap, CopperNormalMap, CopperRoughnessMap);
-      copper.roughness = 0.7;
-      [copper.map!, copper.normalMap!, copper.roughnessMap!].forEach((map) => (
-        map!.repeat.set(0.2, 0.2)
-      ));
-      const rust = TexturedMaterial(RustDiffuseMap, RustNormalMap, RustRoughnessMap);
-      [rust.map!, rust.normalMap!, rust.roughnessMap!].forEach((map) => (
-        map!.repeat.set(0.2, 0.2)
-      ));
-      const wire = new MeshStandardMaterial({
-        color: 0,
-        roughness: 0.3,
-      });
       Items.materials = {
-        [Item.computer]: rust,
-        [Item.copperIngot]: copper,
-        [Item.copperOre]: copper,
-        [Item.frame]: iron,
-        [Item.ironIngot]: iron,
-        [Item.ironOre]: iron,
-        [Item.ironPlate]: iron,
-        [Item.ironRod]: iron,
-        [Item.rotor]: rust,
-        [Item.wire]: wire,
+        [Item.computer]: RustMaterial(),
+        [Item.copperIngot]: CopperMaterial(),
+        [Item.copperOre]: CopperMaterial(),
+        [Item.frame]: IronMaterial(),
+        [Item.ironIngot]: IronMaterial(),
+        [Item.ironOre]: IronMaterial(),
+        [Item.ironPlate]: IronMaterial(),
+        [Item.ironRod]: IronMaterial(),
+        [Item.rotor]: RustMaterial(),
+        [Item.wire]: WireMaterial(),
       };
     }
     return Items.materials;
-  }
-
-  static getMaterials() {
-    Items.setupMaterials();
-    const materials: MeshStandardMaterial[] = [];
-    for (let key in Items.materials) {
-      const material = Items.materials[key as any as Exclude<Item, Item.none>];
-      if (!materials.includes(material)) {
-        materials.push(material);
-      }
-    }
-    return materials;
   }
 
   private readonly bounds: Sphere;
@@ -492,7 +468,7 @@ class Items extends Group {
         return;
       }
       if (!instances[item]) {
-        instances[item] = new InstancedItems(bounds, Items.geometries![item], Items.materials![item], count);
+        instances[item] = new InstancedItems(bounds, Items.geometries[item], Items.materials[item], count);
         this.add(instances[item]!);
       }
       const alpha = locked ? 1 : step;

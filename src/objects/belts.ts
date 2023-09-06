@@ -13,7 +13,7 @@ import {
 } from 'three';
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import Container from '../core/container';
-import { MetalMaterial } from '../core/materials';
+import { BeltMaterial } from '../core/materials';
 import Physics from '../core/physics';
 import Items, { Item } from './items';
 import Inventory from '../ui/stores/inventory';
@@ -191,7 +191,7 @@ class Belts extends Group {
   };
 
   static getMaterial() {
-    return MetalMaterial();
+    return BeltMaterial();
   }
 
   private static shape: Shape | undefined;
