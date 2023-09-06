@@ -197,9 +197,6 @@ class Generators extends Instances<Generator> {
         RotorRoughnessMap,
         { metalness: 0.3 }
       );
-      [material.map!, material.normalMap!, material.roughnessMap!].forEach((map) => (
-        map!.repeat.set(0.2, 0.2)
-      ));
       material.customProgramCacheKey = () => 'Generator';
       material.onBeforeCompile = (shader: Shader) => {
         shader.vertexShader = shader.vertexShader
