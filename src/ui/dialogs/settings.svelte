@@ -14,17 +14,40 @@
   export let closeCurrentUI: () => void;
   export let download: () => void;
   export let link: () => string;
-  export let load: () => void;
+  export let load: (file: File) => void;
   export let reset: () => void;
   export let save: () => void;
-
-  const toggleSFX = () => {
-    Settings.setSFX(!$Settings.sfx);
-  };
 
   let isOpen = true;
   let isResetting = false;
   let isWelcome = true;
+
+  const browse = () => {
+    const loader = document.createElement('input');
+    loader.type = 'file';
+    loader.accept = '.json';
+    loader.addEventListener('change', ({ target: { files: [file] } }: any) => {
+      if (!file) {
+        return;
+      }
+      load(file);
+    });
+    loader.click();
+  };
+
+  const drop = (e: DragEvent) => {
+    e.preventDefault();
+    if (!e.dataTransfer) return;
+    const [file] = e.dataTransfer.files;
+    if (!file || file.type.indexOf('application/json') !== 0) {
+      return;
+    }
+    load(file);
+  };
+
+  const prevent = (e: DragEvent) => (
+    e.preventDefault()
+  );
 
   const toggleReset = () => {
     isResetting = !isResetting;
@@ -43,6 +66,10 @@
     }
   };
 
+  const toggleSFX = () => {
+    Settings.setSFX(!$Settings.sfx);
+  };
+
   const toggleWelcome = () => {
     isWelcome = !isWelcome;
   };
@@ -59,6 +86,8 @@
     return formatter.format(diff, 'minutes');
   };
 </script>
+
+<svelte:document on:dragenter={prevent} on:dragover={prevent} on:drop={drop} />
 
 <Autosave save={trackSave} />
 
@@ -110,7 +139,7 @@
             <button on:click={download}>
               Export
             </button>
-            <button on:click={load}>
+            <button on:click={browse}>
               Import
             </button>
           </div>

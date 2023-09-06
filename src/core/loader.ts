@@ -346,30 +346,19 @@ export const encode = (decoded: string) => (
   Base64.fromUint8Array(deflateSync(strToU8(decoded)), true)
 );
 
-export const load = () => new Promise<Serialized>((resolve, reject) => {
-  const loader = document.createElement('input');
-  loader.type = 'file';
-  loader.accept = '.json';
-  loader.addEventListener('change', ({ target: { files: [file] } }: any) => {
-    if (!file) {
-      return;
-    }
-    const url = URL.createObjectURL(file);
-    fetch(url)
-      .then((r) => r.json())
-      .then((serialized: Serialized) => {
-        serialized = migrate(serialized);
-        if (serialized.version !== version) {
-          throw new Error();
-        }
-        return serialized;
-      })
-      .then(resolve)
-      .catch(reject)
-      .finally(() => URL.revokeObjectURL(url));
-  });
-  loader.click();
-});
+export const load = (file: File) => {
+  const url = URL.createObjectURL(file);
+  return fetch(url)
+    .then((r) => r.json())
+    .then((serialized: Serialized) => {
+      serialized = migrate(serialized);
+      if (serialized.version !== version) {
+        throw new Error();
+      }
+      return serialized;
+    })
+    .finally(() => URL.revokeObjectURL(url));
+};
 
 export const download = (
   serialized: Serialized

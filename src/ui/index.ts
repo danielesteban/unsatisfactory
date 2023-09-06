@@ -167,6 +167,16 @@ export const init = (
         current.$destroy();
         current = undefined;
       },
+      load: async (file: File) => {
+        let serialized;
+        try {
+          serialized = await load(file);
+        } catch (e) {
+          return;
+        }
+        localStorage.setItem('autosave', JSON.stringify(serialized));
+        location.reload();
+      },
       download: () => (
         download(serialize(camera, objects))
       ),
@@ -175,16 +185,6 @@ export const init = (
         const url = new URL(location.href);
         url.hash = '/load/' + encoded;
         return url.href;
-      },
-      load: async () => {
-        let serialized;
-        try {
-          serialized = await load();
-        } catch (e) {
-          return;
-        }
-        localStorage.setItem('autosave', JSON.stringify(serialized));
-        location.reload();
       },
       reset: () => {
         localStorage.removeItem('autosave');
