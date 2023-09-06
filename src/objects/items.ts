@@ -496,6 +496,9 @@ class Items extends Group {
         this.add(instances[item]!);
       }
       const alpha = locked ? 1 : step;
+      if (i === (count - 1) && alpha === 1) {
+        return;
+      }
       path.getPointAt((i + alpha) / count, Items.transform.position);
       Items.transform.lookAt(Items.aux.lerpVectors(tangents[i], tangents[i + 1], alpha).add(Items.transform.position));
       Items.transform.updateMatrix();
