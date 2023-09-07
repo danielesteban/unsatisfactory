@@ -1,7 +1,9 @@
 <script lang="ts">
   import Autosave from '../components/autosave.svelte';
+  import Clicked from '../components/clicked.svelte';
   import Clipboard from '../components/clipboard.svelte';
   import Dialog from '../components/dialog.svelte';
+  import FPS from '../components/fps.svelte';
   import Grid from '../components/grid.svelte';
   import Heading from '../components/heading.svelte';
   import Modules from '../components/modules.svelte';
@@ -116,7 +118,16 @@
 
 {#if isOpen}
 <Dialog bodyClass="" close={toggleSettings}>
-  <Heading>Unsatisfactory</Heading>
+  <Heading>
+    Unsatisfactory
+    <div slot="actions">
+      {#if !isWelcome}
+        <div class="info">
+          <FPS />
+        </div>
+      {/if}
+    </div>
+  </Heading>
   <Grid>
     {#if isWelcome}
       <Welcome play={toggleSettings} />
@@ -128,9 +139,15 @@
             Save <span class="info">(Autosaved: {formattedTime(lastSave)})</span>
           </div>
           <div class="buttons">
-            <button class="save" on:click={trackSave}>
-              Save
-            </button>
+            <Clicked on:click={trackSave} let:click let:hasClicked>
+              <button class="save" on:click={click}>
+                {#if hasClicked}
+                  Saved!
+                {:else}
+                  Save
+                {/if}
+              </button>
+            </Clicked>
             <button on:click={download}>
               Export
             </button>

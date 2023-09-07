@@ -205,6 +205,7 @@
   .select {
     background: rgba(0, 0, 0, .2);
     height: 1.375rem;
+    font-size: 0.75rem;
   }
   .recipes {
     display: flex;
