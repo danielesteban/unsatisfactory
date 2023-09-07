@@ -28,10 +28,10 @@ class Viewport extends EventDispatcher {
   private readonly csm: CSM;
   public readonly camera: PerspectiveCamera;
   public readonly controls: Controls;
-  public readonly dom: HTMLElement;
   public readonly physics: Physics;
   public readonly renderer: WebGLRenderer;
-  public readonly resolution: number;
+  private renderRadius: number;
+  private resolution: number;
   public readonly scene: Scene;
   public readonly sfx: SFX;
   private readonly time: { value: number; };
@@ -42,12 +42,15 @@ class Viewport extends EventDispatcher {
     if (!dom) {
       throw new Error('Couldn\'t get viewport');
     }
-    this.dom = dom;
+    const antialias = localStorage.getItem('viewport:antialias') !== '0';
+    const fov = parseInt(localStorage.getItem('viewport:fov') || '75', 10);
+    this.renderRadius = parseInt(localStorage.getItem('viewport:renderRadius') || '8', 10);
+    this.resolution = parseFloat(localStorage.getItem('viewport:resolution') || '1');
     this.camera = new PerspectiveCamera(
-      parseInt(localStorage.getItem('viewport:fov') || '75', 10),
+      fov,
       window.innerWidth / window.innerHeight,
       0.1,
-      128
+      this.renderRadius * 16
     );
     this.clock = new Clock();
     this.physics = new Physics();
@@ -57,7 +60,6 @@ class Viewport extends EventDispatcher {
       stencil: false,
       powerPreference: 'high-performance',
     });
-    this.resolution = parseFloat(localStorage.getItem('viewport:resolution') || '1');
     this.renderer.setPixelRatio(window.devicePixelRatio || 1);
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = PCFSoftShadowMap;
@@ -88,7 +90,7 @@ class Viewport extends EventDispatcher {
       window.innerHeight
     ));
     this.antialias = new SMAAPass(window.innerWidth, window.innerHeight);
-    this.antialias.enabled = localStorage.getItem('viewport:antialias') !== '0';
+    this.antialias.enabled = antialias;
     this.composer.addPass(this.antialias);
 
     this.resize();
@@ -130,6 +132,20 @@ class Viewport extends EventDispatcher {
     localStorage.setItem('viewport:fov', `${fov}`);
   }
 
+  getRenderRadius() {
+    const { renderRadius } = this;
+    return renderRadius;
+  }
+
+  setRenderRadius(radius: number) {
+    const { camera, csm } = this;
+    this.renderRadius = radius;
+    camera.far = radius * 16;
+    camera.updateProjectionMatrix();
+    csm.updateFrustums();
+    localStorage.setItem('viewport:renderRadius', `${radius}`);
+  }
+
   getResolution() {
     const { resolution } = this;
     return resolution;
@@ -137,6 +153,7 @@ class Viewport extends EventDispatcher {
 
   setResolution(scale: number) {
     const { composer } = this;
+    this.resolution = scale;
     const ratio = (window.devicePixelRatio || 1) * scale;
     composer.setPixelRatio(ratio);
     localStorage.setItem('viewport:resolution', `${scale}`);

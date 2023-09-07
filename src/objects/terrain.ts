@@ -171,6 +171,7 @@ class Terrain extends Group {
   }
 
   private readonly anchor: Vector3;
+  private radius: number;
   private readonly map: Map<string, TerrainChunk>;
   private readonly noise: ImprovedNoise;
   private readonly physics: Physics;
@@ -185,6 +186,7 @@ class Terrain extends Group {
     this.getGrass = this.getGrass.bind(this);
     this.getHeight = this.getHeight.bind(this);
     this.anchor = new Vector3(Infinity, Infinity, Infinity);
+    this.radius = 0;
     this.map = new Map();
     this.noise = new ImprovedNoise();
     this.physics = physics;
@@ -238,7 +240,7 @@ class Terrain extends Group {
     const { aux, center } = Terrain;
     aux.copy(position).add(center).divideScalar(TerrainChunk.size).floor();
     aux.y = 0;
-    if (anchor.equals(aux)) {
+    if (anchor.equals(aux) && radius === this.radius) {
       for (let i = 0, l = Math.min(queue.length, 4); i < l; i++) {
         const queued = queue.shift()!;
         queued.updateDeposit(this.getDeposit, this.getGrass, this.getHeight);
@@ -256,6 +258,7 @@ class Terrain extends Group {
       return;
     }
     anchor.copy(aux);
+    this.radius = radius;
 
     const radiusSQ = radius ** 2;
     for (let i = 0, l = children.length; i < l; i++) {

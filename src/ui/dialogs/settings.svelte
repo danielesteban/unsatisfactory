@@ -82,8 +82,8 @@
 
   const formatter = new Intl.RelativeTimeFormat('en', { style: 'short' });
   const formattedTime = (date: Date) => {
-    const diff = Math.floor((date.getTime() - Date.now()) / 1000 / 60);
-    return formatter.format(diff, 'minutes');
+    const diff = Math.ceil((date.getTime() - Date.now()) / 1000 / 60);
+    return diff === 0 ? 'seconds ago' : formatter.format(diff, 'minutes');
   };
 </script>
 
@@ -125,17 +125,12 @@
         <Graphics />
         <Module>
           <div slot="name">
-            Save <span class="info">(last: {formattedTime(lastSave)})</span>
+            Save <span class="info">(Autosaved: {formattedTime(lastSave)})</span>
           </div>
-          <div>
-            <button on:click={trackSave}>
+          <div class="buttons">
+            <button class="save" on:click={trackSave}>
               Save
             </button>
-          </div>
-        </Module>
-        <Module>
-          <div slot="name">File</div>
-          <div class="buttons">
             <button on:click={download}>
               Export
             </button>
@@ -145,8 +140,8 @@
           </div>
         </Module>
         <Module>
-          <div slot="name">Share</div>
-          <div class="buttons">
+          <div slot="name">Sharing</div>
+          <div>
             <Clipboard value={link} /> 
           </div>
         </Module>
@@ -217,7 +212,10 @@
   .buttons {
     display: flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: 0.5rem;
+  }
+  .save {
+    background: rgba(90, 255, 90, 0.5);
   }
   .reset {
     background: rgba(255, 90, 90, .5);

@@ -5,9 +5,10 @@ const { subscribe, set, update } = writable<{
   antialias: boolean;
   fov: number;
   gpu: string;
+  renderRadius: number;
   resolution: number;
   sfx: boolean;
-}>({ antialias: true, fov: 75, gpu: 'Unknown', resolution: 1, sfx: true });
+}>({ antialias: true, fov: 75, gpu: 'Unknown', renderRadius: 8, resolution: 1, sfx: true });
 
 let viewport: Viewport;
 
@@ -25,6 +26,7 @@ export default {
       antialias: viewport.getAntialias(),
       fov: viewport.getFOV(),
       gpu: gpu,
+      renderRadius: viewport.getRenderRadius(),
       resolution: viewport.getResolution(),
       sfx: !viewport.sfx.getMuted(),
     });
@@ -59,6 +61,13 @@ export default {
     update((settings) => ({
       ...settings,
       fov,
+    }));
+  },
+  setRenderRadius(radius: number) {
+    viewport.setRenderRadius(radius);
+    update((settings) => ({
+      ...settings,
+      renderRadius: radius,
     }));
   },
   setResolution(scale: number) {

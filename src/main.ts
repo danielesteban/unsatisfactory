@@ -54,7 +54,6 @@ import Wires, { Wire } from './objects/wires';
 import UI, { setCompass, setTooltip, init as initUI } from './ui';
 import Achievements, { Achievement } from './ui/stores/achievements';
 
-const terrainRadius = 8;
 const interactionRadiusSquared = 12 ** 2;
 
 const viewport = new Viewport();
@@ -514,7 +513,7 @@ const getConnector = (intersection: Intersection, raycaster: Raycaster) => {
 
 const center = new Vector2();
 const raycaster = new Raycaster();
-raycaster.far = viewport.camera.far;
+raycaster.far = 128;
 const simulation = new Simulation(
   belts,
   [aggregators, buffers, combinators, fabricators, miners, sinks, smelters, storages]
@@ -522,7 +521,7 @@ const simulation = new Simulation(
 const animate = (buttons: Buttons, delta: number) => {
   birds.step(delta);
   simulation.step(delta);
-  terrain.update(viewport.camera.position, terrainRadius);
+  terrain.update(viewport.camera.position, viewport.getRenderRadius());
   raycaster.setFromCamera(center, viewport.camera);
   const vertexHit = (brush === Brush.dismantle || buttons.tertiary) && raycaster.intersectObjects<Wire>(wires.children, false)[0];
   const physicsHit = viewport.physics.castRay(intersection, raycaster.ray.origin, raycaster.ray.direction, raycaster.far);
@@ -563,7 +562,7 @@ const animate = (buttons: Buttons, delta: number) => {
   }
 
   birds.reset();
-  terrain.update(viewport.camera.position, terrainRadius);
+  terrain.update(viewport.camera.position, viewport.getRenderRadius());
   initUI(viewport.camera, objects, viewport);
   viewport.physics.init();
   viewport.setAnimationLoop(animate);
