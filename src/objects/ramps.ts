@@ -13,7 +13,7 @@ import { ConcreteMaterial } from '../core/materials';
 import Physics from '../core/physics';
 
 export class Ramp extends Instance {
-  
+
 }
 
 class Ramps extends Instances<Ramp> {

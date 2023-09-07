@@ -1,14 +1,11 @@
 import RAPIER from '@dimforge/rapier3d-compat';
-import {
-  BoxGeometry,
-  Vector3,
-} from 'three';
+import { BoxGeometry, Vector3 } from 'three';
 import Instances, { Instance } from '../core/instances';
 import { ConcreteMaterial } from '../core/materials';
 import Physics from '../core/physics';
 
 export class Pillar extends Instance {
-  
+
 }
 
 class Pillars extends Instances<Pillar> {
@@ -43,7 +40,7 @@ class Pillars extends Instances<Pillar> {
       physics
     );
   }
-  
+
   create(position: Vector3, rotation: number, withCost: boolean = true) {
     return super.addInstance(
       new Pillar(position, rotation),

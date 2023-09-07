@@ -10,7 +10,7 @@ import { ConcreteMaterial } from '../core/materials';
 import Physics from '../core/physics';
 
 export class Column extends Instance {
-  
+
 }
 
 class Columns extends Instances<Column> {

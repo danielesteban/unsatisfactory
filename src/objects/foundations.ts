@@ -10,7 +10,7 @@ import { ConcreteMaterial } from '../core/materials';
 import Physics from '../core/physics';
 
 export class Foundation extends Instance {
-  
+
 }
 
 class Foundations extends Instances<Foundation> {
@@ -61,7 +61,7 @@ class Foundations extends Instances<Foundation> {
       physics
     );
   }
-  
+
   create(position: Vector3, rotation: number, withCost: boolean = true) {
     return super.addInstance(
       new Foundation(position, rotation),
