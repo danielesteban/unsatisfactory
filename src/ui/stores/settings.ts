@@ -28,6 +28,24 @@ export default {
       resolution: viewport.getResolution(),
       sfx: !viewport.sfx.getMuted(),
     });
+
+    // @dani Nothing to see here. Move along.
+    const secret = {
+      combo: [38, 38, 40, 40, 37, 39, 37, 39, 66, 65],
+      sequence: 0,
+      mode: 0,
+    };
+    document.addEventListener('keydown', ({ keyCode: code }: KeyboardEvent) => {
+      if (code !== secret.combo[secret.sequence]) {
+        secret.sequence = code === secret.combo[0] ? 1 : 0;
+        return;
+      }
+      if (++secret.sequence === secret.combo.length) {
+        secret.sequence = 0;
+        secret.mode = (secret.mode + 1) % 2;
+        viewport.controls.setMode(secret.mode);
+      }
+    });
   },
   setAntialias(enabled: boolean) {
     viewport.setAntialias(enabled);
