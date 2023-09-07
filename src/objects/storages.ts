@@ -6,7 +6,7 @@ import {
 } from 'three';
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
-import Container, { Connectors } from '../core/container';
+import Container, { Connectors, ConnectorsCSG } from '../core/container';
 import { Brush as BuildingType, Building, Item } from '../core/data';
 import Instances from '../core/instances';
 import Inventory from '../core/inventory';
@@ -100,13 +100,7 @@ class Storages extends Instances<Storage> {
       const base = new Brush(new BoxGeometry(4, 4, 2), material[0]);
       let brush: Brush = base;
 
-      const opening = new Brush(new BoxGeometry(1.5, 1.5, 0.5), material[1]);
-      connectors.forEach(({ position, rotation }) => {
-        opening.position.copy(position);
-        opening.rotation.y = rotation;
-        opening.updateMatrixWorld();
-        brush = csg.evaluate(brush, opening, SUBTRACTION);
-      });
+      brush = ConnectorsCSG(csg, brush, connectors, material[1]);
       const stripe = new Brush(new BoxGeometry(0.25, 3.5, 0.25), material[1]);
       ([
         new Vector3(0, 0, 0.875),

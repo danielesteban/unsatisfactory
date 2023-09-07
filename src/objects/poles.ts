@@ -2,13 +2,12 @@ import RAPIER from '@dimforge/rapier3d-compat';
 import {
   BoxGeometry,
   BufferGeometry,
-  CylinderGeometry,
   Object3D,
   Vector3,
 } from 'three';
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { ADDITION, Brush, Evaluator } from 'three-bvh-csg';
-import { Connectors, PoweredContainer } from '../core/container';
+import { Brush, Evaluator } from 'three-bvh-csg';
+import { Connectors, PoweredContainer, WireConnectorCSG } from '../core/container';
 import { Brush as BuildingType, Building } from '../core/data';
 import Instances from '../core/instances';
 import { ContainerMaterials } from '../core/materials';
@@ -61,14 +60,7 @@ class Poles extends Instances<Pole> {
       base.updateMatrixWorld();
       let brush = base;
 
-      const pole = new Brush(new CylinderGeometry(0.125, 0.125, 0.25), material[1]);
-      pole.position.set(0, 2.375, 0);
-      pole.updateMatrixWorld();
-      brush = csg.evaluate(base, pole, ADDITION);
-      const cap = new Brush(new CylinderGeometry(0.25, 0.25, 0.5), material[0]);
-      cap.position.copy(pole.position).add(new Vector3(0, 0.375, 0));
-      cap.updateMatrixWorld();
-      brush = csg.evaluate(brush, cap, ADDITION);
+      brush = WireConnectorCSG(csg, brush, new Vector3(0, 2.375, 0), material[0], material[1]);
 
       Poles.geometry = mergeVertices(brush.geometry);
       Poles.geometry.computeBoundingSphere();

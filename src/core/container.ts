@@ -1,13 +1,16 @@
 import {
   BaseEvent,
-  BoxGeometry,
   BufferGeometry,
+  BoxGeometry,
+  CylinderGeometry,
   Group,
+  Material,
   Mesh,
   Object3D,
   Raycaster,
   Vector3,
 } from 'three';
+import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 import { Item } from './data';
 import { Instance } from './instances';
 import { Belt } from '../objects/belts';
@@ -36,6 +39,43 @@ export class Connectors extends Group {
     });
   }
 }
+
+const connector = new Brush(new BoxGeometry(1.5, 1.5, 0.5));
+export const ConnectorsCSG = (
+  csg: Evaluator,
+  brush: Brush,
+  connectors: { position: Vector3; rotation?: number; }[],
+  material: Material,
+) => {
+  connector.material = material;
+  connectors.forEach(({ position, rotation }) => {
+    connector.position.copy(position);
+    connector.rotation.y = rotation || 0;
+    connector.updateMatrixWorld();
+    brush = csg.evaluate(brush, connector, SUBTRACTION);
+  });
+  return brush;
+};
+
+const wireConnectorRod = new Brush(new CylinderGeometry(0.125, 0.125, 0.25));
+const wireConnectorCap = new Brush(new CylinderGeometry(0.25, 0.25, 0.5));
+export const WireConnectorCSG = (
+  csg: Evaluator,
+  brush: Brush,
+  position: Vector3,
+  capMaterial: Material,
+  rodMaterial: Material
+) => {
+  wireConnectorRod.material = rodMaterial;
+  wireConnectorRod.position.copy(position);
+  wireConnectorRod.updateMatrixWorld();
+  brush = csg.evaluate(brush, wireConnectorRod, ADDITION);
+  wireConnectorCap.material = capMaterial;
+  wireConnectorCap.position.copy(wireConnectorRod.position).add(new Vector3(0, 0.375, 0));
+  wireConnectorCap.updateMatrixWorld();
+  brush = csg.evaluate(brush, wireConnectorCap, ADDITION);
+  return brush;
+};
 
 class Container<Events extends BaseEvent = BaseEvent> extends Instance<Events> {
   private readonly belts: {

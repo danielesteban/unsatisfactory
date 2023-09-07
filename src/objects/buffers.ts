@@ -5,8 +5,8 @@ import {
   Vector3,
 } from 'three';
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
-import Container, { Connectors } from '../core/container';
+import { Brush, Evaluator } from 'three-bvh-csg';
+import Container, { Connectors, ConnectorsCSG } from '../core/container';
 import { Brush as BuildingType, Building, Item } from '../core/data';
 import Instances from '../core/instances';
 import { ContainerMaterials } from '../core/materials';
@@ -95,13 +95,7 @@ class Buffers extends Instances<Buffer> {
       const base = new Brush(new BoxGeometry(2, 2, 2), material[0]);
       let brush = base;
 
-      const opening = new Brush(new BoxGeometry(1.5, 1.5, 0.5), material[1]);
-      connectors.forEach(({ position, rotation }) => {
-        opening.position.copy(position);
-        opening.rotation.y = rotation || 0;
-        opening.updateMatrixWorld();
-        brush = csg.evaluate(brush, opening, SUBTRACTION);
-      });
+      brush = ConnectorsCSG(csg, brush, connectors, material[1]);
 
       Buffers.geometry = mergeVertices(brush.geometry);
       Buffers.geometry.computeBoundingSphere();

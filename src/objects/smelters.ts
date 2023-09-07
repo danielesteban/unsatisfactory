@@ -2,13 +2,12 @@ import RAPIER from '@dimforge/rapier3d-compat';
 import {
   BoxGeometry,
   BufferGeometry,
-  CylinderGeometry,
   Object3D,
   Vector3,
 } from 'three';
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
-import { Connectors } from '../core/container';
+import { SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
+import { Connectors, ConnectorsCSG, WireConnectorCSG } from '../core/container';
 import { Brush as BuildingType, Building } from '../core/data';
 import Instances, { Instance } from '../core/instances';
 import { ContainerMaterials } from '../core/materials';
@@ -79,25 +78,8 @@ class Smelters extends Instances<Smelter> {
       cut.updateMatrixWorld();
       let brush = csg.evaluate(base, cut, SUBTRACTION);
 
-      const pole = new Brush(new CylinderGeometry(0.125, 0.125, 0.25), material[1]);
-      pole.position.set(-1, 2.125, 0);
-      pole.updateMatrixWorld();
-      brush = csg.evaluate(brush, pole, ADDITION);
-      const cap = new Brush(new CylinderGeometry(0.25, 0.25, 0.5), material[0]);
-      cap.position.copy(pole.position).add(new Vector3(0, 0.375, 0));
-      cap.updateMatrixWorld();
-      brush = csg.evaluate(brush, cap, ADDITION);
-
-      const opening = new Brush(new BoxGeometry(1.5, 1.5, 0.5), material[1]);
-      ([
-        [new Vector3(2, -1, 0), Math.PI * 0.5],
-        [new Vector3(-2, -1, 0), Math.PI * 0.5],
-      ] as [Vector3, number][]).forEach(([position, rotation]) => {
-        opening.position.copy(position);
-        opening.rotation.y = rotation;
-        opening.updateMatrixWorld();
-        brush = csg.evaluate(brush, opening, SUBTRACTION);
-      });
+      brush = WireConnectorCSG(csg, brush, new Vector3(-1, 2.125, 0), material[0], material[1]);
+      brush = ConnectorsCSG(csg, brush, connectors, material[1]);
       const stripe = new Brush(new BoxGeometry(3.5, 0.25, 0.25), material[1]);
       ([
         new Vector3(0, -1, 0.875),

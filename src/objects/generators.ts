@@ -14,7 +14,7 @@ import {
 } from 'three';
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { ADDITION, Brush, Evaluator } from 'three-bvh-csg';
-import { Connectors, PoweredContainer } from '../core/container';
+import { Connectors, PoweredContainer, WireConnectorCSG } from '../core/container';
 import { Brush as BuildingType, Building } from '../core/data';
 import Instances, { Instance } from '../core/instances';
 import { ConnectorsMaterial, RustMaterial, TexturedMaterial } from '../core/materials';
@@ -141,14 +141,7 @@ class Generators extends Instances<Generator> {
       pilar.updateMatrixWorld();
       base = csg.evaluate(base, pilar, ADDITION);
 
-      const pole = new Brush(new CylinderGeometry(0.125, 0.125, 0.25), material[2]);
-      pole.position.set(-1, -5 + 1.125, 0);
-      pole.updateMatrixWorld();
-      base = csg.evaluate(base, pole, ADDITION);
-      const cap = new Brush(new CylinderGeometry(0.25, 0.25, 0.5), material[1]);
-      cap.position.copy(pole.position).add(new Vector3(0, 0.375, 0));
-      cap.updateMatrixWorld();
-      base = csg.evaluate(base, cap, ADDITION);
+      base = WireConnectorCSG(csg, base, new Vector3(-1, -5 + 1.125, 0), material[1], material[2]);
 
       const merged = mergeVertices(csg.evaluate(rotor, base, ADDITION).geometry);
       const bone = new BufferAttribute(new Int32Array(merged.getAttribute('position').count), 1);

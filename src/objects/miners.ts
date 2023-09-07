@@ -3,13 +3,12 @@ import {
   BoxGeometry,
   BufferGeometry,
   ConeGeometry,
-  CylinderGeometry,
   PositionalAudio,
   Vector3,
 } from 'three';
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
-import { Connectors, PoweredContainer } from '../core/container';
+import { ADDITION, Brush, Evaluator } from 'three-bvh-csg';
+import { Connectors, ConnectorsCSG, PoweredContainer, WireConnectorCSG } from '../core/container';
 import { Brush as BuildingType, Building, Item, Mining } from '../core/data';
 import Instances from '../core/instances';
 import { ContainerMaterials } from '../core/materials';
@@ -194,29 +193,15 @@ class Miners extends Instances<Miner> {
   static getGeometry() {
     if (!Miners.geometry) {
       const csg = new Evaluator();
-      const materials = Miners.getMaterial();
-      const base = new Brush(new BoxGeometry(2, 4, 2), materials[0]);
-      const drill = new Brush(new ConeGeometry(1, 1), materials[0]);
+      const material = Miners.getMaterial();
+      const base = new Brush(new BoxGeometry(2, 4, 2), material[0]);
+      const drill = new Brush(new ConeGeometry(1, 1), material[0]);
       drill.geometry.rotateX(Math.PI);
       drill.geometry.translate(0, -2.5, 0);
       let brush = csg.evaluate(base, drill, ADDITION);
 
-      const pole = new Brush(new CylinderGeometry(0.125, 0.125, 0.25), materials[1]);
-      pole.position.set(0, 2.125, 0);
-      pole.updateMatrixWorld();
-      brush = csg.evaluate(brush, pole, ADDITION);
-      const cap = new Brush(new CylinderGeometry(0.25, 0.25, 0.5), materials[0]);
-      cap.position.copy(pole.position).add(new Vector3(0, 0.375, 0));
-      cap.updateMatrixWorld();
-      brush = csg.evaluate(brush, cap, ADDITION);
-
-      const opening = new Brush(new BoxGeometry(1.5, 1.5, 0.5), materials[1]);
-      connectors.forEach(({ position, rotation }) => {
-        opening.position.copy(position);
-        opening.rotation.y = rotation || 0;
-        opening.updateMatrixWorld();
-        brush = csg.evaluate(brush, opening, SUBTRACTION);
-      });
+      brush = WireConnectorCSG(csg, brush, new Vector3(0, 2.125, 0), material[0], material[1]);
+      brush = ConnectorsCSG(csg, brush, connectors, material[1]);
 
       Miners.geometry = mergeVertices(brush.geometry);
       Miners.geometry.computeBoundingSphere();
