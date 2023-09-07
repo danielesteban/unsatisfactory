@@ -4,6 +4,17 @@
 
   const Achievements = [
     {
+      id: Achievement.inventory,
+      name: 'Open the Inventory',
+      help: [
+        'Press [I] to open the Inventory.',
+        'There\'s a few basic items already in there.',
+        'Should be enough to start a factory.',
+        'You can also manually craft some items in there',
+        'if you have the necessary ingredients.',
+      ],
+    },
+    {
       id: Achievement.deposit,
       name: 'Find a Deposit',
       help: [
@@ -20,17 +31,6 @@
         'Clicking on a blueprint will select it for building.',
         'Pressing the number keys while holding the cursor',
         'over a blueprint will add it the hotbar.',
-      ],
-    },
-    {
-      id: Achievement.inventory,
-      name: 'Open the Inventory',
-      help: [
-        'Press [I] to open the Inventory.',
-        'There\'s a few basic items already in there.',
-        'Should be enough to start a factory.',
-        'You can also manually craft some items in there',
-        'if you have the necessary ingredients.',
       ],
     },
     {
