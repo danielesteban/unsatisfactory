@@ -5,8 +5,9 @@ import {
   Shader,
   Vector3,
 } from 'three';
-import { Brush, getGeometry as getBrushGeometry } from '../core/brush';
+import { getGeometry as getBrushGeometry } from '../core/brush';
 import { PoweredContainer } from '../core/container';
+import { Brush } from '../core/data';
 import Belts, { Connection } from './belts';
 import Wires from './wires';
 

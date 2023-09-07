@@ -8,12 +8,12 @@ import {
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 import { Connectors } from '../core/container';
+import { Brush as BuildingType, Building } from '../core/data';
 import Instances from '../core/instances';
 import { ContainerMaterials } from '../core/materials';
 import Physics from '../core/physics';
 import SFX from '../core/sfx';
 import Transformer from '../core/transformer';
-import { Item } from './items';
 // import Achievements, { Achievement } from '../ui/stores/achievements';
 
 export class Aggregator extends Transformer {
@@ -39,12 +39,6 @@ const connectors = [
 ];
 
 class Aggregators extends Instances<Aggregator> {
-  static override readonly cost: typeof Instances.cost = [
-    { item: Item.rotor, count: 5 },
-    { item: Item.frame, count: 10 },
-    { item: Item.wire, count: 50 },
-  ];
-
   private static collider: RAPIER.ColliderDesc[] | undefined;
   static getCollider() {
     if (!Aggregators.collider) {
@@ -65,6 +59,8 @@ class Aggregators extends Instances<Aggregator> {
     }
     return Aggregators.connectors;
   }
+
+  protected static override readonly cost = Building[BuildingType.aggregator];
 
   private static geometry: BufferGeometry | undefined;
   static getGeometry() {

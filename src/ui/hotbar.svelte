@@ -1,6 +1,7 @@
 <script lang="ts">
   import { derived } from 'svelte/store';
-  import { Brush, set, subscribe } from '../core/brush';
+  import { set, subscribe } from '../core/brush';
+  import { Brush } from '../core/data';
   import BrushImage from './components/brush.svelte';
   import slots from './stores/hotbar';
 

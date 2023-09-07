@@ -1,5 +1,5 @@
 import { get, writable } from 'svelte/store';
-import { Brush } from '../../core/brush';
+import { Brush } from '../../core/data';
 
 const { subscribe, set, update } = writable(Array.from({ length: 4 }, () => Brush.none));
 

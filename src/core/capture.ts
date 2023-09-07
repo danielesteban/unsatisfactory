@@ -17,9 +17,10 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { N8AOPass } from 'n8ao';
 import { SMAAPass } from 'three/examples/jsm/postprocessing/SMAAPass.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
-import { Brush, getGeometry as getBrushGeometry, getMaterial as getBrushMaterial } from '../core/brush';
+import { getGeometry as getBrushGeometry, getMaterial as getBrushMaterial } from './brush';
+import { Brush, Item } from './data';
 import Belts from '../objects/belts';
-import Items, { Item } from '../objects/items';
+import Items from '../objects/items';
 
 const width = 256;
 const height = 256;

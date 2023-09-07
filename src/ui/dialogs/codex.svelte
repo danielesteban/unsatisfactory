@@ -1,7 +1,6 @@
 <script context="module" lang="ts">
   import { writable } from 'svelte/store';
-  import { Brush, names as BrushName } from '../../core/brush';
-  import { Item, ItemName } from '../../objects/items';
+  import { Brush, BrushName, Item, ItemName } from '../../core/data';
 
   enum Groups {
     items,

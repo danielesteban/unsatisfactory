@@ -1,7 +1,7 @@
 
 <script lang="ts">
+  import { Item, ItemName } from '../../core/data';
   import Inventory from '../../core/inventory';
-  import { Item, ItemName } from '../../objects/items';
   import { Hand } from '../components/hand.svelte';
   import ItemImage from '../components/item.svelte';
 

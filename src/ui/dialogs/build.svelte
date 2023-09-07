@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
-  import { Brush, names, groups, tiers, set as setBrush } from '../../core/brush';
+  import { set as setBrush } from '../../core/brush';
+  import { Brush, BrushName, BrushGroups, BrushTier } from '../../core/data';
   import BrushImage from '../components/brush.svelte';
   import Dialog from '../components/dialog.svelte';
   import Filter from '../components/filter.svelte';
@@ -14,13 +15,13 @@
     close();
   };
 
-  const brushes = groups.map((group) => (
-    group.map((brush) => ({ id: brush, name: names[brush] }))
+  const brushes = BrushGroups.map((group) => (
+    group.map((brush) => ({ id: brush, name: BrushName[brush] }))
   ));
 
   $: tier = $Achievements.has(Achievement.points) ? 1 : 0;
   $: brushesInTier = brushes.map((group) => (
-    group.map((brush) => ({ ...brush, locked: tier < (tiers[brush.id] || 0)}))
+    group.map((brush) => ({ ...brush, locked: tier < (BrushTier[brush.id] || 0)}))
   ));
 
   let hover: Brush | undefined;

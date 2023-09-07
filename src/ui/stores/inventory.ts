@@ -1,5 +1,5 @@
+import { Item } from '../../core/data';
 import Inventory from '../../core/inventory';
-import { Item } from '../../objects/items';
 
 const inventory = new Inventory(50, 500);
 inventory.input(Item.ironPlate, 100);

@@ -5,6 +5,7 @@ import {
   Quaternion,
   Vector3,
 } from 'three';
+import { Brush } from './data';
 import { Instance } from './instances';
 import { Intersection } from './physics';
 import Aggregators, { Aggregator }  from '../objects/aggregators';
@@ -26,27 +27,7 @@ import Storages, { Storage } from '../objects/storages';
 import Walls, { Wall } from '../objects/walls';
 import Wires, { Wire } from '../objects/wires';
 
-export enum Brush {
-  none,
-  aggregator,
-  belt,
-  buffer,
-  column,
-  combinator,
-  dismantle,
-  fabricator,
-  foundation,
-  generator,
-  miner,
-  pillar,
-  pole,
-  ramp,
-  sink,
-  smelter,
-  storage,
-  wall,
-  wire,
-}
+// @dani This file is unjustifiably awful
 
 export let brush: Brush = Brush.none;
 export let rotation: number = 0;
@@ -84,66 +65,6 @@ export const subscribe = (listener: (brush: Brush) => void) => {
       listeners.splice(index, 1);
     } 
   }
-};
-
-export const names: Record<Brush, string> = {
-  [Brush.none]: 'None',
-  [Brush.aggregator]: 'Aggregator',
-  [Brush.belt]: 'Belt',
-  [Brush.buffer]: 'Buffer',
-  [Brush.column]: 'Column',
-  [Brush.dismantle]: 'Dismantle',
-  [Brush.combinator]: 'Combinator',
-  [Brush.fabricator]: 'Fabricator',
-  [Brush.foundation]: 'Foundation',
-  [Brush.generator]: 'Generator',
-  [Brush.miner]: 'Miner',
-  [Brush.pillar]: 'Pillar',
-  [Brush.pole]: 'Pole',
-  [Brush.ramp]: 'Ramp',
-  [Brush.sink]: 'Sink',
-  [Brush.smelter]: 'Smelter',
-  [Brush.storage]: 'Storage',
-  [Brush.wall]: 'Wall',
-  [Brush.wire]: 'Wire',
-};
-
-export const groups: Exclude<Brush, Brush.none>[][] = [
-  [
-    Brush.foundation,
-    Brush.pillar,
-    Brush.ramp,
-    Brush.column,
-    Brush.wall,
-  ],
-  [
-    Brush.miner,
-    Brush.smelter,
-    Brush.fabricator,
-    Brush.combinator,
-    Brush.aggregator,
-  ],
-  [
-    Brush.belt,
-    Brush.buffer,
-    Brush.sink,
-    Brush.storage,
-  ],
-  [
-    Brush.generator,
-    Brush.pole,
-    Brush.wire,
-  ],
-];
-
-export const tiers: Partial<Record<Brush, number>> = {
-  [Brush.aggregator]: 1,
-  [Brush.column]: 1,
-  [Brush.combinator]: 1,
-  [Brush.pillar]: 1,
-  [Brush.ramp]: 1,
-  [Brush.storage]: 1,
-  [Brush.wall]: 1,
 };
 
 export const getFromObject = (instance?: Instance | Belt | Wire) => {

@@ -15,10 +15,10 @@ import {
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { ADDITION, Brush, Evaluator } from 'three-bvh-csg';
 import { Connectors, PoweredContainer } from '../core/container';
+import { Brush as BuildingType, Building } from '../core/data';
 import Instances, { Instance } from '../core/instances';
 import { ConnectorsMaterial, RustMaterial, TexturedMaterial } from '../core/materials';
 import Physics from '../core/physics';
-import { Item } from './items';
 import RotorDiffuseMap from '../textures/rock_boulder_dry_diff_1k.webp';
 import RotorNormalMap from '../textures/rock_boulder_dry_nor_gl_1k.webp';
 import RotorRoughnessMap from '../textures/rock_boulder_dry_rough_1k.webp';
@@ -86,11 +86,6 @@ export class Generator extends PoweredContainer<
 }
 
 class Generators extends Instances<Generator> {
-  static override readonly cost: typeof Instances.cost = [
-    { item: Item.ironPlate, count: 20 },
-    { item: Item.wire, count: 10 },
-  ];
-
   private static collider: RAPIER.ColliderDesc[] | undefined;
   static getCollider() {
     if (!Generators.collider) {
@@ -111,6 +106,8 @@ class Generators extends Instances<Generator> {
     }
     return Generators.connectors;
   }
+
+  protected static override readonly cost = Building[BuildingType.generator];
 
   private static geometry: BufferGeometry | undefined;
   private static readonly rotorOffset: Vector3 = new Vector3(0.75, 0, 0);

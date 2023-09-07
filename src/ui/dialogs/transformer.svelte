@@ -7,8 +7,8 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
   import { writable } from 'svelte/store';
+  import { Item, ItemName, Recipes, Recipe, Transformer as ItemTrasformer, TransformerName } from '../../core/data';
   import Transformer from '../../core/transformer';
-  import { Item, ItemName, Recipes, Recipe, Transformer as ItemTrasformer, TransformerName } from '../../objects/items';
   import Dialog from '../components/dialog.svelte';
   import Grid from '../components/grid.svelte';
   import Hand, { Hand as HandStore } from '../components/hand.svelte';

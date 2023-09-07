@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
   import { writable } from 'svelte/store';
-  import { Item } from '../../objects/items';
+  import { Item } from '../../core/data';
   import { Miner } from '../../objects/miners';
   import Dialog from '../components/dialog.svelte';
   import Grid from '../components/grid.svelte';

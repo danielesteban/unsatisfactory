@@ -1,7 +1,7 @@
 
 <script lang="ts">
+  import { Item, ItemName, Recipes, TransformerName } from '../../core/data';
   import Simulation from '../../core/simulation';
-  import { Item, ItemName, Recipes, TransformerName } from '../../objects/items';
   export let item: Item;
 
   $: recipes = Recipes.filter(({ output: { item: output } }) => output === item);

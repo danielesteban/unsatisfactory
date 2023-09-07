@@ -8,10 +8,10 @@ import {
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 import { Connectors, PoweredContainer } from '../core/container';
+import { Brush as BuildingType, Building, Item, Sinking } from '../core/data';
 import Instances from '../core/instances';
 import { ContainerMaterials } from '../core/materials';
 import Physics from '../core/physics';
-import { Item, Sinking } from './items';
 import Points from '../ui/stores/points';
 
 export class Sink extends PoweredContainer<
@@ -41,11 +41,6 @@ const connectors = [
 ];
 
 class Sinks extends Instances<Sink> {
-  static override readonly cost: typeof Instances.cost = [
-    { item: Item.ironPlate, count: 10 },
-    { item: Item.wire, count: 20 },
-  ];
-
   private static collider: RAPIER.ColliderDesc | undefined;
   static getCollider() {
     if (!Sinks.collider) {
@@ -61,6 +56,8 @@ class Sinks extends Instances<Sink> {
     }
     return Sinks.connectors;
   }
+
+  protected static override readonly cost = Building[BuildingType.sink];
 
   private static geometry: BufferGeometry | undefined;
   static getGeometry() {

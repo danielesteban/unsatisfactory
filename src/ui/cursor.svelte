@@ -1,7 +1,7 @@
 <script lang="ts">
   import { derived } from 'svelte/store';
-  import { Brush, names, subscribe } from '../core/brush';
-  import { Item, ItemName } from '../objects/items';
+  import { subscribe } from '../core/brush';
+  import { Brush, BrushName, Item, ItemName } from '../core/data';
   import ItemImage from './components/item.svelte';
   import Inventory from './stores/inventory';
 
@@ -12,8 +12,8 @@
   export let fromBrush: Brush = Brush.none;
   export let value: number = 0;
 
-  $: object = objectBrush === Brush.none ? undefined : names[objectBrush];
-  $: from = fromBrush === Brush.none ? undefined : names[fromBrush];
+  $: object = objectBrush === Brush.none ? undefined : BrushName[objectBrush];
+  $: from = fromBrush === Brush.none ? undefined : BrushName[fromBrush];
 
   const brush = derived([{ subscribe }], ([$brush]) => {
     if ($brush === Brush.none) {
@@ -22,7 +22,7 @@
     if ($brush === Brush.dismantle) {
       return 'Dismantling';
     }
-    return `Building ${names[$brush]}`;
+    return `Building ${BrushName[$brush]}`;
   });
 </script>
 

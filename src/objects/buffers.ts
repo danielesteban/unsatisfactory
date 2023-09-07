@@ -7,10 +7,10 @@ import {
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 import Container, { Connectors } from '../core/container';
+import { Brush as BuildingType, Building, Item } from '../core/data';
 import Instances from '../core/instances';
 import { ContainerMaterials } from '../core/materials';
 import Physics from '../core/physics';
-import { Item } from './items';
 import Inventory from '../ui/stores/inventory';
 
 export class Buffer extends Container {
@@ -69,10 +69,6 @@ const connectors = [
 ];
 
 class Buffers extends Instances<Buffer> {
-  static override readonly cost: typeof Instances.cost = [
-    { item: Item.ironPlate, count: 5 },
-  ];
-
   private static collider: RAPIER.ColliderDesc | undefined;
   static getCollider() {
     if (!Buffers.collider) {
@@ -88,6 +84,8 @@ class Buffers extends Instances<Buffer> {
     }
     return Buffers.connectors;
   }
+
+  protected static override readonly cost = Building[BuildingType.buffer];
 
   private static geometry: BufferGeometry | undefined;
   static getGeometry() {

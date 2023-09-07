@@ -1,8 +1,8 @@
 import { Base64 } from 'js-base64';
 import { deflateSync, inflateSync, strFromU8, strToU8 } from 'fflate';
 import { Camera, Vector3 } from 'three';
-import { Brush } from './brush';
 import Container, { PoweredContainer } from './container';
+import { Brush, Item, Recipes } from './data';
 import Aggregators, { Aggregator } from '../objects/aggregators';
 import Belts, { Belt } from '../objects/belts';
 import Buffers, { Buffer } from '../objects/buffers';
@@ -11,7 +11,7 @@ import Combinators, { Combinator } from '../objects/combinators';
 import Fabricators, { Fabricator } from '../objects/fabricators';
 import Foundations from '../objects/foundations';
 import Generators, { Generator }  from '../objects/generators';
-import { Item, Recipes, SerializedItems, serializeItems, deserializeItems }  from '../objects/items';
+import { SerializedItems, serializeItems, deserializeItems }  from '../objects/items';
 import Miners, { Miner } from '../objects/miners';
 import Pillars from '../objects/pillars';
 import Poles, { Pole } from '../objects/poles';

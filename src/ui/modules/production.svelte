@@ -1,6 +1,6 @@
 <script lang="ts">
+  import { Item, ItemName } from '../../core/data';
   import Simulation from '../../core/simulation';
-  import { Item, ItemName } from '../../objects/items';
   import ItemImage from '../components/item.svelte';
   import Module from '../components/module.svelte';
   

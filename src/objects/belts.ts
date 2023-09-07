@@ -13,9 +13,10 @@ import {
 } from 'three';
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import Container from '../core/container';
+import { Item } from '../core/data';
 import { BeltMaterial } from '../core/materials';
 import Physics from '../core/physics';
-import Items, { Item } from './items';
+import Items from './items';
 import Inventory from '../ui/stores/inventory';
 
 export type Connection = {

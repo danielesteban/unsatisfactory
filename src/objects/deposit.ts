@@ -10,8 +10,8 @@ import {
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 import seedrandom from 'seedrandom';
+import { Item } from '../core/data';
 import { CopperMaterial, IronMaterial } from '../core/materials';
-import { Item } from './items';
 
 export class Deposit extends Mesh {
   private static collider: RAPIER.ColliderDesc | undefined;

@@ -12,7 +12,7 @@ import {
   Quaternion,
   Vector3,
 } from 'three';
-import { Item } from '../objects/items';
+import { BuildCost, defaultBuildCost } from './data';
 import Inventory from '../ui/stores/inventory';
 import Physics from './physics';
 
@@ -139,9 +139,7 @@ class Instances<InstanceType extends Instance> extends Group {
     return !this.getCost().find(({ item, count }) => !Inventory.canOutput(item, count));
   }
 
-  protected static readonly cost: { item: Exclude<Item, Item.none>; count: number; }[] = [
-    { item: Item.ironPlate, count: 1 },
-  ];
+  protected static readonly cost: BuildCost = defaultBuildCost;
   getCost() {
     return (<typeof Instances<InstanceType>> this.constructor).cost;
   }

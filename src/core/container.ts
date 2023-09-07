@@ -8,9 +8,9 @@ import {
   Raycaster,
   Vector3,
 } from 'three';
+import { Item } from './data';
 import { Instance } from './instances';
 import { Belt } from '../objects/belts';
-import { Item } from '../objects/items';
 import { Wire } from '../objects/wires';
 
 export class Connectors extends Group {

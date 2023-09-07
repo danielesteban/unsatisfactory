@@ -1,6 +1,7 @@
 import { SvelteComponent } from 'svelte';
 import { Camera } from 'three';
 import { getFromObject } from '../core/brush';
+import { Item, Transformer as ItemTransformer } from '../core/data';
 import { Instance } from '../core/instances';
 import { download, encode, load, serialize, Objects } from '../core/loader';
 import Transformer from '../core/transformer';
@@ -10,7 +11,6 @@ import { Belt } from '../objects/belts';
 import { Combinator } from '../objects/combinators';
 import { Fabricator } from '../objects/fabricators';
 import { Generator } from '../objects/generators';
-import { Item, Transformer as ItemTransformer } from '../objects/items';
 import { Miner } from '../objects/miners';
 import { Sink } from '../objects/sinks';
 import { Smelter } from '../objects/smelters';

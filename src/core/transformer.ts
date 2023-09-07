@@ -3,8 +3,8 @@ import {
   Vector3,
 } from 'three';
 import { Connectors, PoweredContainer } from './container';
+import { Item, Recipe, Recipes } from './data';
 import SFX from './sfx';
-import { Item, Recipe, Recipes } from '../objects/items';
 import Inventory from '../ui/stores/inventory';
 
 class Transformer extends PoweredContainer<

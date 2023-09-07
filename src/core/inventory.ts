@@ -1,4 +1,4 @@
-import { Item } from '../objects/items';
+import { Item } from './data';
 
 class Inventory {
   private count: number;

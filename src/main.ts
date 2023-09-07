@@ -5,7 +5,6 @@ import {
   Vector3,
 } from 'three';
 import {
-  Brush,
   brush,
   rotation,
   set as setBrush,
@@ -15,6 +14,7 @@ import {
 } from './core/brush';
 import Container, { PoweredContainer } from './core/container';
 import { Buttons } from './core/controls';
+import { Brush } from './core/data';
 import Instances, { Instance } from './core/instances';
 import { decode, deserialize, Objects } from './core/loader';
 import {

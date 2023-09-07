@@ -10,11 +10,11 @@ import {
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 import { Connectors, PoweredContainer } from '../core/container';
+import { Brush as BuildingType, Building, Item, Mining } from '../core/data';
 import Instances from '../core/instances';
 import { ContainerMaterials } from '../core/materials';
 import Physics from '../core/physics';
 import SFX from '../core/sfx';
-import { Item, Mining } from './items';
 import Achievements, { Achievement } from '../ui/stores/achievements';
 import Inventory from '../ui/stores/inventory';
 
@@ -172,11 +172,6 @@ const connectors = [
 ];
 
 class Miners extends Instances<Miner> {
-  static override readonly cost: typeof Instances.cost = [
-    { item: Item.ironPlate, count: 10 },
-    { item: Item.wire, count: 5 },
-  ];
-
   private static collider: RAPIER.ColliderDesc | undefined;
   static getCollider() {
     if (!Miners.collider) {
@@ -192,6 +187,8 @@ class Miners extends Instances<Miner> {
     }
     return Miners.connectors;
   }
+
+  protected static override readonly cost = Building[BuildingType.miner];
 
   private static geometry: BufferGeometry | undefined;
   static getGeometry() {

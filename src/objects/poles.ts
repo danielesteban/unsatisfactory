@@ -9,10 +9,10 @@ import {
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { ADDITION, Brush, Evaluator } from 'three-bvh-csg';
 import { Connectors, PoweredContainer } from '../core/container';
+import { Brush as BuildingType, Building } from '../core/data';
 import Instances from '../core/instances';
 import { ContainerMaterials } from '../core/materials';
 import Physics from '../core/physics';
-import { Item } from './items';
 
 // @dani @hack @grievance
 // The poles aren't really containers.
@@ -33,11 +33,6 @@ export class Pole extends PoweredContainer {
 }
 
 class Poles extends Instances<Pole> {
-  static override readonly cost: typeof Instances.cost = [
-    { item: Item.ironRod, count: 5 },
-    { item: Item.wire, count: 5 },
-  ];
-
   private static collider: RAPIER.ColliderDesc | undefined;
   static getCollider() {
     if (!Poles.collider) {
@@ -53,6 +48,8 @@ class Poles extends Instances<Pole> {
     }
     return Poles.connectors;
   }
+
+  protected static override readonly cost = Building[BuildingType.pole];
 
   private static geometry: BufferGeometry | undefined;
   static getGeometry() {

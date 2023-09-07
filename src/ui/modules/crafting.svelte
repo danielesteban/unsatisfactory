@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
   import { derived } from 'svelte/store';
-  import { ItemName, Recipes, Recipe, Transformer as ItemTrasformer } from '../../objects/items';
+  import { ItemName, Recipes, Recipe, Transformer as ItemTrasformer } from '../../core/data';
   import ItemImage from '../components/item.svelte';
   import Inventory from '../stores/inventory';
 

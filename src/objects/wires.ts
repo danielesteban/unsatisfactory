@@ -7,8 +7,8 @@ import {
   TubeGeometry,
 } from 'three';
 import { PoweredContainer } from '../core/container';
+import { Brush, Building } from '../core/data';
 import { WireMaterial } from '../core/materials';
-import { Item } from '../objects/items';
 import { Generator } from './generators';
 import Alerts, { Alert } from '../ui/stores/alerts';
 import Inventory from '../ui/stores/inventory';
@@ -88,9 +88,7 @@ class Wires extends Group {
     return !this.getCost().find(({ item, count }) => !Inventory.canOutput(item, count));
   }
 
-  private static readonly cost: { item: Exclude<Item, Item.none>; count: number; }[] = [
-    { item: Item.wire, count: 1 },
-  ];
+  private static readonly cost = Building[Brush.wire];
   getCost() {
     return Wires.cost;
   }
