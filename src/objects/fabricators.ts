@@ -52,7 +52,7 @@ class Fabricators extends Instances<Fabricator> {
     return Fabricators.connectors;
   }
 
-  protected static override readonly cost = Building[BuildingType.fabricator];
+  protected static override readonly cost = Building[BuildingType.fabricator]!;
 
   private static geometry: BufferGeometry | undefined;
   static getGeometry() {

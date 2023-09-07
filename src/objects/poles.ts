@@ -49,7 +49,7 @@ class Poles extends Instances<Pole> {
     return Poles.connectors;
   }
 
-  protected static override readonly cost = Building[BuildingType.pole];
+  protected static override readonly cost = Building[BuildingType.pole]!;
 
   private static geometry: BufferGeometry | undefined;
   static getGeometry() {

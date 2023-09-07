@@ -88,7 +88,7 @@ class Wires extends Group {
     return !this.getCost().find(({ item, count }) => !Inventory.canOutput(item, count));
   }
 
-  private static readonly cost = Building[Brush.wire];
+  private static readonly cost = Building[Brush.wire]!;
   getCost() {
     return Wires.cost;
   }

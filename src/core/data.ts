@@ -114,51 +114,51 @@ export const defaultBuildCost: BuildCost = [
   { item: Item.ironPlate, count: 1 },
 ];
 
-export const Building = {
+export const Building: Partial<Record<Brush, BuildCost>> = {
   [Brush.aggregator]: [
     { item: Item.rotor, count: 5 },
     { item: Item.frame, count: 10 },
     { item: Item.wire, count: 50 },
-  ] as BuildCost,
+  ],
   [Brush.buffer]: [
     { item: Item.ironPlate, count: 5 },
-  ] as BuildCost,
+  ],
   [Brush.combinator]: [
     { item: Item.ironPlate, count: 10 },
     { item: Item.ironRod, count: 10 },
     { item: Item.wire, count: 20 },
-  ] as BuildCost,
+  ],
   [Brush.fabricator]: [
     { item: Item.ironRod, count: 5 },
     { item: Item.wire, count: 10 },
-  ] as BuildCost,
+  ],
   [Brush.generator]: [
     { item: Item.ironPlate, count: 20 },
     { item: Item.wire, count: 10 },
-  ] as BuildCost,
+  ],
   [Brush.miner]: [
     { item: Item.ironPlate, count: 10 },
     { item: Item.wire, count: 5 },
-  ] as BuildCost,
+  ],
   [Brush.pole]: [
     { item: Item.ironRod, count: 5 },
     { item: Item.wire, count: 5 },
-  ] as BuildCost,
+  ],
   [Brush.sink]: [
     { item: Item.ironPlate, count: 10 },
     { item: Item.wire, count: 20 },
-  ] as BuildCost,
+  ],
   [Brush.smelter]: [
     { item: Item.ironRod, count: 5 },
     { item: Item.wire, count: 10 },
-  ] as BuildCost,
+  ],
   [Brush.storage]: [
     { item: Item.ironPlate, count: 10 },
     { item: Item.ironRod, count: 10 },
-  ] as BuildCost,
+  ],
   [Brush.wire]: [
     { item: Item.wire, count: 1 },
-  ] as BuildCost,
+  ],
 };
 
 export const Mining: Partial<Record<Item, { consumption: number; count: number; rate: number; }>> = {

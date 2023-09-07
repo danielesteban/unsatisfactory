@@ -66,7 +66,7 @@ class Smelters extends Instances<Smelter> {
     return Smelters.connectors;
   }
 
-  protected static override readonly cost = Building[BuildingType.smelter];
+  protected static override readonly cost = Building[BuildingType.smelter]!;
 
   private static geometry: BufferGeometry | undefined;
   static getGeometry() {

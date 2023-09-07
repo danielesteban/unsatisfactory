@@ -90,7 +90,7 @@ class Storages extends Instances<Storage> {
     return Storages.connectors;
   }
 
-  protected static override readonly cost = Building[BuildingType.storage];
+  protected static override readonly cost = Building[BuildingType.storage]!;
 
   private static geometry: BufferGeometry | undefined;
   static getGeometry() {

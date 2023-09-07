@@ -107,7 +107,7 @@ class Generators extends Instances<Generator> {
     return Generators.connectors;
   }
 
-  protected static override readonly cost = Building[BuildingType.generator];
+  protected static override readonly cost = Building[BuildingType.generator]!;
 
   private static geometry: BufferGeometry | undefined;
   private static readonly rotorOffset: Vector3 = new Vector3(0.75, 0, 0);

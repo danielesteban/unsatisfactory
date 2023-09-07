@@ -57,7 +57,7 @@ class Sinks extends Instances<Sink> {
     return Sinks.connectors;
   }
 
-  protected static override readonly cost = Building[BuildingType.sink];
+  protected static override readonly cost = Building[BuildingType.sink]!;
 
   private static geometry: BufferGeometry | undefined;
   static getGeometry() {

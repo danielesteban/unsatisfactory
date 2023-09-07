@@ -188,7 +188,7 @@ class Miners extends Instances<Miner> {
     return Miners.connectors;
   }
 
-  protected static override readonly cost = Building[BuildingType.miner];
+  protected static override readonly cost = Building[BuildingType.miner]!;
 
   private static geometry: BufferGeometry | undefined;
   static getGeometry() {

@@ -85,7 +85,7 @@ class Buffers extends Instances<Buffer> {
     return Buffers.connectors;
   }
 
-  protected static override readonly cost = Building[BuildingType.buffer];
+  protected static override readonly cost = Building[BuildingType.buffer]!;
 
   private static geometry: BufferGeometry | undefined;
   static getGeometry() {

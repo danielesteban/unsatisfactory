@@ -60,7 +60,7 @@ class Aggregators extends Instances<Aggregator> {
     return Aggregators.connectors;
   }
 
-  protected static override readonly cost = Building[BuildingType.aggregator];
+  protected static override readonly cost = Building[BuildingType.aggregator]!;
 
   private static geometry: BufferGeometry | undefined;
   static getGeometry() {
