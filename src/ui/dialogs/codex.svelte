@@ -26,6 +26,7 @@
 <script lang="ts">
   import Dialog from '../components/dialog.svelte';
   import Filter from '../components/filter.svelte';
+  import Modules from '../components/modules.svelte';
   import BrushData from '../modules/brush.svelte';
   import ItemData from '../modules/item.svelte';
 
@@ -44,14 +45,14 @@
           {/each}
         {/each}
       </div>
-      <div class="codex">
+      <Modules>
         {#if $selected.group === Groups.brushes}
           <BrushData brush={$selected.id} />
         {/if}
         {#if $selected.group === Groups.items}
           <ItemData item={$selected.id} />
         {/if}
-      </div>
+      </Modules>
     </div>
   </Filter>
 </Dialog>
@@ -83,11 +84,5 @@
   .entries > button.selected {
     background: rgba(90, 255, 90, 0.5);
     color: #eee;
-  }
-  .codex {
-    display: grid;
-    grid-template-rows: auto 1fr;
-    gap: 1rem;
-    padding: 1rem;
   }
 </style>

@@ -8,6 +8,7 @@
 
   $: cost = Building[brush] || defaultBuildCost;
 </script>
+
 <Module>
   <div slot="name">{BrushName[brush]}</div>
   <div class="info">

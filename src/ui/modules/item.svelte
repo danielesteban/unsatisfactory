@@ -9,6 +9,7 @@
 
   $: recipes = Recipes.filter(({ output: { item: output } }) => output === item);
 </script>
+
 <Module>
   <div slot="name">{ItemName[item]}</div>
   <div class="info">
