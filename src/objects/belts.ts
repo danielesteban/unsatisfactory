@@ -13,7 +13,7 @@ import {
 } from 'three';
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import Container from '../core/container';
-import { Item } from '../core/data';
+import { defaultBuildCost, Item } from '../core/data';
 import { BeltMaterial } from '../core/materials';
 import Physics from '../core/physics';
 import Items from './items';
@@ -230,13 +230,7 @@ class Belts extends Group {
     return !this.getCost().find(({ item, count }) => !Inventory.canOutput(item, count));
   }
 
-  private static readonly cost: { item: Exclude<Item, Item.none>; count: number; }[] = [
-    // @dani @incomplete
-    // Belts are free for now.
-    // Fist I need to update some stuff in the hover code
-    // so it can multiply the cost by the number of segments to be built.
-    // { item: Item.ironPlate, count: 1 },
-  ];
+  private static readonly cost = defaultBuildCost;
   getCost() {
     return Belts.cost;
   }

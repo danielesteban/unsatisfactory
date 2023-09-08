@@ -251,11 +251,7 @@ const create = (intersection: Intersection) => {
     case Brush.belt:
       if (
         intersection.connector === false
-        // @dani @incomplete
-        // Need to add the number of slots in the belt somehow to the intersection
-        // and then adjust the cost based on that.
-        // So... Belts are free for now.
-        // || !belts.canAfford()
+        || !belts.canAfford()
       ) {
         return 'nope';
       }
@@ -266,10 +262,7 @@ const create = (intersection: Intersection) => {
       }
       belts.create(
         connection as Connection,
-        { container: intersection.object as Container, connector: intersection.connector },
-        // @dani @incomplete
-        // Same as above. Free belts.
-        false
+        { container: intersection.object as Container, connector: intersection.connector }
       );
       return 'tap';
     case Brush.wire:
@@ -365,30 +358,27 @@ const handleInput = (
 const aux = new Vector3();
 const hover = (intersection?: Intersection) => {
   ghost.visible = false;
-  
+
   if (
     brush === Brush.belt
   ) {
-    // @dani @incomplete
-    // Free belts.
-    // const affordable = belts.canAfford();
-    // const cost = belts.getCost();
-    const affordable = true;
-    const cost = undefined;
+    const affordable = belts.canAfford();
+    const cost = belts.getCost();
     let from = connection.container as PoweredContainer;
     let to;
     if (
-      intersection?.object && intersection.connector !== false
+      intersection?.object
+      && intersection.connector !== false
     ) {
       if (connection.container) {
         to = intersection.object as PoweredContainer;
-        ghost.setBelt(connection as Connection, { container: intersection.object as Container, connector: intersection.connector }, true);
+        ghost.setBelt(connection as Connection, { container: intersection.object as Container, connector: intersection.connector }, affordable);
       } else {
         from = intersection.object as PoweredContainer;
-        ghost.setConnector((intersection.object as Container).getConnector(intersection.connector), true);
+        ghost.setConnector((intersection.object as Container).getConnector(intersection.connector), affordable);
       }
     } else if (connection.container) {
-      ghost.setConnector(connection.container.getConnector(connection.connector), true);
+      ghost.setConnector(connection.container.getConnector(connection.connector), affordable);
     }
     if (from) {
       // @dani @incomplete
