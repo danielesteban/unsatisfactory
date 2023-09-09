@@ -77,7 +77,7 @@
     />
     <input
       type="password"
-      autocomplete="current-password"
+      autocomplete={view === View.login ? 'current-password' : 'new-password'}
       placeholder="Password"
       bind:value={password}
     />
