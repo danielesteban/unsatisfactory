@@ -6,7 +6,8 @@ Minimalistic server to store savegames in the cloud and load them from any brows
 No deltas, No conflict resolution, No migrations, No sanitization. Just raw storage.
 
 ```yaml
-version: '2'
+# docker-compose.yml
+version: "2"
 services:
   server:
     image: ghcr.io/danielesteban/unsatisfactory/cloudsaves:master
