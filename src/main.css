@@ -91,6 +91,13 @@ input[type="text"]::placeholder, input[type="password"]::placeholder {
   color: #aaa;
 }
 
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #eee;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
 #info {
   position: absolute;
   bottom: 1rem;
