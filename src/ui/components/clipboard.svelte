@@ -17,10 +17,3 @@
     {/if}
   </button>
 </Clicked>
-
-<style>
-  button {
-    padding: 0 0.75rem;
-    white-space: nowrap;
-  }
-</style>

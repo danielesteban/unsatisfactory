@@ -32,7 +32,7 @@ body {
 
 button {
   margin: 0;
-  padding: 0;
+  padding: 0 0.75rem;
   border: 0;
   outline: none;
   font-size: inherit;
@@ -46,6 +46,7 @@ button {
   height: 2rem;
   min-width: 4rem;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 canvas {
