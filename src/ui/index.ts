@@ -30,6 +30,7 @@ import Alerts from './alerts.svelte';
 import Compass from './compass.svelte';
 import Cursor from './cursor.svelte';
 import Hotbar from './hotbar.svelte';
+import Loading from './loading.svelte';
 import Cloudsaves from './stores/cloudsaves';
 import Settings from './stores/settings';
 
@@ -125,6 +126,11 @@ export const setCompass = (orientation: number, position: { x: number; z: number
     lon: Math.floor(position.x),
     orientation: Math.floor(orientation / Math.PI * 18000) / 100,
   });
+};
+
+export const setLoading = () => {
+  const ui = new Loading({ target });
+  return () => ui.$destroy();
 };
 
 const cursor = new Cursor({ target });

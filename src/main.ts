@@ -51,7 +51,7 @@ import Storages from './objects/storages';
 import Terrain from './objects/terrain';
 import Walls from './objects/walls';
 import Wires, { Wire } from './objects/wires';
-import UI, { setCompass, setTooltip, init as initUI } from './ui';
+import UI, { setCompass, setLoading, setTooltip, init as initUI } from './ui';
 import Achievements, { Achievement } from './ui/stores/achievements';
 import Cloudsaves from './ui/stores/cloudsaves';
 
@@ -541,14 +541,14 @@ const animate = (buttons: Buttons, delta: number) => {
     stored = decode(location.hash.slice(7));
     location.hash = '/';
   } else if (Cloudsaves.isEnabled()) {
-    // @dani @incomplete
-    // Display some feedback while it's loading
-    stored = await Cloudsaves
-      .load()
-      .catch(() => {
-        // @dani @incomplete
-        // Display loading error
-      });
+    const done = setLoading();
+    try {
+      stored = await Cloudsaves.load();
+    } catch (e) {
+      // @dani @incomplete
+      // Display loading error
+    }
+    done();
   }
   stored = stored || localStorage.getItem('autosave');
   if (stored) {
