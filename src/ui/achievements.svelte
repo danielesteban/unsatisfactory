@@ -163,7 +163,7 @@
     }
     timer = setTimeout(() => {
       achievement = next ? { ...next, completed: false } : undefined;
-    }, 3000);
+    }, 10000);
   });
 </script>
 
