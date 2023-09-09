@@ -1,21 +1,28 @@
 <script lang="ts">
-  export let save: () => void;
+  export let save: () => Promise<void>;
 
   const countdown = 10;
   let count = 0;
   let timer = 0;
   let isCounting = false;
+  let isSaving = false;
   let hasSaved = false;
   const counter = () => {
     const now = performance.now();
     const elapsed = Math.floor((now - timer) / 1000);
     if (elapsed >= countdown) {
       isCounting = false;
-      hasSaved = true;
-      save();
-      setTimeout(() => {
-        hasSaved = false;
-      }, 1000);
+      isSaving = true;
+      save()
+        .then(() => {
+          hasSaved = true;
+          setTimeout(() => {
+            hasSaved = false;
+          }, 1000);
+        })
+        .finally(() => {
+          isSaving = false;
+        });
       return;
     }
     requestAnimationFrame(counter);
@@ -29,10 +36,13 @@
   setInterval(autosave, 120000);
 </script>
 
-{#if isCounting || hasSaved}
+{#if isCounting || isSaving || hasSaved}
   <div class="autosave" class:saved={hasSaved}>
     {#if isCounting}
       Autosaving in {count}...
+    {/if}
+    {#if isSaving}
+      Saving...
     {/if}
     {#if hasSaved}
       Saved!

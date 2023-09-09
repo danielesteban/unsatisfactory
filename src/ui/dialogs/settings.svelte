@@ -1,6 +1,5 @@
 <script lang="ts">
   import Autosave from '../components/autosave.svelte';
-  import Clicked from '../components/clicked.svelte';
   import Clipboard from '../components/clipboard.svelte';
   import Cloudsaves from '../components/cloudsaves.svelte';
   import Dialog from '../components/dialog.svelte';
@@ -19,7 +18,7 @@
   export let link: () => string;
   export let load: (file: File) => void;
   export let reset: () => void;
-  export let save: () => void;
+  export let save: () => Promise<void>;
 
   let isOpen = true;
   let isResetting = false;
@@ -77,10 +76,30 @@
     isWelcome = !isWelcome;
   };
 
-  let lastSave: Date = new Date();
+  let hasSaved = false;
+  let isSaving = false;
+  let lastSave = new Date();
+  let saveTimer = 0;
   const trackSave = () => {
-    lastSave = new Date();
-    return save();
+    clearTimeout(saveTimer);
+    hasSaved = false;
+    isSaving = true;
+    return save()
+      .then(() => {
+        hasSaved = true;
+        lastSave = new Date();
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(() => {
+          hasSaved = false;
+        }, 1000);
+      })
+      .catch(() => {
+        // @dani @incomplete
+        // Show error feedback. Retry?
+      })
+      .finally(() => {
+        isSaving = false;
+      });
   };
 
   const formatter = new Intl.RelativeTimeFormat('en', { style: 'short' });
@@ -140,15 +159,15 @@
             Save <span class="info">(Autosaved: {formattedTime(lastSave)})</span>
           </div>
           <div class="buttons">
-            <Clicked on:click={trackSave} let:click let:hasClicked>
-              <button class="save" on:click={click}>
-                {#if hasClicked}
-                  Saved!
-                {:else}
-                  Save
-                {/if}
-              </button>
-            </Clicked>
+            <button disabled={isSaving} class="save" on:click={trackSave}>
+              {#if isSaving}
+                Saving...
+              {:else if hasSaved}
+                Saved!
+              {:else}
+                Save
+              {/if}
+            </button>
             <button on:click={download}>
               Export
             </button>

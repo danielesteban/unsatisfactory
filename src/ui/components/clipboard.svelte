@@ -1,19 +1,22 @@
 <script lang="ts">
-  import Clicked from './clicked.svelte';
-
   export let value: () => string;
 
-  const copy = () => (
-    navigator.clipboard.writeText(value())
-  );
+  let hasCopied = false;
+  let timer = 0;
+  const copy = () => {
+    navigator.clipboard.writeText(value());
+    hasCopied = true;
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      hasCopied = false;
+    }, 1000);
+  };
 </script>
 
-<Clicked on:click={copy} let:click let:hasClicked>
-  <button on:click={click}>
-    {#if hasClicked}
-      Copied to clipboard
-    {:else}
-      Copy link
-    {/if}
-  </button>
-</Clicked>
+<button on:click={copy}>
+  {#if hasCopied}
+    Copied to clipboard
+  {:else}
+    Copy link
+  {/if}
+</button>
