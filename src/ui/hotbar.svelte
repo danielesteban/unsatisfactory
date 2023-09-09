@@ -8,7 +8,7 @@
   const current = { subscribe };
 
   const keydown = ({ code, repeat }: KeyboardEvent) => {
-    if (code.length !== 6 || code.slice(0, 5) !== 'Digit' || repeat || !document.body.classList.contains('pointerlock')) {
+    if (!code || code.length !== 6 || code.slice(0, 5) !== 'Digit' || repeat || !document.body.classList.contains('pointerlock')) {
       return;
     }
     const digit = parseInt(code.slice(5), 10);

@@ -2,6 +2,7 @@
   import Autosave from '../components/autosave.svelte';
   import Clicked from '../components/clicked.svelte';
   import Clipboard from '../components/clipboard.svelte';
+  // import Cloudsaves from '../components/cloudsaves.svelte';
   import Dialog from '../components/dialog.svelte';
   import FPS from '../components/fps.svelte';
   import Grid from '../components/grid.svelte';
@@ -79,7 +80,7 @@
   let lastSave: Date = new Date();
   const trackSave = () => {
     lastSave = new Date();
-    save();
+    return save();
   };
 
   const formatter = new Intl.RelativeTimeFormat('en', { style: 'short' });
@@ -156,6 +157,12 @@
             </button>
           </div>
         </Module>
+        <!-- <Module>
+          <div slot="name">Cloudsaves <span class="info">(experimental)</span></div>
+          <div>
+            <Cloudsaves /> 
+          </div>
+        </Module> -->
         <Module>
           <div slot="name">Sharing</div>
           <div>

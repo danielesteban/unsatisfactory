@@ -53,6 +53,7 @@ import Walls from './objects/walls';
 import Wires, { Wire } from './objects/wires';
 import UI, { setCompass, setTooltip, init as initUI } from './ui';
 import Achievements, { Achievement } from './ui/stores/achievements';
+import Cloudsaves from './ui/stores/cloudsaves';
 
 const interactionRadiusSquared = 12 ** 2;
 
@@ -534,21 +535,29 @@ const animate = (buttons: Buttons, delta: number) => {
   setCompass(viewport.camera.rotation.y, viewport.camera.position);
 };
 
-{
+(async () => {
   let stored;
   if (location.hash.slice(2, 6) === 'load') {
     stored = decode(location.hash.slice(7));
     location.hash = '/';
+  } else if (Cloudsaves.isEnabled()) {
+    // @dani @incomplete
+    // Display some feedback while it's loading
+    stored = await Cloudsaves
+      .load()
+      .catch(() => {
+        // @dani @incomplete
+        // Display loading error
+      });
   }
   stored = stored || localStorage.getItem('autosave');
   if (stored) {
-    let serialized;
-    try {
-      serialized = JSON.parse(stored);
-    } catch (e) {}
-    if (serialized) {
-      deserialize(serialized, viewport.camera, objects);
+    if (typeof stored === 'string') {
+      try {
+        stored = JSON.parse(stored);
+      } catch (e) {}
     }
+    deserialize(stored, viewport.camera, objects);
   }
 
   birds.reset();
@@ -556,4 +565,4 @@ const animate = (buttons: Buttons, delta: number) => {
   initUI(viewport.camera, objects, viewport);
   viewport.physics.init();
   viewport.setAnimationLoop(animate);
-}
+})();

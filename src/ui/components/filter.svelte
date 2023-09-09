@@ -61,21 +61,12 @@
     line-height: 1em;
   }
   .search .input {
-    box-sizing: border-box;
     border: 0;
     margin: 0;
     padding: 1rem;
-    outline: 0;
-    color: inherit;
-    font-family: inherit;
-    font-size: inherit;
-    line-height: inherit;
     background: transparent;
-    width: 100%;
+    border-radius: 0;
     border-bottom: 2px solid rgba(255, 255, 255, 0.05);
-  }
-  .search .input::placeholder {
-    color: #aaa;
   }
   .result {
     position: absolute;

@@ -66,9 +66,28 @@ select {
   cursor: pointer;
 }
 
-input {
+input[type="checkbox"], input[type="range"] {
   accent-color: #000;
   cursor: pointer;
+}
+
+input[type="text"], input[type="password"] {
+  box-sizing: border-box;
+  border: 0;
+  margin: 0;
+  padding: 0.4375rem 0.5rem;
+  outline: none;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+  background: rgba(0, 0, 0, .5);
+  border-radius: 0.5rem;
+  width: 100%;
+}
+
+input[type="text"]::placeholder, input[type="password"]::placeholder {
+  color: #aaa;
 }
 
 #info {

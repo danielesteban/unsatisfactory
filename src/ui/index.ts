@@ -30,6 +30,7 @@ import Alerts from './alerts.svelte';
 import Compass from './compass.svelte';
 import Cursor from './cursor.svelte';
 import Hotbar from './hotbar.svelte';
+import Cloudsaves from './stores/cloudsaves';
 import Settings from './stores/settings';
 
 let current: SvelteComponent | undefined = undefined;
@@ -174,7 +175,12 @@ export const init = (
         } catch (e) {
           return;
         }
-        localStorage.setItem('autosave', JSON.stringify(serialized));
+        serialized = JSON.stringify(serialized);
+        if (Cloudsaves.isEnabled()) {
+          await Cloudsaves.save(serialized);
+        } else {
+          localStorage.setItem('autosave', serialized);
+        }
         location.reload();
       },
       download: () => (
@@ -186,12 +192,21 @@ export const init = (
         url.hash = '/load/' + encoded;
         return url.href;
       },
-      reset: () => {
-        localStorage.removeItem('autosave');
+      reset: async () => {
+        if (Cloudsaves.isEnabled()) {
+          await Cloudsaves.reset();
+        } else {
+          localStorage.removeItem('autosave');
+        }
         location.reload();
       },
-      save: () => {
-        localStorage.setItem('autosave', JSON.stringify(serialize(camera, objects)));
+      save: async () => {
+        const serialized = JSON.stringify(serialize(camera, objects));
+        if (Cloudsaves.isEnabled()) {
+          await Cloudsaves.save(serialized);
+        } else {
+          localStorage.setItem('autosave', serialized);
+        }
       },
     },
     target: document.getElementById('ui')!,

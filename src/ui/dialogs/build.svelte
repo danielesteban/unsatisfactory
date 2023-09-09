@@ -32,7 +32,7 @@
     hover = brush;
   };
   const keydown = ({ code, repeat, target }: KeyboardEvent) => {
-    if (!hover || code.length !== 6 || code.slice(0, 5) !== 'Digit' || repeat || (target as HTMLElement).tagName.toLowerCase() === 'input') {
+    if (!hover || !code || code.length !== 6 || code.slice(0, 5) !== 'Digit' || repeat || (target as HTMLElement).tagName.toLowerCase() === 'input') {
       return;
     }
     const digit = parseInt(code.slice(5), 10);
