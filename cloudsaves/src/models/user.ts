@@ -5,7 +5,7 @@ import { sessionSecret } from '../core/config';
 
 interface User {
   username: string;
-  password?: string;
+  password: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -27,7 +27,10 @@ const UserSchema = new Schema<User, UserModel, UserMethods>({
     required: true,
     index: true,
   },
-  password: String,
+  password: {
+    type: String,
+    required: true,
+  },
 }, { timestamps: true });
 
 UserSchema.index({ username: 1 }, { name: 'username_2', collation: { locale: 'en', strength: 2 }, unique: true });
@@ -37,12 +40,12 @@ UserSchema.pre('save', function onSave(next) {
   if (user.isModified('username')) {
     user.username = user.username.slice(0, 15);
   }
-  if (user.isModified('password') && user.password) {
+  if (user.isModified('password')) {
     return bcrypt.genSalt(5, (err, salt) => {
       if (err) {
         return next(err);
       }
-      return bcrypt.hash(user.password!, salt, (err, hash) => {
+      return bcrypt.hash(user.password, salt, (err, hash) => {
         if (err) {
           return next(err);
         }

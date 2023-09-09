@@ -38,7 +38,7 @@ export const setupPassport = () => {
     session: false,
   }, (username, password, done) => (
     User
-      .findOne({ username, password: { $exists: true } })
+      .findOne({ username })
       .then((user) => {
         if (!user) {
           return done(null, false);
