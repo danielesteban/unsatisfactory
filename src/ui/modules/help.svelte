@@ -59,6 +59,12 @@
   </div>
   <div>
     <div class="keys">
+      <div class="key">O</div>
+    </div>
+    <div>Codex</div>
+  </div>
+  <div>
+    <div class="keys">
       <div>
         <div class="key shift">Shift</div>
       </div>
