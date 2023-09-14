@@ -5,6 +5,7 @@ import {
   Material,
   Mesh,
   TubeGeometry,
+  Vector3,
 } from 'three';
 import { PoweredContainer } from '../core/container';
 import { Brush, Building } from '../core/data';
@@ -17,10 +18,11 @@ export class Wire extends Mesh {
   public readonly from: PoweredContainer;
   public readonly to: PoweredContainer;
 
-  constructor(geometry: BufferGeometry, material: Material, from: PoweredContainer, to: PoweredContainer) {
+  constructor({ geometry, position }: { geometry: BufferGeometry, position: Vector3 }, material: Material, from: PoweredContainer, to: PoweredContainer) {
     super(geometry, material);
     this.castShadow = this.receiveShadow = true;
     this.geometry.computeBoundingSphere();
+    this.position.copy(position);
     this.updateMatrixWorld();
     this.matrixAutoUpdate = false;
     this.from = from;
@@ -54,6 +56,9 @@ class Wires extends Group {
     toDownwards.y = -1;
     toDownwards.normalize();
     toDirection.lerp(toDownwards, 0.3);
+    const position = (new Vector3()).addVectors(fromConnector, toConnector).multiplyScalar(0.5);
+    fromConnector.sub(position);
+    toConnector.sub(position);
     const path = new CubicBezierCurve3(
       fromConnector,
       fromConnector.clone().addScaledVector(fromDirection, offset),
@@ -61,7 +66,8 @@ class Wires extends Group {
       toConnector
     );
     const segments = Math.ceil(path.getLength() / 0.1);
-    return new TubeGeometry(path, segments, 0.0625, 4, false);
+    const geometry = new TubeGeometry(path, segments, 0.0625, 4, false);
+    return { geometry, position };
   }
 
   static getMaterial() {

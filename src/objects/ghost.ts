@@ -49,8 +49,9 @@ class Ghost extends Mesh {
   }
 
   setBelt(from: Connection, to: Connection, isValid: boolean) {
-    this.setGeometry(Belts.getGeometry(from, to).geometry, true);
-    this.position.set(0, 0, 0);
+    const { geometry, position } = Belts.getGeometry(from, to);
+    this.setGeometry(geometry, true);
+    this.position.copy(position);
     this.rotation.set(0, 0, 0);
     this.update(isValid);
   }
@@ -70,8 +71,9 @@ class Ghost extends Mesh {
   }
 
   setWire(from: PoweredContainer, to: PoweredContainer, isValid: boolean) {
-    this.setGeometry(Wires.getGeometry(from, to), true);
-    this.position.set(0, 0, 0);
+    const { geometry, position } = Wires.getGeometry(from, to);
+    this.setGeometry(geometry, true);
+    this.position.copy(position);
     this.rotation.set(0, 0, 0);
     this.update(isValid);
   }

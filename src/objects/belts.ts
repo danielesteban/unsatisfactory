@@ -33,10 +33,11 @@ export class Belt extends Mesh {
   private readonly items: Items;
   private readonly slots: { item: Item; locked: boolean; }[];
 
-  constructor({ geometry, path }: { geometry: BufferGeometry, path: Curve<Vector3> }, material: Material, from: Connection, to: Connection) {
+  constructor({ geometry, path, position }: { geometry: BufferGeometry, path: Curve<Vector3>, position: Vector3 }, material: Material, from: Connection, to: Connection) {
     super(mergeVertices(geometry), material);
     this.castShadow = this.receiveShadow = true;
     this.geometry.computeBoundingSphere();
+    this.position.copy(position);
     this.updateMatrixWorld();
     this.matrixAutoUpdate = false;
     this.onBeforeRender = this.animate.bind(this);
@@ -162,6 +163,9 @@ class Belts extends Group {
       .addScaledVector(toDirection, -0.5)
       .add(Belts.offset);
     const offset = fromPosition.distanceTo(toPosition) * 0.3;
+    const position = (new Vector3()).addVectors(fromPosition, toPosition).multiplyScalar(0.5);
+    fromPosition.sub(position);
+    toPosition.sub(position);
     const path = new CubicBezierCurve3(
       fromPosition,
       fromPosition.clone().addScaledVector(fromDirection, offset),
@@ -188,7 +192,7 @@ class Belts extends Group {
     }
     const segments = Math.ceil(path.getLength() / 0.1);
     const geometry = new ExtrudeGeometry(Belts.getShape(), { extrudePath: path, steps: segments });
-    return { geometry, path };
+    return { geometry, path, position };
   };
 
   static getMaterial() {
@@ -241,7 +245,8 @@ class Belts extends Group {
     this.add(belt);
     physics.addBody(
       belt,
-      RAPIER.RigidBodyDesc.fixed(),
+      RAPIER.RigidBodyDesc.fixed()
+        .setTranslation(belt.position.x, belt.position.y, belt.position.z),
       RAPIER.ColliderDesc.trimesh(
         belt.geometry.getAttribute('position').array as Float32Array,
         belt.geometry.getIndex()!.array as Uint32Array
