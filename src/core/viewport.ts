@@ -4,6 +4,7 @@ import {
   Material,
   PCFSoftShadowMap,
   PerspectiveCamera,
+  Raycaster,
   Scene,
   Shader,
   Vector3,
@@ -29,6 +30,7 @@ class Viewport extends EventDispatcher {
   public readonly camera: PerspectiveCamera;
   public readonly controls: Controls;
   public readonly physics: Physics;
+  public readonly raycaster: Raycaster;
   public readonly renderer: WebGLRenderer;
   private renderRadius: number;
   private resolution: number;
@@ -54,6 +56,8 @@ class Viewport extends EventDispatcher {
     );
     this.clock = new Clock();
     this.physics = new Physics();
+    this.raycaster = new Raycaster();
+    this.raycaster.far = this.camera.far;
     this.controls = new Controls(this.camera, this.physics, dom);
     this.renderer = new WebGLRenderer({
       depth: false,
@@ -138,9 +142,9 @@ class Viewport extends EventDispatcher {
   }
 
   setRenderRadius(radius: number) {
-    const { camera, csm } = this;
+    const { camera, csm, raycaster } = this;
     this.renderRadius = radius;
-    camera.far = radius * 16;
+    camera.far = csm.maxFar = raycaster.far = radius * 16;
     camera.updateProjectionMatrix();
     csm.updateFrustums();
     localStorage.setItem('viewport:renderRadius', `${radius}`);

@@ -503,8 +503,6 @@ const getConnector = (intersection: Intersection, raycaster: Raycaster) => {
 };
 
 const center = new Vector2();
-const raycaster = new Raycaster();
-raycaster.far = 128;
 const simulation = new Simulation(
   belts,
   [aggregators, buffers, combinators, fabricators, miners, sinks, smelters, storages]
@@ -513,9 +511,9 @@ const animate = (buttons: Buttons, delta: number) => {
   birds.step(delta);
   simulation.step(delta);
   terrain.update(viewport.camera.position, viewport.getRenderRadius());
-  raycaster.setFromCamera(center, viewport.camera);
-  const vertexHit = (brush === Brush.dismantle || buttons.tertiary) && raycaster.intersectObjects<Wire>(wires.children, false)[0];
-  const physicsHit = viewport.physics.castRay(intersection, raycaster.ray.origin, raycaster.ray.direction, raycaster.far);
+  viewport.raycaster.setFromCamera(center, viewport.camera);
+  const vertexHit = (brush === Brush.dismantle || buttons.tertiary) && viewport.raycaster.intersectObjects<Wire>(wires.children, false)[0];
+  const physicsHit = viewport.physics.castRay(intersection, viewport.raycaster.ray.origin, viewport.raycaster.ray.direction, viewport.raycaster.far);
   let hit;
   if (physicsHit && (!vertexHit || intersection.distance < vertexHit.distance)) {
     hit = intersection;
@@ -526,7 +524,7 @@ const animate = (buttons: Buttons, delta: number) => {
     hit = intersection;
   }
   if (hit) {
-    hit.connector = getConnector(hit, raycaster);
+    hit.connector = getConnector(hit, viewport.raycaster);
   }
   hover(hit);
   if (buttons.primary || buttons.secondary || buttons.tertiary || buttons.build || buttons.codex || buttons.dismantle || buttons.interact || buttons.inventory) {
