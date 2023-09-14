@@ -73,7 +73,7 @@ UserSchema.methods = {
   getSession() {
     const user = this;
     return new Promise((resolve, reject) => (
-      jwt.sign({ id: user.id }, sessionSecret, { expiresIn: '24h' }, (err, session) => {
+      jwt.sign({ id: user.id }, sessionSecret, { expiresIn: '7d' }, (err, session) => {
         if (err || !session) {
           reject(err);
           return;
