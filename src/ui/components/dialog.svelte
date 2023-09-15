@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
 
-  export let bodyClass: string = 'ui';
+  export let bodyClass: string[] = ['ui'];
   export let close: () => void;
 
   let dom: HTMLDivElement;
@@ -17,9 +17,9 @@
     }
     close();
   };
-  
-  bodyClass && document.body.classList.add(bodyClass);
-  onDestroy(() => bodyClass && document.body.classList.remove(bodyClass));
+
+  bodyClass.length && document.body.classList.add(...bodyClass);
+  onDestroy(() => bodyClass.length && document.body.classList.remove(...bodyClass));
 </script>
 
 <svelte:document on:keyup={keyup} />

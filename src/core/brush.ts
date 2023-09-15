@@ -32,24 +32,6 @@ import Wires, { Wire } from '../objects/wires';
 export let brush: Brush = Brush.none;
 export let rotation: number = 0;
 
-document.addEventListener('keydown', (e) => {
-  if (e.repeat || !document.body.classList.contains('pointerlock')) {
-    return;
-  }
-  switch (e.code) {
-    case 'KeyR': {
-      rotation += Math.PI * 0.125;
-      while (rotation > Math.PI) rotation -= Math.PI * 2;
-      break;
-    }
-    case 'KeyT': {
-      rotation -= Math.PI * 0.125;
-      while (rotation < -Math.PI) rotation += Math.PI * 2;
-      break;
-    }
-  }
-});
-
 const listeners: ((brush: Brush) => void)[] = [];
 export const set = (type: Brush) => {
   brush = type;
@@ -211,6 +193,12 @@ export const pick = (intersection: Intersection) => {
   if (intersection.object instanceof Instance) {
     rotation = intersection.object.rotation;
   }
+};
+
+export const rotate = (direction: number) => {
+  rotation += Math.PI * 0.125 * direction;
+  while (rotation > Math.PI) rotation -= Math.PI * 2;
+  while (rotation < -Math.PI) rotation += Math.PI * 2;
 };
 
 const offsets = {

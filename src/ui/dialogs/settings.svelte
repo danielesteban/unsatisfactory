@@ -1,5 +1,6 @@
 <script lang="ts">
-  import Autosave from '../components/autosave.svelte';
+  import { onDestroy } from 'svelte';
+  import Loader from '../../core/loader';
   import Clipboard from '../components/clipboard.svelte';
   import Cloudsaves from '../components/cloudsaves.svelte';
   import Dialog from '../components/dialog.svelte';
@@ -10,84 +11,45 @@
   import Module from '../components/module.svelte';
   import Graphics from '../modules/graphics.svelte';
   import Help from '../modules/help.svelte';
-  import Welcome from '../modules/welcome.svelte';
   import Settings from '../stores/settings';
 
-  export let closeCurrentUI: () => void;
-  export let download: () => void;
-  export let link: () => string;
-  export let load: (file: File) => void;
-  export let reset: () => void;
-  export let save: () => Promise<void>;
+  export let close: () => void;
+  export let loader: Loader;
 
-  let isOpen = true;
-  let isResetting = false;
-  let isWelcome = true;
+  const bodyClass = ['settings'];
 
   const browse = () => {
-    const loader = document.createElement('input');
-    loader.type = 'file';
-    loader.accept = '.json';
-    loader.addEventListener('change', ({ target: { files: [file] } }: any) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.addEventListener('change', ({ target: { files: [file] } }: any) => {
       if (!file) {
         return;
       }
-      load(file);
+      loader.importFile(file);
     });
-    loader.click();
+    input.click();
   };
 
-  const drop = (e: DragEvent) => {
-    e.preventDefault();
-    if (!e.dataTransfer) return;
-    const [file] = e.dataTransfer.files;
-    if (!file || file.type.indexOf('application/json') !== 0) {
-      return;
-    }
-    load(file);
-  };
-
-  const prevent = (e: DragEvent) => (
-    e.preventDefault()
-  );
-
-  const toggleReset = () => {
-    isResetting = !isResetting;
-  };
-
-  const toggleSettings = () => {
-    isOpen = !isOpen;
-    isResetting = false;
-    if (isOpen) {
-      closeCurrentUI();
-    } else {
-      document.getElementById('viewport')!.requestPointerLock();
-    }
-    if (isWelcome) {
-      isWelcome = false;
-    }
-  };
-
-  const toggleSFX = () => {
-    Settings.setSFX(!$Settings.sfx);
-  };
-
-  const toggleWelcome = () => {
-    isWelcome = !isWelcome;
+  let lastDownloadURL: string;
+  const download = () => {
+    const downloader = document.createElement('a');
+    downloader.download = 'unsatisfactory.json';
+    URL.revokeObjectURL(lastDownloadURL);
+    downloader.href = lastDownloadURL = URL.createObjectURL(loader.exportFile());
+    downloader.click();
   };
 
   let hasSaved = false;
   let isSaving = false;
-  let lastSave = new Date();
   let saveTimer = 0;
-  const trackSave = () => {
+  const onSave = () => {
     clearTimeout(saveTimer);
     hasSaved = false;
     isSaving = true;
-    return save()
+    return loader.save()
       .then(() => {
         hasSaved = true;
-        lastSave = new Date();
         clearTimeout(saveTimer);
         saveTimer = setTimeout(() => {
           hasSaved = false;
@@ -102,148 +64,112 @@
       });
   };
 
+  const link = () => loader.exportLink();
+
+  let isResetting = false;
+  const toggleReset = () => {
+    isResetting = !isResetting;
+  };
+  const reset = () => loader.reset();
+
   const formatter = new Intl.RelativeTimeFormat('en', { style: 'short' });
   const formattedTime = (date: Date) => {
     const diff = Math.ceil((date.getTime() - Date.now()) / 1000 / 60);
     return diff === 0 ? 'seconds ago' : formatter.format(diff, 'minutes');
   };
+
+  let lastSave: Date;
+  let lastSaveFormatted: string;
+  let lastSaveUnsubscribe = Settings.subscribe(({ lastSave: date }) => {
+    lastSave = date;
+    lastSaveFormatted = formattedTime(date);
+  });
+  let lastSaveInterval = setInterval(() => {
+    lastSaveFormatted = formattedTime(lastSave);
+  }, 30000);
+
+  onDestroy(() => {
+    lastSaveUnsubscribe();
+    clearTimeout(saveTimer);
+    clearInterval(lastSaveInterval);
+    URL.revokeObjectURL(lastDownloadURL);
+  });
 </script>
 
-<svelte:document on:dragenter={prevent} on:dragover={prevent} on:drop={drop} />
-
-<Autosave save={trackSave} />
-
-<div class="actions">
-  {#if !isOpen || isWelcome}
-    <button class="settings" on:click={isWelcome ? toggleWelcome : toggleSettings}>
-      <svg viewBox="0 0 24 24">
-        <path fill-rule="evenodd" clip-rule="evenodd" d="M14.2788 2.15224C13.9085 2 13.439 2 12.5 2C11.561 2 11.0915 2 10.7212 2.15224C10.2274 2.35523 9.83509 2.74458 9.63056 3.23463C9.53719 3.45834 9.50065 3.7185 9.48635 4.09799C9.46534 4.65568 9.17716 5.17189 8.69017 5.45093C8.20318 5.72996 7.60864 5.71954 7.11149 5.45876C6.77318 5.2813 6.52789 5.18262 6.28599 5.15102C5.75609 5.08178 5.22018 5.22429 4.79616 5.5472C4.47814 5.78938 4.24339 6.1929 3.7739 6.99993C3.30441 7.80697 3.06967 8.21048 3.01735 8.60491C2.94758 9.1308 3.09118 9.66266 3.41655 10.0835C3.56506 10.2756 3.77377 10.437 4.0977 10.639C4.57391 10.936 4.88032 11.4419 4.88029 12C4.88026 12.5581 4.57386 13.0639 4.0977 13.3608C3.77372 13.5629 3.56497 13.7244 3.41645 13.9165C3.09108 14.3373 2.94749 14.8691 3.01725 15.395C3.06957 15.7894 3.30432 16.193 3.7738 17C4.24329 17.807 4.47804 18.2106 4.79606 18.4527C5.22008 18.7756 5.75599 18.9181 6.28589 18.8489C6.52778 18.8173 6.77305 18.7186 7.11133 18.5412C7.60852 18.2804 8.2031 18.27 8.69012 18.549C9.17714 18.8281 9.46533 19.3443 9.48635 19.9021C9.50065 20.2815 9.53719 20.5417 9.63056 20.7654C9.83509 21.2554 10.2274 21.6448 10.7212 21.8478C11.0915 22 11.561 22 12.5 22C13.439 22 13.9085 22 14.2788 21.8478C14.7726 21.6448 15.1649 21.2554 15.3694 20.7654C15.4628 20.5417 15.4994 20.2815 15.5137 19.902C15.5347 19.3443 15.8228 18.8281 16.3098 18.549C16.7968 18.2699 17.3914 18.2804 17.8886 18.5412C18.2269 18.7186 18.4721 18.8172 18.714 18.8488C19.2439 18.9181 19.7798 18.7756 20.2038 18.4527C20.5219 18.2105 20.7566 17.807 21.2261 16.9999C21.6956 16.1929 21.9303 15.7894 21.9827 15.395C22.0524 14.8691 21.9088 14.3372 21.5835 13.9164C21.4349 13.7243 21.2262 13.5628 20.9022 13.3608C20.4261 13.0639 20.1197 12.558 20.1197 11.9999C20.1197 11.4418 20.4261 10.9361 20.9022 10.6392C21.2263 10.4371 21.435 10.2757 21.5836 10.0835C21.9089 9.66273 22.0525 9.13087 21.9828 8.60497C21.9304 8.21055 21.6957 7.80703 21.2262 7C20.7567 6.19297 20.522 5.78945 20.2039 5.54727C19.7799 5.22436 19.244 5.08185 18.7141 5.15109C18.4722 5.18269 18.2269 5.28136 17.8887 5.4588C17.3915 5.71959 16.7969 5.73002 16.3099 5.45096C15.8229 5.17191 15.5347 4.65566 15.5136 4.09794C15.4993 3.71848 15.4628 3.45833 15.3694 3.23463C15.1649 2.74458 14.7726 2.35523 14.2788 2.15224ZM12.5 15C14.1695 15 15.5228 13.6569 15.5228 12C15.5228 10.3431 14.1695 9 12.5 9C10.8305 9 9.47716 10.3431 9.47716 12C9.47716 13.6569 10.8305 15 12.5 15Z"/>
-      </svg>
-    </button>
-  {/if}
-  <button class="sfx" on:click={toggleSFX}>
-    {#if $Settings.sfx}
-      <svg viewBox="0 0 48 48">
-        <polygon points="24,42.16 24,5.835 11.303,15.999 4,15.998 4,31.998 11.303,31.999"/>
-        <path d="M28,27.999v4c4.411,0,8-3.589,8-8s-3.589-8-8-8v4c2.206,0,4,1.794,4,4S30.206,27.999,28,27.999z"/>
-        <path d="M44,23.999c0-9.374-7.626-17-17-17v4c7.168,0,13,5.832,13,13s-5.832,13-13,13v4C36.374,40.999,44,33.373,44,23.999z"/>
-      </svg>
-    {:else}
-      <svg viewBox="0 0 48 48">
-        <polygon points="7.729,43.099 18.178,32.65 29.824,41.971 29.824,21.004 42.558,8.271 39.729,5.442 29.824,15.348 29.824,5.646 17.127,15.81 9.824,15.81 9.824,31.81 13.362,31.81 4.901,40.271"/>
-      </svg>
-    {/if}
-  </button>
-</div>
-
-{#if isOpen}
-<Dialog bodyClass="" close={toggleSettings}>
+<Dialog bodyClass={bodyClass} close={close}>
   <Heading>
     Unsatisfactory
     <div slot="actions">
-      {#if !isWelcome}
-        <div class="info">
-          <FPS />
-        </div>
-      {/if}
+      <div class="info">
+        <FPS />
+      </div>
     </div>
   </Heading>
   <Grid>
-    {#if isWelcome}
-      <Welcome play={toggleSettings} />
-    {:else}
-      <Modules>
-        <Graphics />
-        <Module>
-          <div slot="name">
-            Save <span class="info">(Autosaved: {formattedTime(lastSave)})</span>
-          </div>
-          <div class="buttons">
-            <button disabled={isSaving} class="save" on:click={trackSave}>
-              {#if isSaving}
-                Saving...
-              {:else if hasSaved}
-                Saved!
-              {:else}
-                Save
-              {/if}
-            </button>
-            <button on:click={download}>
-              Export
-            </button>
-            <button on:click={browse}>
-              Import
-            </button>
-          </div>
-        </Module>
-        <Module>
-          <div slot="name">Cloudsaves <span class="info">(experimental)</span></div>
-          <div>
-            <Cloudsaves /> 
-          </div>
-        </Module>
-        <Module>
-          <div slot="name">Share a copy</div>
-          <div>
-            <Clipboard value={link} /> 
-          </div>
-        </Module>
-        <Module>
-          <div slot="name">Danger Zone</div>
-            {#if isResetting}
-              <div class="confirm">
-                <div class="info">Are you sure?</div>
-                <div class="buttons">
-                  <button on:click={toggleReset}>
-                    No
-                  </button>
-                  <button on:click={reset} class="reset">
-                    Yes
-                  </button>
-                </div>
-              </div>
+    <Modules>
+      <Graphics />
+      <Module>
+        <div slot="name">
+          Save <span class="info">(Autosaved: {lastSaveFormatted})</span>
+        </div>
+        <div class="buttons">
+          <button class="save" disabled={isSaving} on:click={onSave}>
+            {#if isSaving}
+              Saving...
+            {:else if hasSaved}
+              Saved!
             {:else}
-              <div>
-                <button on:click={toggleReset} class="reset">
-                  Reset
+              Save
+            {/if}
+          </button>
+          <button on:click={download}>
+            Export
+          </button>
+          <button on:click={browse}>
+            Import
+          </button>
+        </div>
+      </Module>
+      <Module>
+        <div slot="name">Cloudsaves <span class="info">(experimental)</span></div>
+        <div>
+          <Cloudsaves /> 
+        </div>
+      </Module>
+      <Module>
+        <div slot="name">Share a copy</div>
+        <div>
+          <Clipboard value={link} /> 
+        </div>
+      </Module>
+      <Module>
+        <div slot="name">Danger Zone</div>
+          {#if isResetting}
+            <div class="confirm">
+              <div class="info">Are you sure?</div>
+              <div class="buttons">
+                <button on:click={toggleReset}>
+                  No
+                </button>
+                <button on:click={reset} class="reset">
+                  Yes
                 </button>
               </div>
-            {/if}
-        </Module>
-      </Modules>
-    {/if}
+            </div>
+          {:else}
+            <div>
+              <button on:click={toggleReset} class="reset">
+                Reset
+              </button>
+            </div>
+          {/if}
+      </Module>
+    </Modules>
     <Help />
   </Grid>
 </Dialog>
-{/if}
 
 <style>
-  .actions {
-    position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
-    display: flex;
-    z-index: 2;
-  }
-  :global(body.pointerlock) .actions {
-    display: none;
-  }
-  .settings, .sfx {
-    background: transparent;
-    min-width: auto;
-    height: auto;
-    padding: 0.5rem;
-  }
-  .settings > svg, .sfx > svg {
-    fill: currentColor;
-    stroke: #000;
-    width: 1.5rem;
-    height: 1.5rem;
-    pointer-events: none;
-  }
-  .settings > svg {
-    stroke-width: 0.4;
-  }
   .info {
     color: #aaa;
   }

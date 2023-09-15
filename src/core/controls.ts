@@ -16,6 +16,8 @@ export type Buttons = {
   dismantle: boolean;
   interact: boolean;
   inventory: boolean;
+  rotateCW: boolean;
+  rotateCCW: boolean;
 };
 
 enum ControlsMode {
@@ -49,6 +51,8 @@ class Controls {
       dismantle: false,
       interact: false,
       inventory: false,
+      rotateCW: false,
+      rotateCCW: false,
     };
     this.camera = camera;
     this.isLocked = false;
@@ -80,6 +84,8 @@ class Controls {
     buttons.dismantle = false;
     buttons.interact = false;
     buttons.inventory = false;
+    buttons.rotateCW = false;
+    buttons.rotateCCW = false;
   }
 
   lock() {
@@ -204,6 +210,12 @@ class Controls {
       case 'KeyO':
         buttons.codex = true;
         break;
+      case 'KeyR':
+        buttons.rotateCCW = true;
+        break;
+      case 'KeyT':
+        buttons.rotateCW = true;
+        break;
     }
   }
 
@@ -254,6 +266,12 @@ class Controls {
       case 'KeyO':
         buttons.codex = false;
         break;
+      case 'KeyR':
+        buttons.rotateCCW = false;
+        break;
+      case 'KeyT':
+        buttons.rotateCW = false;
+        break;
     }
   }
 
@@ -261,22 +279,34 @@ class Controls {
   private static readonly speedMax = Math.log(64);
   private static readonly speedRange = Controls.speedMax - Controls.speedMin;
   onWheel(e: WheelEvent) {
-    const { isLocked, mode, movementSpeed } = this;
+    const { buttons, isLocked, mode, movementSpeed } = this;
     if (e.ctrlKey || e.metaKey) {
       e.preventDefault();
     }
-    if (!isLocked || mode !== ControlsMode.photo) {
+    if (!isLocked) {
       return;
     }
-    const { speedMin, speedRange } = Controls;
-    const logSpeed = Math.min(
-      Math.max(
-        ((Math.log(movementSpeed) - speedMin) / speedRange) - (e.deltaY * 0.0003),
-        0
-      ),
-      1
-    );
-    this.movementSpeed = Math.exp(speedMin + logSpeed * speedRange);
+    switch (mode) {
+      case ControlsMode.photo: {
+        const { speedMin, speedRange } = Controls;
+        const logSpeed = Math.min(
+          Math.max(
+            ((Math.log(movementSpeed) - speedMin) / speedRange) - (e.deltaY * 0.0003),
+            0
+          ),
+          1
+        );
+        this.movementSpeed = Math.exp(speedMin + logSpeed * speedRange);
+        break;
+      }
+      case ControlsMode.physics:
+        if (e.deltaY > 0) {
+          buttons.rotateCCW = true;
+        } else {
+          buttons.rotateCW = true;
+        }
+        break;
+    }
   }
 
   setMode(mode: ControlsMode) {

@@ -5,10 +5,19 @@ const { subscribe, set, update } = writable<{
   antialias: boolean;
   fov: number;
   gpu: string;
+  lastSave: Date;
   renderRadius: number;
   resolution: number;
   sfx: boolean;
-}>({ antialias: true, fov: 75, gpu: 'Unknown', renderRadius: 8, resolution: 1, sfx: true });
+}>({
+  antialias: true,
+  fov: 75,
+  gpu: 'Unknown',
+  lastSave: new Date(),
+  renderRadius: 8,
+  resolution: 1,
+  sfx: true,
+});
 
 let viewport: Viewport;
 
@@ -26,6 +35,7 @@ export default {
       antialias: viewport.getAntialias(),
       fov: viewport.getFOV(),
       gpu: gpu,
+      lastSave: new Date(),
       renderRadius: viewport.getRenderRadius(),
       resolution: viewport.getResolution(),
       sfx: !viewport.sfx.getMuted(),
@@ -82,6 +92,12 @@ export default {
     update((settings) => ({
       ...settings,
       sfx: enabled,
+    }));
+  },
+  updateLastSave() {
+    update((settings) => ({
+      ...settings,
+      lastSave: new Date(),
     }));
   },
 };

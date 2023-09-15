@@ -1,4 +1,3 @@
-
 <script lang="ts">
   import { Brush, BrushName, ItemName, Building, defaultBuildCost } from '../../core/data';
   import Module from '../components/module.svelte';

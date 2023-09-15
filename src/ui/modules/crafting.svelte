@@ -29,7 +29,6 @@
     Recipes
       .filter((recipe) => (
         recipe.transformer === ItemTrasformer.fabricator
-        || recipe.transformer === ItemTrasformer.smelter
       ))
       .map((recipe) => ({
         ...recipe,

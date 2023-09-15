@@ -131,7 +131,7 @@ class Birds extends InstancedMesh {
     geometry.dispose();
   }
 
-  reset() {
+  init() {
     for (let i = 0; i < Birds.count; i++) {
       this.resetBird(i);
     }

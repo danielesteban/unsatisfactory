@@ -1,11 +1,12 @@
 <script lang="ts">
   import { derived } from 'svelte/store';
-  import { subscribe } from '../core/brush';
-  import { Brush, BrushName, Item, ItemName } from '../core/data';
-  import ItemImage from './components/item.svelte';
-  import Inventory from './stores/inventory';
+  import { subscribe } from '../../core/brush';
+  import { Brush, BrushName, Item, ItemName } from '../../core/data';
+  import ItemImage from '../components/item.svelte';
+  import Inventory from '../stores/inventory';
+  import { Action } from './cursor';
 
-  export let action: 'belt' | 'build' | 'configure' | 'dismantle' | 'invalid' | 'unaffordable' | 'wire' | 'yield' | undefined;
+  export let action: Action | undefined = undefined;
   export let cost: { item: Exclude<Item, Item.none>; count: number; }[] | undefined = undefined;
   export let item: Item = Item.none;
   export let objectBrush: Brush = Brush.none;
@@ -30,26 +31,26 @@
   <div class="crosshair"></div>
   {#if action}
     <div class="action">
-      {#if action === 'belt'}
+      {#if action === Action.belt}
         Belt from <span class="object">{from || object}</span>{#if from} to <span class="object">{object}</span>{/if}
-      {:else if action === 'build'}
+      {:else if action === Action.build}
         Press <span class="key">R</span> or <span class="key">T</span> to rotate
-      {:else if action === 'configure'}
+      {:else if action === Action.configure}
         Press <span class="key">E</span> to configure <span class="object">{object}</span>
-      {:else if action === 'dismantle'}
+      {:else if action === Action.dismantle}
         Dismantle <span class="object">{object}</span>
-      {:else if action === 'invalid'}
+      {:else if action === Action.invalid}
         Invalid placement
-      {:else if action === 'unaffordable'}
+      {:else if action === Action.unaffordable}
         Can't afford
-      {:else if action === 'wire'}
+      {:else if action === Action.wire}
         Wire from <span class="object">{from || object}</span>{#if from} to <span class="object">{object}</span>{/if}
-      {:else if action === 'yield'}
+      {:else if action === Action.yield}
         <span class="object">{ItemName[item]}</span> ({value === 1 ? 'Pure' : 'Impure'})
       {/if}
     </div>
   {/if}
-  {#if cost && (action === 'belt' || action === 'build' || action === 'invalid' || action === 'unaffordable' || action === 'wire')}
+  {#if cost}
     <div class="cost">
       {#each cost as { item, count }}
         <div class="item">

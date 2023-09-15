@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { onDestroy } from 'svelte';
   import { set as setBrush } from '../../core/brush';
   import { Brush, BrushName, BrushGroups, BrushTier } from '../../core/data';
   import BrushImage from '../components/brush.svelte';
@@ -9,6 +8,8 @@
   import Hotbar from '../stores/hotbar';
 
   export let close: () => void;
+
+  const bodyClass = ['ui', 'hotbar'];
 
   const set = (brush: Brush) => () => {
     setBrush(brush);
@@ -39,14 +40,11 @@
     const slot = digit === 0 ? 9 : (digit - 1);
     Hotbar.toggle(hover, slot);
   };
-
-  document.body.classList.add('hotbar');
-  onDestroy(() => document.body.classList.remove('hotbar'));
 </script>
 
 <svelte:document on:keydown={keydown} />
 
-<Dialog close={close}>
+<Dialog bodyClass={bodyClass} close={close}>
   <Filter groups={brushesInTier} let:filtered>
     <div class="grid">
       {#each filtered as group}

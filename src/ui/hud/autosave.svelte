@@ -1,24 +1,32 @@
 <script lang="ts">
-  export let save: () => Promise<void>;
+  import { onDestroy } from 'svelte';
+  import Loader from '../../core/loader';
+
+  export let loader: Loader;
 
   const countdown = 10;
   let count = 0;
   let timer = 0;
+  let hasSaved = false;
+  let hasSavedTimer = 0;
   let isCounting = false;
   let isSaving = false;
-  let hasSaved = false;
   const counter = () => {
     const now = performance.now();
     const elapsed = Math.floor((now - timer) / 1000);
     if (elapsed >= countdown) {
       isCounting = false;
       isSaving = true;
-      save()
+      loader.save()
         .then(() => {
           hasSaved = true;
-          setTimeout(() => {
+          hasSavedTimer = setTimeout(() => {
             hasSaved = false;
           }, 1000);
+        })
+        .catch(() => {
+          // @dani @incomplete
+          // Show error feedback. Retry?
         })
         .finally(() => {
           isSaving = false;
@@ -33,7 +41,11 @@
     timer = performance.now();
     requestAnimationFrame(counter);
   };
-  setInterval(autosave, 120000);
+  const autosaveInterval = setInterval(autosave, 120000);
+  onDestroy(() => {
+    clearInterval(autosaveInterval);
+    clearTimeout(hasSavedTimer);
+  });
 </script>
 
 {#if isCounting || isSaving || hasSaved}

@@ -1,6 +1,7 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte';
   import { derived } from 'svelte/store';
-  import completed, { Achievement } from './stores/achievements';
+  import completed, { Achievement } from '../stores/achievements';
 
   const Achievements = [
     {
@@ -150,7 +151,7 @@
   const current = derived([completed], ([$completed]) => Achievements.find((achievement) => !$completed.has(achievement.id)));
   let achievement: (typeof Achievements[0] & { completed: boolean; }) | undefined;
   let timer: number;
-  current.subscribe((next) => {
+  const unsubscribe = current.subscribe((next) => {
     clearTimeout(timer);
     if (achievement) {
       if (achievement.id === next?.id) {
@@ -164,6 +165,10 @@
     timer = setTimeout(() => {
       achievement = next ? { ...next, completed: false } : undefined;
     }, 10000);
+  });
+  onDestroy(() => {
+    unsubscribe();
+    clearTimeout(timer);
   });
 </script>
 

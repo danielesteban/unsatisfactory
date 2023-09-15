@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Alerts, { Alert } from './stores/alerts';
+  import Alerts, { Alert } from '../stores/alerts';
 </script>
 
 {#if $Alerts.size}

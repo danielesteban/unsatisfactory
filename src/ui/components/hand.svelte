@@ -1,7 +1,8 @@
 <script context="module" lang="ts">
+  import { Writable } from 'svelte/store';
   import { Item } from '../../core/data';
   import Inventory from '../../core/inventory';
-  import { Writable } from 'svelte/store';
+
   export type Hand = Writable<{ item: Exclude<Item, Item.none>; count: number; slot: number; } | undefined>;
 </script>
 

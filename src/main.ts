@@ -10,13 +10,14 @@ import {
   set as setBrush,
   getFromObject,
   pick,
+  rotate as rotateBrush,
   snap,
 } from './core/brush';
 import Container, { PoweredContainer } from './core/container';
 import { Buttons } from './core/controls';
 import { Brush } from './core/data';
 import Instances, { Instance } from './core/instances';
-import { decode, deserialize, Objects } from './core/loader';
+import Loader from './core/loader';
 import {
   BeltMaterial,
   ConcreteMaterial,
@@ -51,9 +52,8 @@ import Storages from './objects/storages';
 import Terrain from './objects/terrain';
 import Walls from './objects/walls';
 import Wires, { Wire } from './objects/wires';
-import UI, { setCompass, setLoading, setTooltip, init as initUI } from './ui';
+import UI, { Action, Dialog } from './ui';
 import Achievements, { Achievement } from './ui/stores/achievements';
-import Cloudsaves from './ui/stores/cloudsaves';
 
 const interactionRadiusSquared = 12 ** 2;
 
@@ -144,10 +144,6 @@ viewport.scene.add(birds);
 const ghost = new Ghost();
 viewport.scene.add(ghost);
 
-const objects: Objects = {
-  aggregators, belts, buffers, columns, combinators, fabricators, foundations, generators, miners, pillars, poles, ramps, sinks, smelters, storages, walls, wires,
-};
-
 const brushObjects = {
   [Brush.aggregator]: aggregators,
   [Brush.belt]: belts,
@@ -184,6 +180,31 @@ const intersection: Intersection = {
   normal: new Vector3(),
   point: new Vector3(),
 };
+
+const loader = new Loader(
+  viewport.camera,
+  {
+    aggregators,
+    belts,
+    buffers,
+    columns,
+    combinators,
+    fabricators,
+    foundations,
+    generators,
+    miners,
+    pillars,
+    poles,
+    ramps,
+    sinks,
+    smelters,
+    storages,
+    walls,
+    wires,
+  }
+);
+
+const ui = new UI(loader, viewport);
 
 const canInteract = (intersection: Intersection) => (
   intersection.object instanceof Container
@@ -330,12 +351,12 @@ const handleInput = (
   }
   if (build) {
     setBrush(Brush.none);
-    UI('build');
+    ui.show(Dialog.build);
     Achievements.complete(Achievement.build);
   }
   if (codex) {
     setBrush(Brush.none);
-    UI('codex');
+    ui.show(Dialog.codex);
   }
   if (dismantle) {
     setBrush(brush === Brush.dismantle ? Brush.none : Brush.dismantle);
@@ -343,12 +364,12 @@ const handleInput = (
   if (interact || secondary) {
     setBrush(Brush.none);
     if (intersection?.object && canInteract(intersection)) {
-      UI('container', intersection.object as Instance);
+      ui.show(Dialog.container, intersection.object as Instance);
     }
   }
   if (inventory) {
     setBrush(Brush.none);
-    UI('inventory');
+    ui.show(Dialog.inventory);
     Achievements.complete(Achievement.inventory);
   }
   if (hasConnection) {
@@ -385,7 +406,7 @@ const hover = (intersection?: Intersection) => {
       // @dani @incomplete
       // This tooltip logic is fucking nuts!
       // Should prolly refactor this function to take an object.
-      setTooltip(!affordable ? 'unaffordable' : 'belt', to || from, to ? from : undefined, cost);
+      ui.setCursor(!affordable ? Action.unaffordable : Action.belt, to || from, to ? from : undefined, cost);
       return;
     }
   }
@@ -410,15 +431,15 @@ const hover = (intersection?: Intersection) => {
       valid = (brush !== Brush.miner || intersection.object instanceof Deposit);
       ghost.setBrush(brush, snap(intersection), rotation, affordable && valid);
     }
-    let action: 'build' | 'invalid' | 'unaffordable';
+    let action: Action;
     if (!valid) {
-      action = 'invalid';
+      action = Action.invalid;
     } else if (!affordable) {
-      action = 'unaffordable';
+      action = Action.unaffordable;
     } else {
-      action = 'build';
+      action = Action.build;
     }
-    setTooltip(action, undefined, undefined, cost);
+    ui.setCursor(action, undefined, undefined, cost);
     return;
   }
 
@@ -427,7 +448,7 @@ const hover = (intersection?: Intersection) => {
     && intersection?.object
     && canInteract(intersection)
   ) {
-    setTooltip('configure', intersection.object as Instance);
+    ui.setCursor(Action.configure, intersection.object as Instance);
     return;
   }
 
@@ -440,7 +461,7 @@ const hover = (intersection?: Intersection) => {
       || intersection.object instanceof Wire
     )
   ) {
-    setTooltip('dismantle', intersection.object);
+    ui.setCursor(Action.dismantle, intersection.object);
     return;
   }
 
@@ -449,7 +470,7 @@ const hover = (intersection?: Intersection) => {
     && intersection?.object instanceof Deposit
     && intersection.object.getWorldPosition(aux).distanceToSquared(viewport.camera.position) <= interactionRadiusSquared
   ) {
-    setTooltip('yield', undefined, undefined, undefined, intersection.object.getItem(), intersection.object.getPurity());
+    ui.setCursor(Action.yield, undefined, undefined, undefined, intersection.object.getItem(), intersection.object.getPurity());
     Achievements.complete(Achievement.deposit);
     return;
   }
@@ -478,12 +499,12 @@ const hover = (intersection?: Intersection) => {
       // @dani @incomplete
       // This tooltip logic is fucking nuts!
       // Should prolly refactor this function to take an object.
-      setTooltip(!affordable ? 'unaffordable' : 'wire', to || from, to ? from : undefined, cost);
+      ui.setCursor(!affordable ? Action.unaffordable : Action.wire, to || from, to ? from : undefined, cost);
       return;
     }
   }
 
-  setTooltip(undefined);
+  ui.setCursor(undefined);
 };
 
 const getConnector = (intersection: Intersection, raycaster: Raycaster) => {
@@ -526,41 +547,29 @@ const animate = (buttons: Buttons, delta: number) => {
   if (hit) {
     hit.connector = getConnector(hit, viewport.raycaster);
   }
+  if (brush !== Brush.none && brush !== Brush.dismantle && (buttons.rotateCCW || buttons.rotateCW)) {
+    rotateBrush(buttons.rotateCCW ? 1 : -1);
+  }
   hover(hit);
   if (buttons.primary || buttons.secondary || buttons.tertiary || buttons.build || buttons.codex || buttons.dismantle || buttons.interact || buttons.inventory) {
     handleInput(buttons, hit);
   }
-  setCompass(viewport.camera.rotation.y, viewport.camera.position);
+  ui.setCompass(viewport.camera.rotation.y, viewport.camera.position);
 };
 
 (async () => {
-  let stored;
-  if (location.hash.slice(2, 6) === 'load') {
-    stored = decode(location.hash.slice(7));
-    location.hash = '/';
-  } else if (Cloudsaves.isEnabled()) {
-    const done = setLoading();
-    try {
-      stored = await Cloudsaves.load();
-    } catch (e) {
-      // @dani @incomplete
-      // Display loading error
-    }
+  const done = UI.loading();
+  try {
+    await loader.load();
+  } catch (e) {
+    // @dani @incomplete
+    // Display loading error
+  } finally {
     done();
   }
-  stored = stored || localStorage.getItem('autosave');
-  if (stored) {
-    if (typeof stored === 'string') {
-      try {
-        stored = JSON.parse(stored);
-      } catch (e) {}
-    }
-    deserialize(stored, viewport.camera, objects);
-  }
-
-  birds.reset();
+  birds.init();
   terrain.update(viewport.camera.position, viewport.getRenderRadius());
-  initUI(viewport.camera, objects, viewport);
   viewport.physics.init();
   viewport.setAnimationLoop(animate);
+  ui.init();
 })();
