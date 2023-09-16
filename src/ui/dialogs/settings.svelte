@@ -21,7 +21,7 @@
   const browse = () => {
     const input = document.createElement('input');
     input.type = 'file';
-    input.accept = '.json';
+    input.accept = '.json,.png';
     input.addEventListener('change', ({ target: { files: [file] } }: any) => {
       if (!file) {
         return;
@@ -32,13 +32,21 @@
   };
 
   let lastDownloadURL: string;
-  const download = () => {
+  const download = (blob: Blob, filename: string) => {
     const downloader = document.createElement('a');
-    downloader.download = 'unsatisfactory.json';
+    downloader.download = filename;
     URL.revokeObjectURL(lastDownloadURL);
-    downloader.href = lastDownloadURL = URL.createObjectURL(loader.exportFile());
+    downloader.href = lastDownloadURL = URL.createObjectURL(blob);
     downloader.click();
   };
+
+  const downloadFile = () => (
+    download(loader.exportFile(), 'unsatisfactory.json')
+  );
+
+  const downloadSteganography = async () => (
+    download(await loader.exportSteganography(), 'unsatisfactory.png')
+  );
 
   let hasSaved = false;
   let isSaving = false;
@@ -122,7 +130,7 @@
               Save
             {/if}
           </button>
-          <button on:click={download}>
+          <button on:click={downloadFile}>
             Export
           </button>
           <button on:click={browse}>
@@ -138,8 +146,11 @@
       </Module>
       <Module>
         <div slot="name">Share a copy</div>
-        <div>
+        <div class="buttons">
           <Clipboard value={link} /> 
+          <button on:click={downloadSteganography}>
+            Save as image
+          </button>
         </div>
       </Module>
       <Module>

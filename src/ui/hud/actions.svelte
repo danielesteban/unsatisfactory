@@ -9,7 +9,7 @@
     e.preventDefault();
     if (!e.dataTransfer) return;
     const [file] = e.dataTransfer.files;
-    if (!file || file.type.indexOf('application/json') !== 0) {
+    if (!file || (file.type.indexOf('application/json') !== 0 && file.type.indexOf('image') !== 0)) {
       return;
     }
     loader.importFile(file);

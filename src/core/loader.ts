@@ -1,9 +1,10 @@
 import { Base64 } from 'js-base64';
 import { deflateSync, inflateSync, strFromU8, strToU8 } from 'fflate';
-import { Camera, Vector3 } from 'three';
+import { Vector3 } from 'three';
 import Container, { PoweredContainer } from './container';
 import { Brush, Item, Recipes } from './data';
 import Instances, { Instance } from './instances';
+import Viewport from './viewport';
 import Aggregators, { Aggregator } from '../objects/aggregators';
 import Belts, { Belt } from '../objects/belts';
 import Buffers, { Buffer } from '../objects/buffers';
@@ -82,12 +83,12 @@ type Serialized = {
 };
 
 class Loader {
-  private readonly camera: Camera;
   private readonly objects: Objects;
+  private readonly viewport: Viewport;
 
-  constructor(camera: Camera, objects: Objects) {
-    this.camera = camera;
+  constructor(objects: Objects, viewport: Viewport) {
     this.objects = objects
+    this.viewport = viewport;
   }
 
   async load() {
@@ -130,6 +131,34 @@ class Loader {
     return url.href;
   }
 
+  exportSteganography() {
+    const { viewport } = this;
+    const encoded = deflateSync(strToU8(JSON.stringify(this.serialize())));
+    const lengthAsBytes = new Uint8Array((new Uint32Array([encoded.length])).buffer);
+    const bytes = new Uint8Array(lengthAsBytes.length + encoded.length);
+    bytes.set(lengthAsBytes, 0);
+    bytes.set(encoded, lengthAsBytes.length);
+    const { length } = bytes;
+    let byte = 0;
+    let chunk = 0;
+    const getChunk = () => {
+      const v = (bytes[byte] >> (chunk * 2)) & 3;
+      chunk++;
+      if (chunk >= 4) {
+        chunk = 0;
+        byte++;
+      }
+      return v;
+    };
+    const size = Math.max(Math.ceil(Math.sqrt(length * 8 / 6)), 512);
+    return viewport
+      .capture(size, size, (pixel) => {
+        for (let i = 0; i < 3 && byte < length; i++) {
+          pixel[i] = (pixel[i] & ~3) | getChunk();
+        }
+      });
+  }
+
   async importFile(file: File) {
     let serialized;
     try {
@@ -157,10 +186,10 @@ class Loader {
 
   private serialize(): Serialized {
     const {
-      camera,
       objects: {
         aggregators, belts, buffers, columns, combinators, fabricators, foundations, generators, miners, pillars, poles, ramps, sinks, smelters, storages, walls, wires,
       },
+      viewport: { camera },
     } = this;
     const containers = new WeakMap<Container, number>();
     const serializeInstances = (instances: Instances<Instance>) => (
@@ -247,10 +276,10 @@ class Loader {
 
   private deserialize(serialized: Serialized) {
     const {
-      camera,
       objects: {
         aggregators, belts, buffers, columns, combinators, fabricators, foundations, generators, miners, pillars, poles, ramps, sinks, smelters, storages, walls, wires,
       },
+      viewport: { camera },
     } = this;
     serialized = Loader.migrate(serialized);
     if (serialized.version !== Loader.version) {
@@ -424,8 +453,47 @@ class Loader {
 
   private static parse(file: File) {
     const url = URL.createObjectURL(file);
-    return fetch(url)
-      .then((r) => r.json())
+    return (
+      file.type.indexOf('image') === 0 ? (
+        new Promise((resolve, reject) => {
+          const img = new Image();
+          const canvas = document.createElement('canvas');
+          img.onerror = reject;
+          img.onload = () => {
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d')!;
+            ctx.drawImage(img, 0, 0);
+            const pixels = ctx.getImageData(0, 0, img.width, img.height).data;
+            let pixel = 0;
+            const getByte = () => {
+              let byte = 0;
+              for (let i = 0; i < 4; i++) {
+                byte |= (pixels[pixel++] & 3) << (i * 2);
+                if (pixel % 4 == 3) pixel++;
+              }
+              return byte;
+            };
+            const length = (new Uint32Array((new Uint8Array([getByte(), getByte(), getByte(), getByte()])).buffer))[0];
+            const encoded = new Uint8Array(length);
+            for (let i = 0; i < length; i++) {
+              encoded[i] = getByte();
+            }
+            let decoded;
+            try {
+              decoded = JSON.parse(strFromU8(inflateSync(encoded)));
+            } catch (e) {
+              reject(e);
+              return;
+            }
+            resolve(decoded);
+          };
+          img.src = url;
+        })
+      ) : (
+        fetch(url).then((r) => r.json())
+      )
+    )
       .then((serialized: Serialized) => {
         serialized = Loader.migrate(serialized);
         if (serialized.version !== Loader.version) {

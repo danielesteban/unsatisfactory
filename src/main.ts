@@ -182,7 +182,6 @@ const intersection: Intersection = {
 };
 
 const loader = new Loader(
-  viewport.camera,
   {
     aggregators,
     belts,
@@ -201,7 +200,8 @@ const loader = new Loader(
     storages,
     walls,
     wires,
-  }
+  },
+  viewport
 );
 
 const ui = new UI(loader, viewport);

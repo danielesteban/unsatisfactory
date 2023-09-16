@@ -2,6 +2,7 @@ import {
   Clock,
   EventDispatcher,
   Material,
+  NoBlending,
   PCFSoftShadowMap,
   PerspectiveCamera,
   Raycaster,
@@ -9,12 +10,15 @@ import {
   Shader,
   Vector3,
   WebGLRenderer,
+  WebGLRenderTarget,
 } from 'three';
 import { CSM } from 'three/examples/jsm/csm/CSM.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 // @ts-ignore
 import { N8AOPass } from 'n8ao';
+import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { SMAAPass } from 'three/examples/jsm/postprocessing/SMAAPass.js';
+import { CopyShader } from 'three/examples/jsm/shaders/CopyShader.js';
 import Controls, { Buttons } from './controls';
 import Physics from './physics';
 import SFX from './sfx';
@@ -182,6 +186,62 @@ class Viewport extends EventDispatcher {
       obc(shader, renderer);
     };
     material.userData.time = time;
+  }
+
+  private static captureOutput: HTMLCanvasElement;
+  private static capturePass: ShaderPass;
+  private static capturePixels: ImageData;
+  private static captureTarget: WebGLRenderTarget;    
+  capture(width: number, height: number, map?: (pixel: Uint8Array) => void) {
+    if (!Viewport.captureOutput) {
+      Viewport.captureOutput = document.createElement('canvas');
+    }
+    if (!Viewport.capturePass) {
+      Viewport.capturePass = new ShaderPass({
+        ...CopyShader,
+        vertexShader: CopyShader.vertexShader.replace('vUv = uv;', 'vUv = vec2(uv.x, 1.0 - uv.y);'),
+      });
+      Viewport.capturePass.material.blending = NoBlending;
+    }
+    if (!Viewport.capturePixels || Viewport.capturePixels.width !== width || Viewport.capturePixels.height !== height) {
+      Viewport.capturePixels = new ImageData(width, height);
+    }
+    if (!Viewport.captureTarget) {
+      Viewport.captureTarget = new WebGLRenderTarget();
+    }
+    const { captureOutput: output, capturePass: pass, capturePixels: pixels, captureTarget: target } = Viewport;
+    const { camera, composer, csm, renderer, resolution } = this;
+    composer.setSize(width, height);
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+    csm.updateFrustums();
+    composer.renderToScreen = false;
+    composer.setPixelRatio(1);
+    csm.update();
+    composer.render();
+    target.setSize(width, height);
+    pass.render(renderer, target, composer.writeBuffer, 0, false);
+    composer.setPixelRatio((window.devicePixelRatio || 1) * resolution);
+    composer.renderToScreen = true;
+    this.resize();
+    output.width = width;
+    output.height = height;
+    renderer.readRenderTargetPixels(target, 0, 0, width, height, pixels.data);
+    if (map) {
+      for (let i = 0, l = pixels.data.length; i < l; i += 4) {
+        map(new Uint8Array(pixels.data.buffer, i, 4));
+      }
+    }
+    output.getContext('2d')!.putImageData(pixels, 0, 0);
+    return new Promise<Blob>((resolve, reject) => (
+      output.toBlob((blob) => {
+        if (blob) {
+          resolve(blob);
+        } else {
+          reject();
+        }
+      })
+    ));
   }
 
   private render() {
