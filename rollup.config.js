@@ -28,7 +28,7 @@ export default {
   plugins: [
     commonjs(),
     url({ include: ['**/*.exr', '**/*.ogg', '**/*.webp'], destDir: 'dist/assets', publicPath: '/assets/' }),
-    nodeResolve({ extensions: ['.js', '.ts'] }),
+    nodeResolve({ browser: true, extensions: ['.js', '.ts'] }),
     svelte({ preprocess: sveltePreprocess({ sourceMap: !production }) }),
     typescript({ sourceMap: !production, inlineSources: !production }),
     postcss({ extract: true, minimize: production }),
