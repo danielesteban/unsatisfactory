@@ -9,26 +9,23 @@
   import { writable } from 'svelte/store';
   import { Item, ItemName, Recipes, Recipe, Transformer as ItemTrasformer, TransformerName } from '../../core/data';
   import Transformer from '../../core/transformer';
-  import Dialog from '../components/dialog.svelte';
+  import DialogWithInventory from '../components/dialoginventory.svelte';
   import Grid from '../components/grid.svelte';
-  import Hand, { Hand as HandStore } from '../components/hand.svelte';
+  import { Hand } from '../components/hand.svelte';
   import Heading from '../components/heading.svelte';
   import ItemImage from '../components/item.svelte';
   import Modules from '../components/modules.svelte';
   import Module from '../components/module.svelte';
-  import Inventory from '../modules/inventory.svelte';
   import Power from '../modules/power.svelte';
   import Production from '../modules/production.svelte';
   import Progress from '../modules/progress.svelte';
   import Toggle from '../modules/toggle.svelte';
-  import inventory from '../stores/inventory';
+  import Inventory from '../stores/inventory';
   import Settings from '../stores/settings';
 
   export let close: () => void;
   export let instance: Transformer;
   export let transformer: ItemTrasformer;
-
-  const hand: HandStore = writable(undefined);
 
   const name = TransformerName[transformer];
   const recipes = Recipes.filter((recipe) => recipe.transformer === transformer);
@@ -43,15 +40,16 @@
     if (recipe) {
       const inputBuffer = instance.getInputBuffer();
       const outputBuffer = instance.getOutputBuffer();
-      recipe.input.forEach(({ item }) => inputBuffer[item] && inventory.input(item, inputBuffer[item]!));
+      recipe.input.forEach(({ item }) => inputBuffer[item] && Inventory.input(item, inputBuffer[item]!));
       if (outputBuffer > 0) {
-        inventory.input(recipe.output.item, outputBuffer);
+        Inventory.input(recipe.output.item, outputBuffer);
       }
     }
     instance.setRecipe(undefined);
     $Settings.sfx && sfx.paused && sfx.play();
   };
 
+  const hand: Hand = writable(undefined);
   const onInput = (item: Exclude<Item, Item.none>) => ({ button, isPrimary, shiftKey }: PointerEvent) => {
     if (!isPrimary) {
       return;
@@ -70,7 +68,7 @@
     }
     const amount = button === 2 ? Math.ceil(count / 2) : count;
     if (shiftKey) {
-      inventory.input(item, instance.getFromInputBuffer(item, amount));
+      Inventory.input(item, instance.getFromInputBuffer(item, amount));
     } else {
       $hand = { item, count: instance.getFromInputBuffer(item, amount), slot: 0 };
     }
@@ -85,15 +83,15 @@
     }
     const amount = button === 2 ? Math.ceil(count / 2) : count;
     if (shiftKey) {
-      inventory.input(item, instance.getFromOutputBuffer(amount));
+      Inventory.input(item, instance.getFromOutputBuffer(amount));
     } else {
       $hand = { item, count: instance.getFromOutputBuffer(amount), slot: 0 };
     }
   };
   const onPush = (slot: number, count: number) => {
-    const { item } = inventory.getSlot(slot);
+    const { item } = Inventory.getSlot(slot);
     const remaining = instance.addToInputBuffer(item, count);
-    inventory.getFromSlot(slot, count - remaining);
+    Inventory.getFromSlot(slot, count - remaining);
   };
 
   let recipe = instance.getRecipe();
@@ -121,87 +119,68 @@
   $: output = recipe ? { ...recipe?.output, buffer: outputBuffer } : [];
 </script>
 
-<Dialog close={close}>
-  <div class="grid">
-    <div>
-      <Heading>
-        {name}
-        <div slot="actions">
-          {#if recipe}
-            <button
-              class="select"
-              on:click={resetRecipe}
-            >
-              Recipe
-            </button>
-          {/if}
-        </div>
-      </Heading>
-      {#if !recipe}
-        <Modules>
-          <Module>
-            <div slot="name">Recipe</div>
-            <div class="recipes">
-              {#each recipes as r}
-                <button
-                  class="recipe"
-                  on:click={setRecipe(r)}
-                >
-                  <ItemImage item={r.output.item} multiple let:images>
-                    {#each images as image}
-                      <!-- svelte-ignore a11y-missing-attribute -->
-                      <img src={image} />
-                    {/each}
-                  </ItemImage>
-                  <span>{ItemName[r.output.item]}</span>
-                </button>
-              {/each}
-            </div>
-          </Module>
-        </Modules>
-      {:else}
-        <Grid>
-          <Modules>
-            <Toggle instance={instance} />
-            <Progress instance={instance} />
-            <Power instance={instance} />
-          </Modules>
-          <Modules>
-            <Production
-              name="Input"
-              items={input}
-              rate={recipe.rate}
-              onBuffer={onInput}
-            />
-            <Production
-              name="Output"
-              items={output}
-              rate={recipe.rate}
-              onBuffer={onOutput}
-            />
-          </Modules>
-        </Grid>
+<DialogWithInventory close={close} hand={hand} onPush={onPush}>
+  <Heading>
+    {name}
+    <div slot="actions">
+      {#if recipe}
+        <button
+          class="select"
+          on:click={resetRecipe}
+        >
+          Recipe
+        </button>
       {/if}
     </div>
-    <div class="inventory">
-      <Inventory hand={hand} inventory={inventory} onPush={onPush} />
-    </div>
-  </div>
-</Dialog>
-
-<Hand hand={hand} inventory={inventory} />
+  </Heading>
+  {#if !recipe}
+    <Modules>
+      <Module>
+        <div slot="name">Recipe</div>
+        <div class="recipes">
+          {#each recipes as r}
+            <button
+              class="recipe"
+              on:click={setRecipe(r)}
+            >
+              <ItemImage item={r.output.item} multiple let:images>
+                {#each images as image}
+                  <!-- svelte-ignore a11y-missing-attribute -->
+                  <img src={image} />
+                {/each}
+              </ItemImage>
+              <span>{ItemName[r.output.item]}</span>
+            </button>
+          {/each}
+        </div>
+      </Module>
+    </Modules>
+  {:else}
+    <Grid>
+      <Modules>
+        <Toggle instance={instance} />
+        <Progress instance={instance} />
+        <Power instance={instance} />
+      </Modules>
+      <Modules>
+        <Production
+          name="Input"
+          items={input}
+          rate={recipe.rate}
+          onBuffer={onInput}
+        />
+        <Production
+          name="Output"
+          items={output}
+          rate={recipe.rate}
+          onBuffer={onOutput}
+        />
+      </Modules>
+    </Grid>
+  {/if}
+</DialogWithInventory>
 
 <style>
-  .grid {
-    display: grid;
-    grid-template-columns: 1fr 300px;
-  }
-  .inventory {
-    padding: 1rem 0;
-    background: rgba(0, 0, 0, .2);
-    border-radius: 0 1rem 1rem 0;
-    box-sizing: border-box;
-  }
   .select {
     background: rgba(0, 0, 0, .2);
     height: 1.375rem;
