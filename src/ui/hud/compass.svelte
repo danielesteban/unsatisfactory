@@ -1,12 +1,21 @@
 <script lang="ts">
+  import { MathUtils, Vector3 } from 'three';
+  import ItemImage from '../components/item.svelte';
+  import Scanner from '../stores/scanner';
+
   export let lat: number;
   export let lon: number;
   export let orientation: number;
 
   let canvas: HTMLCanvasElement;
   
-  const width = 380;
+  const width = 448;
   const height = 42;
+  const padding = 20;
+  const steps = 42;
+  const step = (width - padding * 2) / steps;
+  const stepDeg = 5;
+  const notchDeg = 15;
   const named: any = {
     [0]: 'N',
     [45]: 'NE',
@@ -47,11 +56,6 @@
       }
     }
 
-    const padding = 20;
-    const steps = 42;
-    const step = (width - padding * 2) / steps;
-    const stepDeg = 5;
-    const notchDeg = 15;
     const deg = Math.floor(orientation / notchDeg) * notchDeg;
     const degOffset = deg - (steps * 0.5 * stepDeg);
     const offset = (deg - orientation) / notchDeg * step * 3;
@@ -90,6 +94,25 @@
   };
   
   $: canvas && draw(orientation);
+
+  const getDistanceToMarker = (position: Vector3, lat: number, lon: number) => (
+    Math.round(Math.sqrt((lon - position.x) ** 2 + (lat - position.z) ** 2))
+  );
+
+  const getMarkerPosition = (position: Vector3, lat: number, lon: number, orientation: number) => {
+    let angle = Math.atan2(lon - position.x, lat - position.z);
+    angle = Math.PI * 2 - (angle - Math.floor(angle/(Math.PI * 2)) * Math.PI * 2);
+    angle = Math.floor(angle / Math.PI * 18000) / 100;
+    const diff = Math.abs(angle - orientation) > Math.abs(orientation - angle) ? (orientation - angle) : (angle - orientation);
+    const offset = diff / stepDeg * step;
+    return width * 0.5 + MathUtils.clamp(offset, width * -0.5, width * 0.5);
+  };
+
+  $: markers = $Scanner.results.map(({ item, position }) => ({
+    item,
+    distance: getDistanceToMarker(position, lat, lon),
+    position: getMarkerPosition(position, lat, lon, orientation),
+  }));
 </script>
 
 <div class="compass">
@@ -97,7 +120,24 @@
     <div>{`${Math.abs(lat / 1000).toFixed(2)}° ${lat < 0 ? 'N' : 'S'}`}</div>
     <div>{`${Math.abs(lon / 1000).toFixed(2)}° ${lon < 0 ? 'W' : 'E'}`}</div>
   </div>
-  <canvas bind:this={canvas} />
+  <div>
+    <canvas bind:this={canvas} />
+    <div class="scanner">
+      {#each markers as { item, position, distance }}
+        <div class="marker" style="left: {position}px">
+          <div class="box">
+            <div class="image">
+              <ItemImage item={item} />
+            </div>
+            <div class="distance">
+              {distance}m
+            </div>
+          </div>
+        </div>
+      {/each}
+      {#if $Scanner.isRunning}<div class="progress" style="width:{$Scanner.progress * width}px"></div>{/if}
+    </div>
+  </div>
   <div class="info keys">
     <div>
       <div>
@@ -157,5 +197,56 @@
     justify-content: center;
     color: #eee;
     font-size: 0.5625rem;
+  }
+
+  .scanner {
+    position: relative;
+  }
+
+  .progress {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    height: 0.25rem;
+    transform: translate(-50%, -50%);
+    background: rgba(90, 255, 90, 0.5);
+  }
+
+  .marker {
+    position: absolute;
+  }
+  
+  .marker::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    background: rgba(0, 0, 0, 0.15);
+    width: 2px;
+    height: 1rem;
+    transform: translate(-50%, 0);
+  }
+
+  .box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 0.25rem;
+    transform: translate(-50%, 1rem);
+  }
+
+  .distance {
+    margin-top: -0.5rem;
+    font-size: 0.625rem;
+    color: #eee;
+  }
+
+  .image {
+    width: 1.75rem;
+    height: 1.75rem;
   }
 </style>

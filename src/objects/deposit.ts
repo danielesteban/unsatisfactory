@@ -4,6 +4,7 @@ import {
   BufferGeometry,
   CylinderGeometry,
   Mesh,
+  Material,
   SphereGeometry,
   Vector3,
 } from 'three';
@@ -11,7 +12,7 @@ import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 import seedrandom from 'seedrandom';
 import { Item } from '../core/data';
-import { CopperMaterial, IronMaterial } from '../core/materials';
+import { CoalMaterial, CopperMaterial, IronMaterial } from '../core/materials';
 
 export class Deposit extends Mesh {
   private static collider: RAPIER.ColliderDesc | undefined;
@@ -71,6 +72,7 @@ export class Deposit extends Mesh {
   }
 
   private static readonly materials = {
+    [Item.coal]: CoalMaterial,
     [Item.copperOre]: CopperMaterial,
     [Item.ironOre]: IronMaterial,
   };
@@ -94,57 +96,49 @@ export class Deposit extends Mesh {
     return this.purity;
   }
 
-  private static readonly aux: Vector3 = new Vector3();
+  private static readonly auxA: Vector3 = new Vector3();
   private static readonly auxB: Vector3 = new Vector3();
   private static readonly auxC: Vector3 = new Vector3();
   private static readonly auxD: Vector3 = new Vector3();
-  private static readonly auxE: Vector3 = new Vector3();
-  update(origin: Vector3, getDeposit: (position: Vector3) => number, getGrass: (position: Vector3) => number, getHeight: (position: Vector3) => number) {
-    const { aux, auxB, auxC, auxD, auxE } = Deposit;
-    aux.set(8, 0, 8).add(origin);
-    const deposit = getDeposit(aux);
-    if (deposit > 0.2 && getGrass(aux) < -0.2) {
-      let y = getHeight(aux) * 0.2;
+  update(origin: Vector3, getDeposit: (position: Vector3) => { item: Item, purity: number } | undefined, getHeight: (position: Vector3) => number) {
+    const { auxA, auxB, auxC, auxD } = Deposit;
+    const deposit = getDeposit(origin);
+    if (deposit) {
+      let y = getHeight(origin) * 0.2;
 
-      auxB.set(-4, 0, -4).add(aux);
+      auxA.set(-4, 0, -4).add(origin);
+      auxA.y = getHeight(auxA);
+      auxB.set(4, 0, 4).add(origin);
       auxB.y = getHeight(auxB);
-      auxC.set(4, 0, 4).add(aux);
-      auxC.y = getHeight(auxC);
-      auxD.subVectors(auxB, auxC).normalize();
-      if (auxB.y < auxC.y) auxD.negate();
+      auxC.subVectors(auxA, auxB).normalize();
+      if (auxA.y < auxB.y) auxC.negate();
+      y += auxA.y * 0.2;
       y += auxB.y * 0.2;
-      y += auxC.y * 0.2;
 
-      auxB.set(4, 0, -4).add(aux);
+      auxA.set(4, 0, -4).add(origin);
+      auxA.y = getHeight(auxA);
+      auxB.set(-4, 0, 4).add(origin);
       auxB.y = getHeight(auxB);
-      auxC.set(-4, 0, 4).add(aux);
-      auxC.y = getHeight(auxC);
-      auxE.subVectors(auxB, auxC).normalize();
-      if (auxB.y < auxC.y) auxE.negate();
+      auxD.subVectors(auxA, auxB).normalize();
+      if (auxA.y < auxB.y) auxD.negate();
+      y += auxA.y * 0.2;
       y += auxB.y * 0.2;
-      y += auxC.y * 0.2;
       y -= 1;
 
-      this.position.copy(aux).sub(origin);
       this.position.y = y;
       this.visible = true;
       this.updateMatrix();
       this.updateMatrixWorld();
 
-      auxE.lerp(auxD, 0.5).normalize().add(aux);
-      auxE.y += y;
-      this.lookAt(auxE);
+      auxD.lerp(auxC, 0.5).normalize().add(origin);
+      auxD.y += y;
+      this.lookAt(auxD);
       this.updateMatrix();
       this.updateMatrixWorld();
 
-      if (deposit > 0.3) {
-        this.item = Item.copperOre;
-        this.purity = deposit > 0.35 ? 1 : 2;
-      } else {
-        this.item = Item.ironOre;
-        this.purity = deposit > 0.25 ? 1 : 2;
-      }
-      this.material = Deposit.materials[this.item];
+      this.item = deposit.item;
+      this.purity = deposit.purity;
+      this.material = (Deposit.materials as any)[this.item] as Material;
     } else {
       this.visible = false;
     }

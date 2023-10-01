@@ -277,7 +277,7 @@ export class PoweredContainer<Events extends BaseEvent = BaseEvent> extends Cont
     return this.wires;
   }
 
-  canWire(container?: PoweredContainer) {
+  canWire(container?: PoweredContainer): boolean {
     const { connections, maxConnections } = this;
     return (
       connections.length < maxConnections

@@ -132,7 +132,7 @@ export class Miner extends PoweredContainer<
         position,
         Math.random() * 0.1,
         (Math.random() - 0.5) * 1200,
-        0.4,
+        0.2,
         () => {
           this.sound = undefined;
         }

@@ -2,6 +2,7 @@ import Container from './container';
 import Instances from './instances';
 import Transformer from './transformer';
 import Belts, { Belt } from '../objects/belts';
+import { Generator } from '../objects/generators';
 import { Miner } from '../objects/miners';
 
 class Simulation {
@@ -29,7 +30,7 @@ class Simulation {
         for (let i = 0; i < count; i++) {
           const instance = instances.getInstance(i);
           instance.stepInput();
-          if (instance instanceof Miner || instance instanceof Transformer) {
+          if (instance instanceof Generator || instance instanceof Miner || instance instanceof Transformer) {
             instance.process();
           }
         }

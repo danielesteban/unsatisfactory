@@ -12,6 +12,7 @@ import {
   Vector3,
 } from 'three';
 import { ImprovedNoise } from 'three/examples/jsm/math/ImprovedNoise.js';
+import { Item } from '../core/data';
 import Physics from '../core/physics';
 import Deposit from './deposit';
 import Grass from './grass';
@@ -80,9 +81,9 @@ export class TerrainChunk extends Mesh {
     this.updateMatrixWorld();
   }
 
-  updateDeposit(getDeposit: (position: Vector3) => number, getGrass: (position: Vector3) => number, getHeight: (position: Vector3) => number) {
+  updateDeposit(getDeposit: (position: Vector3) => { item: Item, purity: number } | undefined, getHeight: (position: Vector3) => number) {
     const { deposit, position } = this;
-    deposit.update(position, getDeposit, getGrass, getHeight);
+    deposit.update(position, getDeposit, getHeight);
   }
 
   updateGrass(getGrass: (position: Vector3) => number, getHeight: (position: Vector3) => number) {
@@ -194,6 +195,10 @@ class Terrain extends Group {
     this.queue = [];
   }
 
+  getAnchor() {
+    return this.anchor;
+  }
+
   getDeposit(position: Vector3) {
     const { noise } = this;
     let v = 0;
@@ -204,7 +209,15 @@ class Terrain extends Group {
       f *= 2;
       a *= 0.5;
     }
-    return v;
+    v = Math.min(Math.max(Math.abs(v) - 0.2, 0) * 5, 1);
+    if (!v || this.getGrass(position) > -0.2) {
+      return undefined;
+    }
+    const d = (v * v) * 3;
+    return {
+      item: [Item.ironOre, Item.copperOre, Item.coal][Math.min(Math.floor(d), 2)] as (Item.ironOre | Item.copperOre | Item.coal),
+      purity: (d % 1) > 0.5 ? 1 : 2,
+    };
   }
 
   getGrass(position: Vector3) {
@@ -243,7 +256,7 @@ class Terrain extends Group {
     if (anchor.equals(aux) && radius === this.radius) {
       for (let i = 0, l = Math.min(queue.length, 4); i < l; i++) {
         const queued = queue.shift()!;
-        queued.updateDeposit(this.getDeposit, this.getGrass, this.getHeight);
+        queued.updateDeposit(this.getDeposit, this.getHeight);
         queued.updateGrass(this.getGrass, this.getHeight);
         if (queued.deposit.visible) {
           physics.addBody(
@@ -304,7 +317,7 @@ class Terrain extends Group {
   }
 
   private static readonly renderGrids: Map<number, Vector3[]> = new Map();
-  private static getRenderGrid(radius: number) {
+  static getRenderGrid(radius: number) {
     const { aux, renderGrids } = Terrain;
     let grid = renderGrids.get(radius);
     if (!grid) {

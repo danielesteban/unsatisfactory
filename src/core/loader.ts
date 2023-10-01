@@ -21,6 +21,7 @@ import Ramps from '../objects/ramps';
 import Sinks, { Sink } from '../objects/sinks';
 import Smelters, { Smelter } from '../objects/smelters';
 import Storages, { Storage } from '../objects/storages';
+import Turbines, { Turbine }  from '../objects/turbines';
 import Walls from '../objects/walls';
 import Wires, { Wire } from '../objects/wires';
 import Achievements, { Achievement } from '../ui/stores/achievements';
@@ -46,6 +47,7 @@ type Objects = {
   sinks: Sinks;
   smelters: Smelters;
   storages: Storages;
+  turbines: Turbines;
   walls: Walls;
   wires: Wires;
 };
@@ -64,7 +66,7 @@ type Serialized = {
   combinators: SerializedTransformer[];
   fabricators: SerializedTransformer[];
   foundations: [SerializedPosition, number][];
-  generators: [SerializedPosition, number, SerializedEnabled][];
+  generators: [SerializedPosition, number, SerializedEnabled, number, number | undefined][];
   miners: [SerializedPosition, number, SerializedEnabled, Item, number, number, number | undefined][];
   pillars: [SerializedPosition, number][];
   poles: [SerializedPosition, number][];
@@ -72,6 +74,7 @@ type Serialized = {
   sinks: [SerializedPosition, number, SerializedEnabled][];
   smelters: SerializedTransformer[];
   storages: [SerializedPosition, number, [Item, number][] | undefined][];
+  turbines: [SerializedPosition, number, SerializedEnabled][];
   walls: [SerializedPosition, number][];
   wires: [SerializedContainer, SerializedContainer][];
   achievements: Achievement[];
@@ -187,7 +190,7 @@ class Loader {
   private serialize(): Serialized {
     const {
       objects: {
-        aggregators, belts, buffers, columns, combinators, fabricators, foundations, generators, miners, pillars, poles, ramps, sinks, smelters, storages, walls, wires,
+        aggregators, belts, buffers, columns, combinators, fabricators, foundations, generators, miners, pillars, poles, ramps, sinks, smelters, storages, turbines, walls, wires,
       },
       viewport: { camera },
     } = this;
@@ -215,7 +218,7 @@ class Loader {
       if (instance instanceof Fabricator) {
         key = 3;
       }
-      if (instance instanceof Generator) {
+      if (instance instanceof Turbine) {
         key = 4;
       }
       if (instance instanceof Miner) {
@@ -232,6 +235,9 @@ class Loader {
       }
       if (instance instanceof Storage) {
         key = 9;
+      }
+      if (instance instanceof Generator) {
+        key = 10;
       }
       return [key, containers.get(instance)];
     };
@@ -250,6 +256,7 @@ class Loader {
       sinks: serializeInstances(sinks) as Serialized['sinks'],
       smelters: serializeInstances(smelters) as Serialized['smelters'],
       storages: serializeInstances(storages) as Serialized['storages'],
+      turbines: serializeInstances(turbines) as Serialized['turbines'],
       walls: serializeInstances(walls) as Serialized['walls'],
       belts: (belts.children as Belt[]).map((belt) => {
         const items = serializeItems(belt.getItems());
@@ -277,7 +284,7 @@ class Loader {
   private deserialize(serialized: Serialized) {
     const {
       objects: {
-        aggregators, belts, buffers, columns, combinators, fabricators, foundations, generators, miners, pillars, poles, ramps, sinks, smelters, storages, walls, wires,
+        aggregators, belts, buffers, columns, combinators, fabricators, foundations, generators, miners, pillars, poles, ramps, sinks, smelters, storages, turbines, walls, wires,
       },
       viewport: { camera },
     } = this;
@@ -342,12 +349,12 @@ class Loader {
         }
         return fabricator;
       }),
-      serialized.generators.map(([position, rotation, enabled]) => {
-        const generator = generators.create(aux.fromArray(position), rotation, false)
+      serialized.turbines.map(([position, rotation, enabled]) => {
+        const turbine = turbines.create(aux.fromArray(position), rotation, false)
         if (!enabled) {
-          generator.setEnabled(false);
+          turbine.setEnabled(false);
         }
-        return generator;
+        return turbine;
       }),
       serialized.miners.map(([position, rotation, enabled, item, purity, tick, buffer]) => {
         const miner = miners.create(aux.fromArray(position), rotation, item, purity, false);
@@ -394,6 +401,19 @@ class Loader {
           storage.setInventory(inventory);
         }
         return storage;
+      }),
+      serialized.generators.map(([position, rotation, enabled, tick, buffer]) => {
+        const generator = generators.create(aux.fromArray(position), rotation, false)
+        if (!enabled) {
+          generator.setEnabled(false);
+        }
+        if (buffer) {
+          generator.setBuffer(buffer);
+        }
+        if (tick) {
+          generator.setTick(tick);
+        }
+        return generator;
       }),
     ];
     serialized.columns.forEach(([position, rotation]) => (
@@ -546,9 +566,25 @@ class Loader {
         columns: [],
       };
     },
+    [20]: (serialized: Serialized) => {
+      return {
+        ...serialized,
+        // generators -> turbines
+        generators: [],
+        turbines: serialized.generators as any as Serialized['turbines'],
+        // remove all miners
+        miners: [],
+        belts: serialized.belts.filter(([from, _fromConnector, to, _toConnector, _items]) => (
+          from[0] !== 5 && to[0] !== 5
+        )),
+        wires: serialized.wires.filter(([from, to]) => (
+          from[0] !== 5 && to[0] !== 5
+        )),
+      };
+    },
   };
 
-  private static readonly version: number = 20;
+  private static readonly version: number = 21;
 }
 
 export default Loader;

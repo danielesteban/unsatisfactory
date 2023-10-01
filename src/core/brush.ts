@@ -24,6 +24,7 @@ import Ramps, { Ramp } from '../objects/ramps';
 import Sinks, { Sink } from '../objects/sinks';
 import Smelters, { Smelter } from '../objects/smelters';
 import Storages, { Storage } from '../objects/storages';
+import Turbines, { Turbine } from '../objects/turbines';
 import Walls, { Wall } from '../objects/walls';
 import Wires, { Wire } from '../objects/wires';
 
@@ -95,6 +96,9 @@ export const getFromObject = (instance?: Instance | Belt | Wire) => {
   if (instance instanceof Storage) {
     return Brush.storage;
   }
+  if (instance instanceof Turbine) {
+    return Brush.turbine;
+  }
   if (instance instanceof Wall) {
     return Brush.wall;
   }
@@ -134,6 +138,8 @@ export const getGeometry = (brush: Brush) => {
       return Smelters.getGeometry();
     case Brush.storage:
       return Storages.getGeometry();
+    case Brush.turbine:
+      return Turbines.getGeometry();
     case Brush.wall:
       return Walls.getGeometry();
     default:
@@ -173,6 +179,8 @@ export const getMaterial = (brush: Brush) => {
       return Smelters.getMaterial();
     case Brush.storage:
       return Storages.getMaterial();
+    case Brush.turbine:
+      return Turbines.getMaterial();
     case Brush.wall:
       return Walls.getMaterial();
     case Brush.wire:
@@ -211,7 +219,7 @@ const offsets = {
   [Brush.dismantle]: new Vector3(),
   [Brush.fabricator]: new Vector3(2, 2, 1),
   [Brush.foundation]: new Vector3(2, 0.5, 2),
-  [Brush.generator]: new Vector3(2, 6, 2),
+  [Brush.generator]: new Vector3(3, 4, 1),
   [Brush.miner]: new Vector3(1, 2, 1),
   [Brush.pillar]: new Vector3(2, 2, 2),
   [Brush.pole]: new Vector3(0.5, 3, 0.5),
@@ -219,6 +227,7 @@ const offsets = {
   [Brush.sink]: new Vector3(2, 2, 2),
   [Brush.smelter]: new Vector3(2, 2, 1),
   [Brush.storage]: new Vector3(2, 2, 1),
+  [Brush.turbine]: new Vector3(2, 6, 2),
   [Brush.wall]: new Vector3(2, 2, 0.25),
   [Brush.wire]: new Vector3(),
 };

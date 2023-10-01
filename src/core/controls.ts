@@ -18,6 +18,7 @@ export type Buttons = {
   inventory: boolean;
   rotateCW: boolean;
   rotateCCW: boolean;
+  scan: boolean;
 };
 
 enum ControlsMode {
@@ -53,6 +54,7 @@ class Controls {
       inventory: false,
       rotateCW: false,
       rotateCCW: false,
+      scan: false,
     };
     this.camera = camera;
     this.isLocked = false;
@@ -86,6 +88,7 @@ class Controls {
     buttons.inventory = false;
     buttons.rotateCW = false;
     buttons.rotateCCW = false;
+    buttons.scan = false;
   }
 
   lock() {
@@ -198,6 +201,9 @@ class Controls {
       case 'KeyQ':
         buttons.build = true;
         break;
+      case 'KeyO':
+        buttons.codex = true;
+        break;
       case 'KeyF':
         buttons.dismantle = true;
         break;
@@ -207,14 +213,14 @@ class Controls {
       case 'KeyI':
         buttons.inventory = true;
         break;
-      case 'KeyO':
-        buttons.codex = true;
-        break;
       case 'KeyR':
         buttons.rotateCCW = true;
         break;
       case 'KeyT':
         buttons.rotateCW = true;
+        break;
+      case 'KeyX':
+        buttons.scan = true;
         break;
     }
   }
@@ -254,6 +260,9 @@ class Controls {
       case 'KeyQ':
         buttons.build = false;
         break;
+      case 'KeyO':
+        buttons.codex = false;
+        break;
       case 'KeyF':
         buttons.dismantle = false;
         break;
@@ -263,14 +272,14 @@ class Controls {
       case 'KeyI':
         buttons.inventory = false;
         break;
-      case 'KeyO':
-        buttons.codex = false;
-        break;
       case 'KeyR':
         buttons.rotateCCW = false;
         break;
       case 'KeyT':
         buttons.rotateCW = false;
+        break;
+      case 'KeyX':
+        buttons.scan = false;
         break;
     }
   }

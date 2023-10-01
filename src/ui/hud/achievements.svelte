@@ -16,6 +16,15 @@
       ],
     },
     {
+      id: Achievement.scanner,
+      name: 'Use the Resource Scanner',
+      help: [
+        'Press [C] to use the Resource Scanner.',
+        'It will search for nearby resource nodes and',
+        'populate your compass with their location.',
+      ],
+    },
+    {
       id: Achievement.deposit,
       name: 'Find a Deposit',
       help: [
@@ -45,11 +54,11 @@
       ],
     },
     {
-      id: Achievement.generator,
-      name: 'Build a Generator',
+      id: Achievement.turbine,
+      name: 'Build a Wind Turbine',
       help: [
         'Miners and many other machines require power.',
-        'Select the Generator from the Build menu [Q] and',
+        'Select the Wind Turbine from the Build menu [Q] and',
         'Click over the terrain (or a foundation) to place it on top.',
       ],
     },
@@ -58,9 +67,9 @@
       name: 'Power the Miner',
       help: [
         'Select the Wire from the Build menu [Q] and',
-        'Click over the Generator, and then',
+        'Click over the Wind Turbine, and then',
         'Click over the Miner to wire them together.',
-        'The use of Poles is advised since the Generator',
+        'The use of Poles is advised since the Wind Turbine',
         'can only handle 4 simultaneous direct connections.'
       ],
     },
@@ -110,7 +119,7 @@
         'Then belt the output of a Smelter or Fabricator into the Sink.',
         '',
         'Remember to wire the Sink so it gets powered.',
-        'You may need additonal Generators for this.',
+        'You may need additonal Wind Turbines for this.',
       ],
     },
     // {
@@ -127,7 +136,7 @@
     //     'similar to the one you just built for another item.',
     //     '',
     //     'Remember to wire the Combinator so it gets powered.',
-    //     'You may need additonal Generators for this.',
+    //     'You may need additonal Wind Turbines for this.',
     //   ],
     // },
     // {
@@ -144,7 +153,7 @@
     //     'similar to the ones you just built for the Aggregator.',
     //     '',
     //     'Remember to wire the Aggregator so it gets powered.',
-    //     'You may need additonal Generators for this.',
+    //     'You may need additonal Wind Turbines for this.',
     //   ],
     // },
   ];

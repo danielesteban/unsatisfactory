@@ -8,7 +8,7 @@ export enum Brush {
   dismantle,
   fabricator,
   foundation,
-  generator,
+  turbine,
   miner,
   pillar,
   pole,
@@ -18,6 +18,7 @@ export enum Brush {
   storage,
   wall,
   wire,
+  generator,
 }
 
 export const BrushGroups: Exclude<Brush, Brush.none>[][] = [
@@ -42,6 +43,7 @@ export const BrushGroups: Exclude<Brush, Brush.none>[][] = [
     Brush.storage,
   ],
   [
+    Brush.turbine,
     Brush.generator,
     Brush.pole,
     Brush.wire,
@@ -58,7 +60,7 @@ export const BrushName: Record<Brush, string> = {
   [Brush.combinator]: 'Combinator',
   [Brush.fabricator]: 'Fabricator',
   [Brush.foundation]: 'Foundation',
-  [Brush.generator]: 'Generator',
+  [Brush.generator]: 'Power Plant',
   [Brush.miner]: 'Miner',
   [Brush.pillar]: 'Pillar',
   [Brush.pole]: 'Pole',
@@ -66,6 +68,7 @@ export const BrushName: Record<Brush, string> = {
   [Brush.sink]: 'Sink',
   [Brush.smelter]: 'Smelter',
   [Brush.storage]: 'Storage',
+  [Brush.turbine]: 'Wind Turbine',
   [Brush.wall]: 'Wall',
   [Brush.wire]: 'Wire',
 };
@@ -74,6 +77,7 @@ export const BrushTier: Partial<Record<Brush, number>> = {
   [Brush.aggregator]: 1,
   [Brush.column]: 1,
   [Brush.combinator]: 1,
+  [Brush.generator]: 1,
   [Brush.pillar]: 1,
   [Brush.ramp]: 1,
   [Brush.storage]: 1,
@@ -92,10 +96,12 @@ export enum Item {
   ironRod,
   frame,
   computer,
+  coal,
 }
 
 export const ItemName: Record<Item, string>  = {
   [Item.none]: 'None',
+  [Item.coal]: 'Coal',
   [Item.computer]: 'Computer',
   [Item.copperIngot]: 'Copper Ingot',
   [Item.copperOre]: 'Copper Ore',
@@ -156,12 +162,21 @@ export const Building: Partial<Record<Brush, BuildCost>> = {
     { item: Item.ironPlate, count: 10 },
     { item: Item.ironRod, count: 10 },
   ],
+  [Brush.turbine]: [
+    { item: Item.ironPlate, count: 20 },
+    { item: Item.wire, count: 10 },
+  ],
   [Brush.wire]: [
     { item: Item.wire, count: 1 },
   ],
 };
 
+export const Generation: Partial<Record<Item, { count: number; rate: number; power: number; }>> = {
+  [Item.coal]: { count: 10, rate: 60, power: 500 },
+};
+
 export const Mining: Partial<Record<Item, { consumption: number; count: number; rate: number; }>> = {
+  [Item.coal]: { consumption: 100, count: 20, rate: 20 },
   [Item.copperOre]: { consumption: 100, count: 20, rate: 20 },
   [Item.ironOre]: { consumption: 100, count: 20, rate: 20 },
 };

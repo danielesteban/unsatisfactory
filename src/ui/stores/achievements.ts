@@ -4,7 +4,7 @@ export enum Achievement {
   deposit = 1,
   build,
   miner,
-  generator,
+  turbine,
   power,
   smelter,
   fabricator,
@@ -12,6 +12,7 @@ export enum Achievement {
   points,
   aggregator,
   inventory,
+  scanner,
 }
 
 let achievements: Set<Achievement> = new Set();

@@ -9,8 +9,8 @@ import {
 } from 'three';
 import { PoweredContainer } from '../core/container';
 import { Brush, Building } from '../core/data';
+import Generator from '../core/generator';
 import { WireMaterial } from '../core/materials';
-import { Generator } from './generators';
 import Alerts, { Alert } from '../ui/stores/alerts';
 import Inventory from '../ui/stores/inventory';
 
@@ -107,6 +107,7 @@ class Wires extends Group {
       }
       container.addEventListener('enabled', this.updatePower);
       if (container instanceof Generator) {
+        container.addEventListener('generating', this.updatePower);
         grid.generators.push(container);
       } else {
         grid.containers.push(container);
@@ -136,6 +137,7 @@ class Wires extends Group {
       container.removeEventListener('enabled', this.updatePower);
       let map;
       if (container instanceof Generator) {
+        container.removeEventListener('generating', this.updatePower);
         map = grid.generators;
       } else {
         map = grid.containers;

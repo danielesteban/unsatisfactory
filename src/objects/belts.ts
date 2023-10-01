@@ -228,6 +228,7 @@ class Belts extends Group {
     this.updateMatrixWorld();
     this.matrixAutoUpdate = false;
     this.physics = physics;
+    this.renderOrder = 1;
   }
 
   canAfford() {

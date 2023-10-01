@@ -20,6 +20,7 @@ import Instances, { Instance } from './core/instances';
 import Loader from './core/loader';
 import {
   BeltMaterial,
+  CoalMaterial,
   ConcreteMaterial,
   ConnectorsMaterial,
   CopperMaterial,
@@ -39,7 +40,7 @@ import Combinators from './objects/combinators';
 import Deposit from './objects/deposit';
 import Fabricators from './objects/fabricators';
 import Foundations from './objects/foundations';
-import Generators, { Generator } from './objects/generators';
+import Generators from './objects/generators';
 import Ghost from './objects/ghost';
 import Grass from './objects/grass';
 import Miners from './objects/miners';
@@ -50,10 +51,12 @@ import Sinks from './objects/sinks';
 import Smelters from './objects/smelters';
 import Storages from './objects/storages';
 import Terrain from './objects/terrain';
+import Turbines, { Turbine } from './objects/turbines';
 import Walls from './objects/walls';
 import Wires, { Wire } from './objects/wires';
 import UI, { Action, Dialog } from './ui';
 import Achievements, { Achievement } from './ui/stores/achievements';
+import Scanner from './ui/stores/scanner';
 
 const interactionRadiusSquared = 12 ** 2;
 
@@ -65,20 +68,21 @@ const viewport = new Viewport();
 // to avoid the current hitching when uncompiled shaders get into view.
 [
   BeltMaterial,
+  CoalMaterial,
   ConcreteMaterial,
   ConnectorsMaterial,
   CopperMaterial,
   IronMaterial,
   RustMaterial,
   WireMaterial,
-  Generators.getRotorMaterial(),
+  Turbines.getRotorMaterial(),
   Terrain.getMaterial(),
 ].forEach(viewport.setupMaterialCSM.bind(viewport));
 
 [
   Birds.getMaterial(),
-  Generators.getDepthMaterial(),
-  Generators.getRotorMaterial(),
+  Turbines.getDepthMaterial(),
+  Turbines.getRotorMaterial(),
   Ghost.getMaterial(),
   Grass.getMaterial(),
 ].forEach(viewport.setupMaterialTime.bind(viewport));
@@ -107,7 +111,7 @@ viewport.scene.add(fabricators);
 const foundations = new Foundations(viewport.physics);
 viewport.scene.add(foundations);
 
-const generators = new Generators(viewport.physics);
+const generators = new Generators(viewport.physics, viewport.sfx);
 viewport.scene.add(generators);
 
 const miners = new Miners(viewport.physics, viewport.sfx);
@@ -131,11 +135,14 @@ viewport.scene.add(smelters);
 const storages = new Storages(viewport.physics);
 viewport.scene.add(storages);
 
+const turbines = new Turbines(viewport.physics);
+viewport.scene.add(turbines);
+
 const walls = new Walls(viewport.physics);
 viewport.scene.add(walls);
 
 const wires = new Wires();
-generators.addEventListener('efficiency', wires.updatePower.bind(wires));
+turbines.addEventListener('efficiency', wires.updatePower.bind(wires));
 viewport.scene.add(wires);
 
 const birds = new Birds(viewport.camera.position);
@@ -160,6 +167,7 @@ const brushObjects = {
   [Brush.sink]: sinks,
   [Brush.smelter]: smelters,
   [Brush.storage]: storages,
+  [Brush.turbine]: turbines,
   [Brush.wall]: walls,
   [Brush.wire]: wires,
 };
@@ -198,6 +206,7 @@ const loader = new Loader(
     sinks,
     smelters,
     storages,
+    turbines,
     walls,
     wires,
   },
@@ -241,14 +250,15 @@ const create = (intersection: Intersection) => {
     case Brush.sink:
     case Brush.smelter:
     case Brush.storage:
+    case Brush.turbine:
     case Brush.wall: {
       const object = brushObjects[brush];
       if (!object.canAfford()) {
         return 'nope';
       }
       object.create(snap(intersection), rotation);
-      if (brush === Brush.generator) {
-        Achievements.complete(Achievement.generator);
+      if (brush === Brush.generator || brush === Brush.turbine) {
+        Achievements.complete(Achievement.turbine);
       }
       return;
     }
@@ -334,7 +344,7 @@ const remove = (intersection: Intersection) => {
 };
 
 const handleInput = (
-  { primary, secondary, tertiary, build, codex, dismantle, interact, inventory }: Buttons,
+  { primary, secondary, tertiary, build, codex, dismantle, interact, inventory, scan }: Buttons,
   intersection?: Intersection
 ) => {
   const hasConnection = connection.container !== undefined;
@@ -371,6 +381,9 @@ const handleInput = (
     setBrush(Brush.none);
     ui.show(Dialog.inventory);
     Achievements.complete(Achievement.inventory);
+  }
+  if (scan) {
+    Scanner.scan(terrain);
   }
   if (hasConnection) {
     connection.container = undefined;
@@ -511,8 +524,8 @@ const getConnector = (intersection: Intersection, raycaster: Raycaster) => {
   if (
     brush !== Brush.belt
     || !(intersection.object instanceof Container)
-    || intersection.object instanceof Generator
     || intersection.object instanceof Pole
+    || intersection.object instanceof Turbine
   ) {
     return false;
   }
@@ -526,7 +539,7 @@ const getConnector = (intersection: Intersection, raycaster: Raycaster) => {
 const center = new Vector2();
 const simulation = new Simulation(
   belts,
-  [aggregators, buffers, combinators, fabricators, miners, sinks, smelters, storages]
+  [aggregators, buffers, combinators, fabricators, generators, miners, sinks, smelters, storages]
 );
 const animate = (buttons: Buttons, delta: number) => {
   birds.step(delta);
@@ -551,7 +564,7 @@ const animate = (buttons: Buttons, delta: number) => {
     rotateBrush(buttons.rotateCCW ? 1 : -1);
   }
   hover(hit);
-  if (buttons.primary || buttons.secondary || buttons.tertiary || buttons.build || buttons.codex || buttons.dismantle || buttons.interact || buttons.inventory) {
+  if (buttons.primary || buttons.secondary || buttons.tertiary || buttons.build || buttons.codex || buttons.dismantle || buttons.interact || buttons.inventory || buttons.scan) {
     handleInput(buttons, hit);
   }
   ui.setCompass(viewport.camera.rotation.y, viewport.camera.position);

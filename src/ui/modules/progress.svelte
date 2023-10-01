@@ -1,10 +1,11 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
   import Transformer from '../../core/transformer';
+  import { Generator } from '../../objects/generators';
   import { Miner } from '../../objects/miners';
   import Module from '../components/module.svelte';
 
-  export let instance: Miner | Transformer;
+  export let instance: Generator | Miner | Transformer;
 
   let progress = instance.getProgress();
   const onProgress = () => {

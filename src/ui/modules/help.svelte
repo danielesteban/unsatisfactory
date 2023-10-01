@@ -63,6 +63,12 @@
   </div>
   <div>
     <div class="keys">
+      <div class="key">X</div>
+    </div>
+    <div>Scan</div>
+  </div>
+  <div>
+    <div class="keys">
       <div class="key">O</div>
     </div>
     <div>Codex</div>

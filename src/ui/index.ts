@@ -14,6 +14,7 @@ import { Miner } from '../objects/miners';
 import { Sink } from '../objects/sinks';
 import { Smelter } from '../objects/smelters';
 import { Storage } from '../objects/storages';
+import { Turbine } from '../objects/turbines';
 import { Wire } from '../objects/wires';
 import Loading from './components/loading.svelte';
 import HUD from './hud/index.svelte';
@@ -27,6 +28,7 @@ import SettingsUI from './dialogs/settings.svelte';
 import SinkUI from './dialogs/sink.svelte';
 import StorageUI from './dialogs/storage.svelte';
 import TransformerUI from './dialogs/transformer.svelte';
+import TurbineUI from './dialogs/turbine.svelte';
 import WelcomeUI from './dialogs/welcome.svelte';
 import Settings from './stores/settings';
 
@@ -76,8 +78,8 @@ class UI {
     orientation = Math.PI * 2 - (orientation - Math.floor(orientation/(Math.PI * 2)) * Math.PI * 2);
     hud?.$set({
       compass: {
-        lat: Math.floor(position.z),
-        lon: Math.floor(position.x),
+        lat: Math.floor(position.z * 100) / 100,
+        lon: Math.floor(position.x * 100) / 100,
         orientation: Math.floor(orientation / Math.PI * 18000) / 100,
       },
     });
@@ -171,7 +173,12 @@ class UI {
             props: { close, instance },
             target,
           });
-        }
+        } else if (instance instanceof Turbine) {
+          dialog = new TurbineUI({
+            props: { close, instance },
+            target,
+          });
+        } 
         break;
       }
       case Dialog.inventory:

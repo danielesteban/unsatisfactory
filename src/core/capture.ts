@@ -141,6 +141,10 @@ const processBrushQueue = () => {
       zoom -= 1.5;
     }
     if (brush === Brush.generator) {
+      y = 1.5;
+      zoom *= 1.75;
+    }
+    if (brush === Brush.turbine) {
       y = 3.5;
       zoom *= 3.0;
     }
@@ -156,7 +160,7 @@ const processBrushQueue = () => {
     if (brush === Brush.aggregator || brush === Brush.combinator || brush === Brush.fabricator || brush === Brush.smelter || brush === Brush.storage) {
       rotation = Math.PI * -0.5;
     }
-    if (brush === Brush.generator) {
+    if (brush === Brush.turbine) {
       rotation = Math.PI * 0.5;
     }
     mesh.position.y = -y;
@@ -201,7 +205,7 @@ const processItemQueue = () => {
     if (item === Item.ironIngot || item === Item.copperIngot) {
       y = 0.0625;
     }
-    if (item === Item.computer || item === Item.ironOre || item === Item.copperOre || item === Item.frame) {
+    if (item === Item.coal || item === Item.computer || item === Item.ironOre || item === Item.copperOre || item === Item.frame) {
       y = 0.2;
       zoom *= 1.5;
     }

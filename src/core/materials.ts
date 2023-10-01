@@ -8,6 +8,9 @@ import { loadTexture } from '../textures';
 import BeltDiffuseMap from '../textures/green_metal_rust_diff_1k.webp';
 import BeltNormalMap from '../textures/green_metal_rust_nor_gl_1k.webp';
 import BeltRoughnessMap from '../textures/green_metal_rust_rough_1k.webp';
+import CoalDiffuseMap from '../textures/plastered_stone_wall_diff_1k.webp';
+import CoalNormalMap from '../textures/plastered_stone_wall_nor_gl_1k.webp';
+import CoalRoughnessMap from '../textures/plastered_stone_wall_rough_1k.webp';
 import ConcreteDiffuseMap from '../textures/hexagonal_concrete_paving_diff_1k.webp';
 import ConcreteNormalMap from '../textures/hexagonal_concrete_paving_nor_gl_1k.webp';
 import ConcreteRoughnessMap from '../textures/hexagonal_concrete_paving_rough_1k.webp';
@@ -41,6 +44,13 @@ export const BeltMaterial = TexturedMaterial(
   BeltNormalMap,
   BeltRoughnessMap,
   { metalness: 0.3 }
+);
+
+export const CoalMaterial = TexturedMaterial(
+  CoalDiffuseMap,
+  CoalNormalMap,
+  CoalRoughnessMap,
+  { roughness: 0.7 }
 );
 
 export const ConcreteMaterial = TexturedMaterial(

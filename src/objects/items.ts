@@ -21,6 +21,7 @@ import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 import { Item } from '../core/data';
 import {
+  CoalMaterial,
   ConnectorsMaterial,
   CopperMaterial,
   IronMaterial,
@@ -234,6 +235,7 @@ class Items extends Group {
       wire.computeBoundingSphere();
 
       Items.geometries = {
+        [Item.coal]: ore,
         [Item.computer]: computer,
         [Item.copperIngot]: ingot,
         [Item.copperOre]: ore,
@@ -254,6 +256,7 @@ class Items extends Group {
   }
 
   private static readonly materials = {
+    [Item.coal]: CoalMaterial,
     [Item.computer]: [RustMaterial, ConnectorsMaterial],
     [Item.copperIngot]: CopperMaterial,
     [Item.copperOre]: CopperMaterial,
@@ -279,7 +282,6 @@ class Items extends Group {
     super();
     this.updateMatrixWorld();
     this.matrixAutoUpdate = false;
-    this.renderOrder = 1;
     this.bounds = bounds;
     this.instances = {};
     this.path = path;
