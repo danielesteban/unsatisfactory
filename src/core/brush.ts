@@ -9,6 +9,7 @@ import { Brush } from './data';
 import { Instance } from './instances';
 import { Intersection } from './physics';
 import Aggregators, { Aggregator }  from '../objects/aggregators';
+import Beacons, { Beacon } from '../objects/beacons';
 import Belts, { Belt } from '../objects/belts';
 import Buffers, { Buffer } from '../objects/buffers';
 import Columns, { Column } from '../objects/columns';
@@ -17,6 +18,7 @@ import Combinators, { Combinator }  from '../objects/combinators';
 import Fabricators, { Fabricator }  from '../objects/fabricators';
 import Foundations, { Foundation } from '../objects/foundations';
 import Generators, { Generator } from '../objects/generators';
+import Labs, { Lab } from '../objects/labs';
 import Miners, { Miner } from '../objects/miners';
 import Pillars, { Pillar } from '../objects/pillars';
 import Poles, { Pole } from '../objects/poles';
@@ -54,6 +56,9 @@ export const getFromObject = (instance?: Instance | Belt | Wire) => {
   if (instance instanceof Aggregator) {
     return Brush.aggregator;
   }
+  if (instance instanceof Beacon) {
+    return Brush.beacon;
+  }
   if (instance instanceof Belt) {
     return Brush.belt;
   }
@@ -74,6 +79,9 @@ export const getFromObject = (instance?: Instance | Belt | Wire) => {
   }
   if (instance instanceof Generator) {
     return Brush.generator;
+  }
+  if (instance instanceof Lab) {
+    return Brush.lab;
   }
   if (instance instanceof Miner) {
     return Brush.miner;
@@ -112,6 +120,8 @@ export const getGeometry = (brush: Brush) => {
   switch (brush) {
     case Brush.aggregator:
       return Aggregators.getGeometry();
+    case Brush.beacon:
+      return Beacons.getGeometry();
     case Brush.buffer:
       return Buffers.getGeometry();
     case Brush.column:
@@ -124,6 +134,8 @@ export const getGeometry = (brush: Brush) => {
       return Foundations.getGeometry();
     case Brush.generator:
       return Generators.getGeometry();
+    case Brush.lab:
+      return Labs.getGeometry();
     case Brush.miner:
       return Miners.getGeometry();
     case Brush.pillar:
@@ -151,6 +163,8 @@ export const getMaterial = (brush: Brush) => {
   switch (brush) {
     case Brush.aggregator:
       return Aggregators.getMaterial();
+    case Brush.beacon:
+      return Beacons.getMaterial();
     case Brush.belt:
       return Belts.getMaterial();
     case Brush.buffer:
@@ -165,6 +179,8 @@ export const getMaterial = (brush: Brush) => {
       return Foundations.getMaterial();
     case Brush.generator:
       return Generators.getMaterial();
+    case Brush.lab:
+      return Labs.getMaterial();
     case Brush.miner:
       return Miners.getMaterial();
     case Brush.pillar:
@@ -212,6 +228,7 @@ export const rotate = (direction: number) => {
 const offsets = {
   [Brush.none]: new Vector3(),
   [Brush.aggregator]: new Vector3(4, 2, 4),
+  [Brush.beacon]: new Vector3(0.5, 1.75, 0.5),
   [Brush.belt]: new Vector3(),
   [Brush.buffer]: new Vector3(1, 1, 1),
   [Brush.column]: new Vector3(0.5, 2, 0.5),
@@ -220,6 +237,7 @@ const offsets = {
   [Brush.fabricator]: new Vector3(2, 2, 1),
   [Brush.foundation]: new Vector3(2, 0.5, 2),
   [Brush.generator]: new Vector3(3, 4, 1),
+  [Brush.lab]: new Vector3(2, 2, 2),
   [Brush.miner]: new Vector3(1, 2, 1),
   [Brush.pillar]: new Vector3(2, 2, 2),
   [Brush.pole]: new Vector3(0.5, 3, 0.5),

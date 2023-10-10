@@ -77,11 +77,8 @@
     height: 3.5rem;
     padding-right: 3.5rem;
   }
-  .recipe.crafting, .recipe:disabled {
+  .recipe.crafting {
     cursor: default;
-  }
-  .recipe:disabled {
-    opacity: 0.3;
   }
   .progress {
     display: block;

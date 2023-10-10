@@ -187,7 +187,7 @@ class Transformer extends PoweredContainer<
       return;
     }
     buffer.input = {};
-    recipe.input.map(({ item }, i) => {
+    recipe.input.forEach(({ item }, i) => {
       buffer.input[item] = serialized[0][i] || 0;
     });
     buffer.output = serialized[1];

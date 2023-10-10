@@ -32,6 +32,7 @@ import { Intersection as PhysicsIntersection } from './core/physics';
 import Simulation from './core/simulation';
 import Viewport from './core/viewport';
 import Aggregators  from './objects/aggregators';
+import Beacons  from './objects/beacons';
 import Belts, { Belt, Connection } from './objects/belts';
 import Birds from './objects/birds';
 import Buffers, { Buffer } from './objects/buffers';
@@ -43,6 +44,7 @@ import Foundations from './objects/foundations';
 import Generators from './objects/generators';
 import Ghost from './objects/ghost';
 import Grass from './objects/grass';
+import Labs from './objects/labs';
 import Miners from './objects/miners';
 import Pillars from './objects/pillars';
 import Poles, { Pole } from './objects/poles';
@@ -93,6 +95,9 @@ viewport.scene.add(terrain);
 const aggregators = new Aggregators(viewport.physics, viewport.sfx);
 viewport.scene.add(aggregators);
 
+const beacons = new Beacons(viewport.physics);
+viewport.scene.add(beacons);
+
 const belts = new Belts(viewport.physics);
 viewport.scene.add(belts);
 
@@ -113,6 +118,9 @@ viewport.scene.add(foundations);
 
 const generators = new Generators(viewport.physics, viewport.sfx);
 viewport.scene.add(generators);
+
+const labs = new Labs(viewport.physics);
+viewport.scene.add(labs);
 
 const miners = new Miners(viewport.physics, viewport.sfx);
 viewport.scene.add(miners);
@@ -153,6 +161,7 @@ viewport.scene.add(ghost);
 
 const brushObjects = {
   [Brush.aggregator]: aggregators,
+  [Brush.beacon]: beacons,
   [Brush.belt]: belts,
   [Brush.buffer]: buffers,
   [Brush.column]: columns,
@@ -160,6 +169,7 @@ const brushObjects = {
   [Brush.fabricator]: fabricators,
   [Brush.foundation]: foundations,
   [Brush.generator]: generators,
+  [Brush.lab]: labs,
   [Brush.miner]: miners,
   [Brush.pillar]: pillars,
   [Brush.pole]: poles,
@@ -192,6 +202,7 @@ const intersection: Intersection = {
 const loader = new Loader(
   {
     aggregators,
+    beacons,
     belts,
     buffers,
     columns,
@@ -199,6 +210,7 @@ const loader = new Loader(
     fabricators,
     foundations,
     generators,
+    labs,
     miners,
     pillars,
     poles,
@@ -238,12 +250,14 @@ const create = (intersection: Intersection) => {
   }
   switch (brush) {
     case Brush.aggregator:
+    case Brush.beacon:
     case Brush.buffer:
     case Brush.column:
     case Brush.combinator:
     case Brush.fabricator:
     case Brush.foundation:
     case Brush.generator:
+    case Brush.lab:
     case Brush.pillar:
     case Brush.pole:
     case Brush.ramp:
@@ -257,7 +271,10 @@ const create = (intersection: Intersection) => {
         return 'nope';
       }
       object.create(snap(intersection), rotation);
-      if (brush === Brush.generator || brush === Brush.turbine) {
+      if (brush === Brush.beacon) {
+        Achievements.complete(Achievement.beacon);
+      }
+      if (brush === Brush.turbine) {
         Achievements.complete(Achievement.turbine);
       }
       return;
@@ -539,7 +556,7 @@ const getConnector = (intersection: Intersection, raycaster: Raycaster) => {
 const center = new Vector2();
 const simulation = new Simulation(
   belts,
-  [aggregators, buffers, combinators, fabricators, generators, miners, sinks, smelters, storages]
+  [aggregators, buffers, combinators, fabricators, generators, labs, miners, sinks, smelters, storages]
 );
 const animate = (buttons: Buttons, delta: number) => {
   birds.step(delta);

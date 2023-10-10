@@ -2,10 +2,11 @@ import { Base64 } from 'js-base64';
 import { deflateSync, inflateSync, strFromU8, strToU8 } from 'fflate';
 import { Vector3 } from 'three';
 import Container, { PoweredContainer } from './container';
-import { Brush, Item, Recipes } from './data';
+import { Brush, Item, Recipes, Researching } from './data';
 import Instances, { Instance } from './instances';
 import Viewport from './viewport';
 import Aggregators, { Aggregator } from '../objects/aggregators';
+import Beacons from '../objects/beacons';
 import Belts, { Belt } from '../objects/belts';
 import Buffers, { Buffer } from '../objects/buffers';
 import Columns from '../objects/columns';
@@ -14,6 +15,7 @@ import Fabricators, { Fabricator } from '../objects/fabricators';
 import Foundations from '../objects/foundations';
 import Generators, { Generator }  from '../objects/generators';
 import { SerializedItems, serializeItems, deserializeItems }  from '../objects/items';
+import Labs, { Lab } from '../objects/labs';
 import Miners, { Miner } from '../objects/miners';
 import Pillars from '../objects/pillars';
 import Poles, { Pole } from '../objects/poles';
@@ -29,10 +31,12 @@ import Cloudsaves from '../ui/stores/cloudsaves';
 import Hotbar from '../ui/stores/hotbar';
 import Inventory from '../ui/stores/inventory';
 import Points from '../ui/stores/points';
+import Research from '../ui/stores/research';
 import Settings from '../ui/stores/settings';
 
 type Objects = {
   aggregators: Aggregators;
+  beacons: Beacons;
   belts: Belts;
   buffers: Buffers;
   columns: Columns;
@@ -40,6 +44,7 @@ type Objects = {
   fabricators: Fabricators;
   foundations: Foundations;
   generators: Generators;
+  labs: Labs;
   miners: Miners;
   pillars: Pillars;
   poles: Poles;
@@ -60,6 +65,7 @@ type SerializedTransformer = [SerializedPosition, number, SerializedEnabled, num
 
 type Serialized = {
   aggregators: SerializedTransformer[];
+  beacons: [SerializedPosition, number][];
   belts: [SerializedContainer, number, SerializedContainer, number, SerializedItems | undefined][];
   buffers: [SerializedPosition, number, Item | undefined][];
   columns: [SerializedPosition, number][];
@@ -67,6 +73,7 @@ type Serialized = {
   fabricators: SerializedTransformer[];
   foundations: [SerializedPosition, number][];
   generators: [SerializedPosition, number, SerializedEnabled, number, number | undefined][];
+  labs: [SerializedPosition, number, SerializedEnabled, number | undefined, number[] | undefined][];
   miners: [SerializedPosition, number, SerializedEnabled, Item, number, number, number | undefined][];
   pillars: [SerializedPosition, number][];
   poles: [SerializedPosition, number][];
@@ -81,6 +88,7 @@ type Serialized = {
   hotbar: Brush[];
   inventory: [Item, number][];
   points: number;
+  research: number[];
   view: [SerializedPosition, [number, number, number]];
   version: number;
 };
@@ -190,7 +198,7 @@ class Loader {
   private serialize(): Serialized {
     const {
       objects: {
-        aggregators, belts, buffers, columns, combinators, fabricators, foundations, generators, miners, pillars, poles, ramps, sinks, smelters, storages, turbines, walls, wires,
+        aggregators, beacons, belts, buffers, columns, combinators, fabricators, foundations, generators, labs, miners, pillars, poles, ramps, sinks, smelters, storages, turbines, walls, wires,
       },
       viewport: { camera },
     } = this;
@@ -239,16 +247,21 @@ class Loader {
       if (instance instanceof Generator) {
         key = 10;
       }
+      if (instance instanceof Lab) {
+        key = 11;
+      }
       return [key, containers.get(instance)];
     };
     return {
       aggregators: serializeInstances(aggregators) as Serialized['aggregators'],
+      beacons: serializeInstances(beacons) as Serialized['beacons'],
       buffers: serializeInstances(buffers) as Serialized['buffers'],
       columns: serializeInstances(columns) as Serialized['columns'],
       combinators: serializeInstances(combinators) as Serialized['combinators'],
       fabricators: serializeInstances(fabricators) as Serialized['fabricators'],
       foundations: serializeInstances(foundations) as Serialized['foundations'],
       generators: serializeInstances(generators) as Serialized['generators'],
+      labs: serializeInstances(labs) as Serialized['labs'],
       miners: serializeInstances(miners) as Serialized['miners'],
       pillars: serializeInstances(pillars) as Serialized['pillars'],
       poles: serializeInstances(poles) as Serialized['poles'],
@@ -276,6 +289,7 @@ class Loader {
       hotbar: Hotbar.serialize(),
       inventory: Inventory.serialize(),
       points: Points.serialize(),
+      research: Research.serialize(),
       view: [camera.position.toArray(), camera.rotation.toArray().slice(0, 3)] as Serialized['view'],
       version: Loader.version,
     };
@@ -284,7 +298,7 @@ class Loader {
   private deserialize(serialized: Serialized) {
     const {
       objects: {
-        aggregators, belts, buffers, columns, combinators, fabricators, foundations, generators, miners, pillars, poles, ramps, sinks, smelters, storages, turbines, walls, wires,
+        aggregators, beacons, belts, buffers, columns, combinators, fabricators, foundations, generators, labs, miners, pillars, poles, ramps, sinks, smelters, storages, turbines, walls, wires,
       },
       viewport: { camera },
     } = this;
@@ -415,7 +429,23 @@ class Loader {
         }
         return generator;
       }),
+      serialized.labs.map(([position, rotation, enabled, research, buffer]) => {
+        const lab = labs.create(aux.fromArray(position), rotation, false)
+        if (!enabled) {
+          lab.setEnabled(false);
+        }
+        if (research !== undefined && Researching[research]) {
+          lab.setResearch(Researching[research]);
+          if (buffer) {
+            lab.setBuffer(buffer);
+          }
+        }
+        return lab;
+      }),
     ];
+    serialized.beacons.forEach(([position, rotation]) => (
+      beacons.create(aux.fromArray(position), rotation, false)
+    ));
     serialized.columns.forEach(([position, rotation]) => (
       columns.create(aux.fromArray(position), rotation, false)
     ));
@@ -452,6 +482,7 @@ class Loader {
     Hotbar.deserialize(serialized.hotbar);
     Inventory.deserialize(serialized.inventory);
     Points.deserialize(serialized.points);
+    Research.deserialize(serialized.research);
     camera.position.fromArray(serialized.view[0]);
     camera.userData.targetPosition.copy(camera.position);
     camera.rotation.fromArray(serialized.view[1]);
@@ -582,9 +613,17 @@ class Loader {
         )),
       };
     },
+    [21]: (serialized: Serialized) => {
+      return {
+        ...serialized,
+        beacons: [],
+        labs: [],
+        research: [],
+      };
+    },
   };
 
-  private static readonly version: number = 21;
+  private static readonly version: number = 22;
 }
 
 export default Loader;

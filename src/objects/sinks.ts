@@ -7,7 +7,7 @@ import {
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { Brush, Evaluator } from 'three-bvh-csg';
 import { Connectors, ConnectorsCSG, PoweredContainer, WireConnectorCSG } from '../core/container';
-import { Brush as BuildingType, Building, Item, Sinking } from '../core/data';
+import { Brush as BuildingType, Building, Consumption, Item, Sinking } from '../core/data';
 import Instances from '../core/instances';
 import { ContainerMaterials } from '../core/materials';
 import Physics from '../core/physics';
@@ -20,7 +20,7 @@ export class Sink extends PoweredContainer<
   }
 > {
   constructor(connectors: Connectors, position: Vector3, rotation: number) {
-    super(connectors, position, rotation, 100);
+    super(connectors, position, rotation, Consumption[BuildingType.sink]!);
   }
 
   override canInput() {

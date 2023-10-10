@@ -116,6 +116,8 @@ type InstanceModel = {
 };
 
 class Instances<InstanceType extends Instance> extends Group {
+  private static readonly addInstanceEvent: { type: 'addInstance' } = { type: 'addInstance' };
+  private static readonly removeInstanceEvent: { type: 'removeInstance' } = { type: 'removeInstance' };
   private static maxDistance: number = 64 ** 2;
 
   private readonly chunks: InstancesChunk[];
@@ -182,6 +184,7 @@ class Instances<InstanceType extends Instance> extends Group {
     if (withCost) {
       this.getCost().forEach(({ item, count }) => Inventory.output(item, count));
     }
+    this.dispatchEvent(Instances.addInstanceEvent);
     return instance;
   }
 
@@ -195,6 +198,7 @@ class Instances<InstanceType extends Instance> extends Group {
     this.getCost().forEach(({ item, count }) => Inventory.input(item, count));
     instance.dispose();
     physics.removeBody(instance);
+    this.dispatchEvent(Instances.removeInstanceEvent);
     const chunk = instanceChunks.get(instance);
     if (!chunk) {
       return;

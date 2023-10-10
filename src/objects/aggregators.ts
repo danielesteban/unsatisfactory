@@ -7,7 +7,7 @@ import {
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 import { Connectors, ConnectorsCSG, WireConnectorCSG } from '../core/container';
-import { Brush as BuildingType, Building } from '../core/data';
+import { Brush as BuildingType, Building, Consumption } from '../core/data';
 import Instances from '../core/instances';
 import { ContainerMaterials } from '../core/materials';
 import Physics from '../core/physics';
@@ -17,7 +17,7 @@ import Transformer from '../core/transformer';
 
 export class Aggregator extends Transformer {
   constructor(connectors: Connectors, position: Vector3, rotation: number, sfx: SFX) {
-    super(connectors, position, rotation, 50, sfx);
+    super(connectors, position, rotation, Consumption[BuildingType.aggregator]!, sfx);
   }
 
   // override process() {

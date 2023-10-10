@@ -19,8 +19,8 @@ import SFX from '../core/sfx';
 import Inventory from '../ui/stores/inventory';
 
 export class Generator extends GeneratorBase<
-{ type: 'buffer'; }
-| { type: 'progress'; }
+  { type: 'buffer'; }
+  | { type: 'progress'; }
 > {
   private static readonly bufferEvent: { type: 'buffer' } = { type: 'buffer' };
   private static readonly progressEvent: { type: 'progress' } = { type: 'progress' };

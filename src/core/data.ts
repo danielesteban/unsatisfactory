@@ -19,6 +19,8 @@ export enum Brush {
   wall,
   wire,
   generator,
+  lab,
+  beacon,
 }
 
 export const BrushGroups: Exclude<Brush, Brush.none>[][] = [
@@ -39,20 +41,25 @@ export const BrushGroups: Exclude<Brush, Brush.none>[][] = [
   [
     Brush.belt,
     Brush.buffer,
-    Brush.sink,
     Brush.storage,
   ],
   [
+    Brush.wire,
+    Brush.pole,
     Brush.turbine,
     Brush.generator,
-    Brush.pole,
-    Brush.wire,
+  ],
+  [
+    Brush.beacon,
+    Brush.lab,
+    Brush.sink,
   ],
 ];
 
 export const BrushName: Record<Brush, string> = {
   [Brush.none]: 'None',
   [Brush.aggregator]: 'Aggregator',
+  [Brush.beacon]: 'Beacon',
   [Brush.belt]: 'Belt',
   [Brush.buffer]: 'Buffer',
   [Brush.column]: 'Column',
@@ -61,6 +68,7 @@ export const BrushName: Record<Brush, string> = {
   [Brush.fabricator]: 'Fabricator',
   [Brush.foundation]: 'Foundation',
   [Brush.generator]: 'Power Plant',
+  [Brush.lab]: 'Lab',
   [Brush.miner]: 'Miner',
   [Brush.pillar]: 'Pillar',
   [Brush.pole]: 'Pole',
@@ -71,17 +79,6 @@ export const BrushName: Record<Brush, string> = {
   [Brush.turbine]: 'Wind Turbine',
   [Brush.wall]: 'Wall',
   [Brush.wire]: 'Wire',
-};
-
-export const BrushTier: Partial<Record<Brush, number>> = {
-  [Brush.aggregator]: 1,
-  [Brush.column]: 1,
-  [Brush.combinator]: 1,
-  [Brush.generator]: 1,
-  [Brush.pillar]: 1,
-  [Brush.ramp]: 1,
-  [Brush.storage]: 1,
-  [Brush.wall]: 1,
 };
 
 export enum Item {
@@ -126,6 +123,9 @@ export const Building: Partial<Record<Brush, BuildCost>> = {
     { item: Item.frame, count: 10 },
     { item: Item.wire, count: 50 },
   ],
+  [Brush.beacon]: [
+    { item: Item.ironRod, count: 5 },
+  ],
   [Brush.buffer]: [
     { item: Item.ironPlate, count: 5 },
   ],
@@ -141,6 +141,11 @@ export const Building: Partial<Record<Brush, BuildCost>> = {
   [Brush.generator]: [
     { item: Item.ironPlate, count: 20 },
     { item: Item.wire, count: 10 },
+  ],
+  [Brush.lab]: [
+    { item: Item.ironPlate, count: 10 },
+    { item: Item.ironRod, count: 10 },
+    { item: Item.wire, count: 20 },
   ],
   [Brush.miner]: [
     { item: Item.ironPlate, count: 10 },
@@ -171,6 +176,15 @@ export const Building: Partial<Record<Brush, BuildCost>> = {
   ],
 };
 
+export const Consumption: Partial<Record<Brush, number>> = {
+  [Brush.aggregator]: 50,
+  [Brush.combinator]: 20,
+  [Brush.fabricator]: 10,
+  [Brush.lab]: 30,
+  [Brush.sink]: 100,
+  [Brush.smelter]: 10,
+};
+
 export const Generation: Partial<Record<Item, { count: number; rate: number; power: number; }>> = {
   [Item.coal]: { count: 10, rate: 60, power: 500 },
 };
@@ -180,6 +194,96 @@ export const Mining: Partial<Record<Item, { consumption: number; count: number; 
   [Item.copperOre]: { consumption: 100, count: 20, rate: 20 },
   [Item.ironOre]: { consumption: 100, count: 20, rate: 20 },
 };
+
+export const Researching: { name: string, brushes: Exclude<Brush, Brush.none>[], input: { item: Exclude<Item, Item.none>; count: number; }[]; rate: number; }[] = [
+  {
+    name: 'Logistics',
+    brushes: [
+      Brush.belt,
+      Brush.buffer,
+      Brush.pole,
+    ],
+    input: [
+      {
+        item: Item.ironPlate,
+        count: 100,
+      },
+      {
+        item: Item.wire,
+        count: 200,
+      }
+    ],
+    rate: 100,
+  },
+  {
+    name: 'Manufacturing',
+    brushes: [
+      Brush.combinator,
+      Brush.generator,
+      Brush.storage,
+    ],
+    input: [
+      {
+        item: Item.ironRod,
+        count: 100,
+      },
+      {
+        item: Item.ironPlate,
+        count: 200,
+      },
+      {
+        item: Item.wire,
+        count: 300,
+      }
+    ],
+    rate: 200,
+  },
+  {
+    name: 'Advanced Manufacturing',
+    brushes: [
+      Brush.aggregator,
+      Brush.sink,
+    ],
+    input: [
+      {
+        item: Item.frame,
+        count: 100,
+      },
+      {
+        item: Item.rotor,
+        count: 100,
+      },
+      {
+        item: Item.ironPlate,
+        count: 300,
+      },
+      {
+        item: Item.wire,
+        count: 500,
+      },
+    ],
+    rate: 300,
+  },
+  {
+    name: 'Architecture',
+    brushes: [
+      Brush.column,
+      Brush.ramp,
+      Brush.wall,
+    ],
+    input: [
+      {
+        item: Item.ironRod,
+        count: 50,
+      },
+      {
+        item: Item.ironPlate,
+        count: 100,
+      },
+    ],
+    rate: 50,
+  },
+];
 
 export const Sinking: Partial<Record<Item, number>> = {
   [Item.computer]: 64,

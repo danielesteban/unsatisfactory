@@ -10,6 +10,7 @@ import { Belt } from '../objects/belts';
 import { Combinator } from '../objects/combinators';
 import { Fabricator } from '../objects/fabricators';
 import { Generator } from '../objects/generators';
+import { Lab } from '../objects/labs';
 import { Miner } from '../objects/miners';
 import { Sink } from '../objects/sinks';
 import { Smelter } from '../objects/smelters';
@@ -23,6 +24,7 @@ import BuildUI from './dialogs/build.svelte';
 import CodexUI from './dialogs/codex.svelte';
 import GeneratorUI from './dialogs/generator.svelte';
 import InventoryUI from './dialogs/inventory.svelte';
+import LabUI from './dialogs/lab.svelte';
 import MinerUI from './dialogs/miner.svelte';
 import SettingsUI from './dialogs/settings.svelte';
 import SinkUI from './dialogs/sink.svelte';
@@ -155,6 +157,11 @@ class UI {
           });
         } else if (instance instanceof Generator) {
           dialog = new GeneratorUI({
+            props: { close, instance },
+            target,
+          });
+        } else if (instance instanceof Lab) {
+          dialog = new LabUI({
             props: { close, instance },
             target,
           });

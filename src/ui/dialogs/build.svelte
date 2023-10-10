@@ -1,11 +1,11 @@
 <script lang="ts">
   import { set as setBrush } from '../../core/brush';
-  import { Brush, BrushName, BrushGroups, BrushTier } from '../../core/data';
+  import { Brush, BrushName, BrushGroups, Researching } from '../../core/data';
   import BrushImage from '../components/brush.svelte';
   import Dialog from '../components/dialog.svelte';
   import Filter from '../components/filter.svelte';
-  import Achievements, { Achievement } from '../stores/achievements';
   import Hotbar from '../stores/hotbar';
+  import Research from '../stores/research';
 
   export let close: () => void;
 
@@ -20,9 +20,18 @@
     group.map((brush) => ({ id: brush, name: BrushName[brush] }))
   ));
 
-  $: tier = $Achievements.has(Achievement.points) ? 1 : 0;
-  $: brushesInTier = brushes.map((group) => (
-    group.map((brush) => ({ ...brush, locked: tier < (BrushTier[brush.id] || 0)}))
+  const BrushResearch: Partial<Record<Brush, number>> = Researching.reduce<Partial<Record<Brush, number>>>((brushes, research, index) => {
+    research.brushes.forEach((brush) => {
+      brushes[brush] = index;
+    });
+    return brushes;
+  }, {});
+
+  $: available = brushes.map((group) => (
+    group.map((brush) => ({
+      ...brush,
+      locked: BrushResearch[brush.id] !== undefined && !$Research.has(BrushResearch[brush.id]!),
+    }))
   ));
 
   let hover: Brush | undefined;
@@ -45,7 +54,7 @@
 <svelte:document on:keydown={keydown} />
 
 <Dialog bodyClass={bodyClass} close={close}>
-  <Filter groups={brushesInTier} let:filtered>
+  <Filter groups={available} let:filtered>
     <div class="grid">
       {#each filtered as group}
         <div class="group">
@@ -99,10 +108,6 @@
     width: 7.5625rem;
     height: 7.5625rem;
     background: rgba(0, 0, 0, .2);
-  }
-  .brush:disabled {
-    opacity: 0.3;
-    cursor: default;
   }
   .brush > img {
     position: absolute;

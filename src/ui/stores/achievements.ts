@@ -13,6 +13,8 @@ export enum Achievement {
   aggregator,
   inventory,
   scanner,
+  research,
+  beacon,
 }
 
 let achievements: Set<Achievement> = new Set();

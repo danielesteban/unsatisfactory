@@ -3,10 +3,11 @@
   import Simulation from '../../core/simulation';
   import ItemImage from '../components/item.svelte';
   import Module from '../components/module.svelte';
+  import Progress from '../components/progress.svelte';
   
   export let name: string;
   export let items: { item: Exclude<Item, Item.none>; count: number; buffer: number; } | { item: Exclude<Item, Item.none>; count: number; buffer: number; }[];
-  export let rate: number;
+  export let rate: number | undefined = undefined;
   export let onBuffer: (item: Exclude<Item, Item.none>) => (e: PointerEvent) => void;
 </script>
 
@@ -33,7 +34,13 @@
         </div>
         <div class="info">
           <div><span class="count">{count}</span> {ItemName[item]}</div>
-          <div class="rate">{60 * (Simulation.tps / rate) * count} / min</div>
+          {#if rate !== undefined}
+            <div class="rate">{60 * (Simulation.tps / rate) * count} / min</div>
+          {:else}
+            <div class="progress">
+              <Progress value={buffer / count} />
+            </div>
+          {/if}
         </div>
       </div>
     {/each}
@@ -47,12 +54,16 @@
     gap: 0.5rem;
   }
   .info {
+    flex-grow: 1;
     display: flex;
     flex-direction: column;
     gap: 0.125rem;
   }
   .count {
     font-weight: 600;
+  }
+  .progress {
+    padding: 0.25rem 0 0.5rem;
   }
   .rate {
     color: #aaa;

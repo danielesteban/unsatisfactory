@@ -1,7 +1,9 @@
 <div class="module">
-  <div class="subheading">
-    <slot name="name"></slot>
-  </div>
+  {#if $$slots.name}
+    <div class="subheading">
+      <slot name="name"></slot>
+    </div>
+  {/if}
   <div>
     <slot></slot>
   </div>

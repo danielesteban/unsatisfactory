@@ -1,6 +1,8 @@
 <script lang="ts">
   import { MathUtils, Vector3 } from 'three';
+  import BeaconIcon from '../components/beacon.svelte';
   import ItemImage from '../components/item.svelte';
+  import Beacons from '../stores/beacons';
   import Scanner from '../stores/scanner';
 
   export let lat: number;
@@ -105,14 +107,21 @@
     angle = Math.floor(angle / Math.PI * 18000) / 100;
     const diff = Math.abs(angle - orientation) > Math.abs(orientation - angle) ? (orientation - angle) : (angle - orientation);
     const offset = diff / stepDeg * step;
-    return width * 0.5 + MathUtils.clamp(offset, width * -0.5, width * 0.5);
+    return MathUtils.clamp(width * 0.5 + offset, 0, width);
   };
 
-  $: markers = $Scanner.results.map(({ item, position }) => ({
-    item,
-    distance: getDistanceToMarker(position, lat, lon),
-    position: getMarkerPosition(position, lat, lon, orientation),
-  }));
+  $: markers = [
+    ...$Beacons.map((position) => ({
+      item: undefined,
+      distance: getDistanceToMarker(position, lat, lon),
+      position: getMarkerPosition(position, lat, lon, orientation),
+    })),
+    ...$Scanner.results.map(({ item, position }) => ({
+      item,
+      distance: getDistanceToMarker(position, lat, lon),
+      position: getMarkerPosition(position, lat, lon, orientation),
+    })),
+  ];
 </script>
 
 <div class="compass">
@@ -127,7 +136,11 @@
         <div class="marker" style="left: {position}px">
           <div class="box">
             <div class="image">
-              <ItemImage item={item} />
+              {#if item !== undefined}
+                <ItemImage item={item} />
+              {:else}
+                <BeaconIcon />
+              {/if}
             </div>
             <div class="distance">
               {distance}m
@@ -221,9 +234,9 @@
     position: absolute;
     left: 0;
     top: 0;
-    background: rgba(0, 0, 0, 0.15);
+    background: rgba(0, 0, 0, 0.1);
     width: 2px;
-    height: 1rem;
+    height: 0.5rem;
     transform: translate(-50%, 0);
   }
 
@@ -236,7 +249,7 @@
     height: 2.25rem;
     background: rgba(0, 0, 0, 0.15);
     border-radius: 0.25rem;
-    transform: translate(-50%, 1rem);
+    transform: translate(-50%, 0.5rem);
   }
 
   .distance {

@@ -151,7 +151,7 @@ const processBrushQueue = () => {
     if (brush === Brush.pole) {
       y = 0.5;
     }
-    if (brush === Brush.pillar || brush === Brush.pole || brush === Brush.sink) {
+    if (brush === Brush.lab || brush === Brush.pillar || brush === Brush.pole || brush === Brush.sink) {
       zoom += 0.5;
     }
     if (brush === Brush.aggregator) {
