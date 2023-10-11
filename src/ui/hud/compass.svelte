@@ -115,7 +115,7 @@
     filter = filters[(filters.indexOf(filter) + 1) % filters.length]!;
   };
 
-  const Marker = (item: Item | undefined, position: Vector3, lat: number, lon: number, orientation: number) => {
+  const Marker = (item: Exclude<Item, Item.none> | undefined, position: Vector3, lat: number, lon: number, orientation: number) => {
     let angle = Math.atan2(lon - position.x, lat - position.z);
     angle = Math.PI * 2 - (angle - Math.floor(angle/(Math.PI * 2)) * Math.PI * 2);
     angle = Math.floor(angle / Math.PI * 18000) / 100;
