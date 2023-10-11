@@ -121,7 +121,7 @@
       distance: getDistanceToMarker(position, lat, lon),
       position: getMarkerPosition(position, lat, lon, orientation),
     })),
-  ];
+  ].sort(({ distance: a }, { distance: b }) => b - a);
 </script>
 
 <div class="compass">

@@ -51,7 +51,7 @@ export default {
       aux.addVectors(position, anchor).multiplyScalar(TerrainChunk.size);
       const deposit = terrain.getDeposit(aux);
       if (deposit) {
-        results.unshift({ item: deposit.item, position: aux.clone() });
+        results.push({ item: deposit.item, position: aux.clone() });
         !isMuted && sfx.paused && sfx.play();
       }
       set({ isRunning: true, results, progress: 1 - (grid.length / count)});
