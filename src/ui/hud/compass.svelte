@@ -115,33 +115,36 @@
     filter = filters[(filters.indexOf(filter) + 1) % filters.length]!;
   };
 
-  const getDistanceToMarker = (position: Vector3, lat: number, lon: number) => (
-    Math.round(Math.sqrt((lon - position.x) ** 2 + (lat - position.z) ** 2))
-  );
-
-  const getMarkerPosition = (position: Vector3, lat: number, lon: number, orientation: number) => {
+  const Marker = (item: Item | undefined, position: Vector3, lat: number, lon: number, orientation: number) => {
     let angle = Math.atan2(lon - position.x, lat - position.z);
     angle = Math.PI * 2 - (angle - Math.floor(angle/(Math.PI * 2)) * Math.PI * 2);
     angle = Math.floor(angle / Math.PI * 18000) / 100;
-    const diff = Math.abs((angle - 360) - orientation) > Math.abs(angle - orientation) ? (angle - orientation) : ((angle - 360) - orientation);
+    let diff = angle - orientation;
+    if (Math.abs(diff) > Math.abs(angle - (orientation - 360))) {
+      diff = angle - (orientation - 360);
+    }
+    if (Math.abs(diff) > Math.abs((angle - 360) - orientation)) {
+      diff = (angle - 360) - orientation;
+    }
     const offset = diff / stepDeg * step;
-    return MathUtils.clamp(width * 0.5 + offset, 0, width);
+    return {
+      item,
+      distance: Math.round(Math.sqrt((lon - position.x) ** 2 + (lat - position.z) ** 2)),
+      opacity: 1 - (MathUtils.clamp(Math.abs(offset) - (width * 0.5 - padding), 0, padding) / padding),
+      position: MathUtils.clamp(width * 0.5 + offset, 0, width),
+    };
   };
 
   $: markers = [
-    ...((filter === 'all' || filter === 'beacon') ? $Beacons.map((position) => ({
-      item: undefined,
-      distance: getDistanceToMarker(position, lat, lon),
-      position: getMarkerPosition(position, lat, lon, orientation),
-    })) : []),
+    ...((filter === 'all' || filter === 'beacon') ? $Beacons.map((position) => (
+      Marker(undefined, position, lat, lon, orientation)
+    )) : []),
     ...(filter !== 'beacon' ? (
       $Scanner.results
         .filter(({ item }) => filter === 'all' || filter === item)
-        .map(({ item, position }) => ({
-          item,
-          distance: getDistanceToMarker(position, lat, lon),
-          position: getMarkerPosition(position, lat, lon, orientation),
-        }))
+        .map(({ item, position }) => (
+          Marker(item, position, lat, lon, orientation)
+        ))
     ) : []),
   ].sort(({ distance: a }, { distance: b }) => b - a);
 </script>
@@ -156,8 +159,8 @@
   <div>
     <canvas bind:this={canvas} />
     <div class="scanner">
-      {#each markers as { item, position, distance }}
-        <div class="marker" style="left: {position}px">
+      {#each markers as { item, distance, opacity, position }}
+        <div class="marker" style="left: {position}px; opacity: {opacity};">
           <div class="box">
             <div class="image">
               {#if item !== undefined}
