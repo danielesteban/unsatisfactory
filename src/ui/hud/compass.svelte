@@ -5,9 +5,9 @@
   import Beacons from '../stores/beacons';
   import Scanner from '../stores/scanner';
 
-  export let lat: number;
-  export let lon: number;
-  export let orientation: number;
+  export let lat: number = 0;
+  export let lon: number = 0;
+  export let orientation: number = 0;
 
   let canvas: HTMLCanvasElement;
   
@@ -105,7 +105,7 @@
     let angle = Math.atan2(lon - position.x, lat - position.z);
     angle = Math.PI * 2 - (angle - Math.floor(angle/(Math.PI * 2)) * Math.PI * 2);
     angle = Math.floor(angle / Math.PI * 18000) / 100;
-    const diff = Math.abs(angle - orientation) > Math.abs(orientation - angle) ? (orientation - angle) : (angle - orientation);
+    const diff = Math.abs((angle - 360) - orientation) > Math.abs(angle - orientation) ? (angle - orientation) : ((angle - 360) - orientation);
     const offset = diff / stepDeg * step;
     return MathUtils.clamp(width * 0.5 + offset, 0, width);
   };
