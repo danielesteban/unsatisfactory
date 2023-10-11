@@ -51,7 +51,10 @@
   let hasSaved = false;
   let isSaving = false;
   let saveTimer = 0;
-  const onSave = () => {
+  const save = () => {
+    if (isSaving) {
+      return;
+    }
     clearTimeout(saveTimer);
     hasSaved = false;
     isSaving = true;
@@ -121,7 +124,7 @@
           Save <span class="info">(Autosaved: {lastSaveFormatted})</span>
         </div>
         <div class="buttons">
-          <button class="save" disabled={isSaving} on:click={onSave}>
+          <button class="save" disabled={isSaving} on:click={save}>
             {#if isSaving}
               Saving...
             {:else if hasSaved}

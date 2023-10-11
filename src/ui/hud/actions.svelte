@@ -19,18 +19,31 @@
     e.preventDefault()
   );
 
-  let timer = 0;
   let hasSaved = false;
+  let isSaving = false;
+  let saveTimer = 0;
   const save = () => {
-    loader.save()
+    if (isSaving) {
+      return;
+    }
+    clearTimeout(saveTimer);
+    hasSaved = false;
+    isSaving = true;
+    return loader.save()
       .then(() => {
         hasSaved = true;
-        clearTimeout(timer);
-        timer = setTimeout(() => {
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(() => {
           hasSaved = false;
         }, 1000);
       })
-      .catch(() => {});
+      .catch(() => {
+        // @dani @incomplete
+        // Show error feedback. Retry?
+      })
+      .finally(() => {
+        isSaving = false;
+      });
   };
 
   const toggleSFX = () => {
