@@ -73,7 +73,7 @@ type Serialized = {
   fabricators: SerializedTransformer[];
   foundations: [SerializedPosition, number][];
   generators: [SerializedPosition, number, SerializedEnabled, number, number | undefined][];
-  labs: [SerializedPosition, number, SerializedEnabled, number | undefined, number[] | undefined][];
+  labs: [SerializedPosition, number, SerializedEnabled, number | undefined, number | undefined, number[] | undefined][];
   miners: [SerializedPosition, number, SerializedEnabled, Item, number, number, number | undefined][];
   pillars: [SerializedPosition, number][];
   poles: [SerializedPosition, number][];
@@ -429,7 +429,7 @@ class Loader {
         }
         return generator;
       }),
-      serialized.labs.map(([position, rotation, enabled, research, buffer]) => {
+      serialized.labs.map(([position, rotation, enabled, research, tick, buffer]) => {
         const lab = labs.create(aux.fromArray(position), rotation, false)
         if (!enabled) {
           lab.setEnabled(false);
@@ -438,6 +438,9 @@ class Loader {
           lab.setResearch(Researching[research]);
           if (buffer) {
             lab.setBuffer(buffer);
+          }
+          if (tick) {
+            lab.setTick(tick);
           }
         }
         return lab;
