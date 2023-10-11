@@ -169,22 +169,13 @@
 
 <style>
   .achievement {
-    position: absolute;
-    top: 1rem;
-    left: 1rem;
-    background: rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(0.5rem);
-    padding: 1rem;
-    border-radius: 0.5rem;
+    display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    pointer-events: none;
-    display: none;
-    z-index: 2;
-  }
-
-  :global(body.pointerlock) .achievement, :global(body.ui) .achievement {
-    display: flex;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(0.5rem);
+    border-radius: 0.5rem;
   }
 
   .achievement.completed {
