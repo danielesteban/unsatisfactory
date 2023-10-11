@@ -1,5 +1,6 @@
 <script lang="ts">
   import { MathUtils, Vector3 } from 'three';
+  import { Item, ItemName } from '../../core/data';
   import BeaconIcon from '../components/beacon.svelte';
   import ItemImage from '../components/item.svelte';
   import Beacons from '../stores/beacons';
@@ -97,6 +98,23 @@
   
   $: canvas && draw(orientation);
 
+  const filters: ('all' | 'beacon' | Item)[] = [
+    'all',
+    'beacon',
+    Item.coal,
+    Item.copperOre,
+    Item.ironOre,
+  ];
+  let filter: 'all' | 'beacon' | Item = 'all';
+  $: filterName = filter === 'all' ? 'All' : (filter === 'beacon' ? 'Beacon' : ItemName[filter]);
+
+  const keydown = ({ code, repeat }: KeyboardEvent) => {
+    if (code !== 'KeyZ' || repeat || !document.body.classList.contains('pointerlock')) {
+      return;
+    }
+    filter = filters[(filters.indexOf(filter) + 1) % filters.length]!;
+  };
+
   const getDistanceToMarker = (position: Vector3, lat: number, lon: number) => (
     Math.round(Math.sqrt((lon - position.x) ** 2 + (lat - position.z) ** 2))
   );
@@ -111,18 +129,24 @@
   };
 
   $: markers = [
-    ...$Beacons.map((position) => ({
+    ...((filter === 'all' || filter === 'beacon') ? $Beacons.map((position) => ({
       item: undefined,
       distance: getDistanceToMarker(position, lat, lon),
       position: getMarkerPosition(position, lat, lon, orientation),
-    })),
-    ...$Scanner.results.map(({ item, position }) => ({
-      item,
-      distance: getDistanceToMarker(position, lat, lon),
-      position: getMarkerPosition(position, lat, lon, orientation),
-    })),
+    })) : []),
+    ...(filter !== 'beacon' ? (
+      $Scanner.results
+        .filter(({ item }) => filter === 'all' || filter === item)
+        .map(({ item, position }) => ({
+          item,
+          distance: getDistanceToMarker(position, lat, lon),
+          position: getMarkerPosition(position, lat, lon, orientation),
+        }))
+    ) : []),
   ].sort(({ distance: a }, { distance: b }) => b - a);
 </script>
+
+<svelte:document on:keydown={keydown} />
 
 <div class="compass">
   <div class="info">
@@ -154,12 +178,12 @@
   <div class="info keys">
     <div>
       <div>
-        <div class="key">Q</div>
-        <div>Build</div>
+        <div class="key">Z</div>
+        <div>Filter: {filterName}</div>
       </div>
       <div>
-        <div class="key">F</div>
-        <div>Dismantle</div>
+        <div class="key">X</div>
+        <div>Scan</div>
       </div>
     </div>
   </div>
