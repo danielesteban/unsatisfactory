@@ -1,5 +1,6 @@
 import RAPIER from '@dimforge/rapier3d-compat';
 import {
+  BufferAttribute,
   Group,
   Material,
   Mesh,
@@ -17,9 +18,12 @@ import Physics from '../core/physics';
 import Deposit from './deposit';
 import Grass from './grass';
 import { loadTexture } from '../textures';
-import DiffuseMap from '../textures/coast_sand_rocks_02_diff_1k.webp';
-import NormalMap from '../textures/coast_sand_rocks_02_nor_gl_1k.webp';
-import RoughnessMap from '../textures/coast_sand_rocks_02_rough_1k.webp';
+import DiffuseColdMap from '../textures/coast_sand_rocks_02_diff_1k.webp';
+import NormalColdMap from '../textures/coast_sand_rocks_02_nor_gl_1k.webp';
+import RoughnessColdMap from '../textures/coast_sand_rocks_02_rough_1k.webp';
+import DiffuseWarmMap from '../textures/sand_01_diff_1k.webp';
+import NormalWarmMap from '../textures/sand_01_nor_gl_1k.webp';
+import RoughnessWarmMap from '../textures/sand_01_rough_1k.webp';
 
 export class TerrainChunk extends Mesh {
   public static readonly size: number = 16;
@@ -36,14 +40,17 @@ export class TerrainChunk extends Mesh {
   }
 
   public readonly chunk: Vector3;
+  public readonly heatmap: Float32Array;
   public readonly heightmap: Float32Array;
   public readonly deposit: Deposit;
   public readonly grass: Grass;
   constructor(material: Material) {
     super(TerrainChunk.getGeometry().clone(), material);
+    this.geometry.setAttribute('heat', new BufferAttribute(new Float32Array(this.geometry.getAttribute('position').count), 1));
     this.castShadow = this.receiveShadow = true;
     this.matrixAutoUpdate = false;
     this.chunk = new Vector3();
+    this.heatmap = new Float32Array((TerrainChunk.size + 1) * (TerrainChunk.size + 1));
     this.heightmap = new Float32Array((TerrainChunk.size + 1) * (TerrainChunk.size + 1));
     this.deposit = new Deposit();
     this.add(this.deposit);
@@ -53,29 +60,34 @@ export class TerrainChunk extends Mesh {
 
   private static readonly aux: Vector3 = new Vector3();
   private static readonly center: Vector3 = new Vector3();
-  update(chunk: Vector3, getHeight: (position: Vector3) => number) {
-    const { deposit, geometry, grass, heightmap, position: origin } = this;
+  update(chunk: Vector3, getGrass: (position: Vector3) => number, getHeight: (position: Vector3) => number) {
+    const { deposit, geometry, grass, heatmap, heightmap, position: origin } = this;
     const { aux, center } = TerrainChunk;
     this.chunk.copy(chunk);
     origin.copy(chunk).multiplyScalar(TerrainChunk.size);
+    const heat = geometry.getAttribute('heat');
     const position = geometry.getAttribute('position');
     for (let i = 0, x = 0; x < (TerrainChunk.size + 1); x++) {
       for (let z = 0; z < (TerrainChunk.size + 1); z++, i++) {
-        heightmap[i] = getHeight(aux.set(x - TerrainChunk.size * 0.5, 0, z - TerrainChunk.size * 0.5).add(origin));
+        aux.set(x - TerrainChunk.size * 0.5, 0, z - TerrainChunk.size * 0.5).add(origin);
+        heatmap[i] = getGrass(aux) + 1;
+        heightmap[i] = getHeight(aux);
       }
     }
     let maxRadiusSq = 0;
     for (let i = 0; i < position.count; i++) {
       aux.fromBufferAttribute(position, i);
-      aux.y = heightmap[
+      const index = (
         Math.floor(aux.x + TerrainChunk.size * 0.5) * (TerrainChunk.size + 1)
         + Math.floor(aux.z + TerrainChunk.size * 0.5)
-      ];
+      );
+      heat.setX(i, heatmap[index]);
+      aux.y = heightmap[index];
       position.setY(i, aux.y);
       maxRadiusSq = Math.max(maxRadiusSq, center.distanceToSquared(aux));
     }
     geometry.boundingSphere!.radius = Math.sqrt(maxRadiusSq);
-    position.needsUpdate = true;
+    heat.needsUpdate = position.needsUpdate = true;
     deposit.visible = grass.visible = false;
     this.updateMatrix();
     this.updateMatrixWorld();
@@ -97,73 +109,75 @@ class Terrain extends Group {
   private static material: MeshStandardMaterial | undefined;
   static getMaterial() {
     if (!Terrain.material) {
+      const textures = {
+        cold: {
+          map: loadTexture(DiffuseColdMap),
+          normalMap: loadTexture(NormalColdMap),
+          roughnessMap: loadTexture(RoughnessColdMap),
+        },
+        warm: {
+          map: loadTexture(DiffuseWarmMap),
+          normalMap: loadTexture(NormalWarmMap),
+          roughnessMap: loadTexture(RoughnessWarmMap),
+        },
+      }
       const material = new MeshStandardMaterial({
-        map: loadTexture(DiffuseMap),
-        normalMap: loadTexture(NormalMap),
-        roughnessMap: loadTexture(RoughnessMap),
+        ...textures.cold,
       });
-      material.map!.anisotropy = 16;
-      material.map!.colorSpace = SRGBColorSpace;
-      [material.map!, material.normalMap!, material.roughnessMap!].forEach((map) => {
-        map.repeat.set(4, 4);
-        map.wrapS = map.wrapT = RepeatWrapping;
-      });
+      [textures.cold, textures.warm].forEach((textures) => {
+        textures.map!.anisotropy = 16;
+        textures.map!.colorSpace = SRGBColorSpace;
+        [textures.map!, textures.normalMap!, textures.roughnessMap!].forEach((map) => {
+          map.repeat.set(4, 4);
+          map.wrapS = map.wrapT = RepeatWrapping;
+        });
+      })
       material.customProgramCacheKey = () => 'Terrain';
       material.onBeforeCompile = (shader: Shader) => {
+        shader.uniforms.mapB = { value: textures.warm.map };
+        shader.uniforms.normalMapB = { value: textures.warm.normalMap };
+        shader.uniforms.roughnessMapB = { value: textures.warm.roughnessMap };
+        shader.vertexShader = shader.vertexShader
+          .replace(
+            '#include <clipping_planes_pars_vertex>',
+            /* glsl */`
+            #include <clipping_planes_pars_vertex>
+            attribute float heat;
+            varying float vHeat;
+            `
+          )
+          .replace(
+            '#include <clipping_planes_vertex>',
+            /* glsl */`
+            #include <clipping_planes_vertex>
+            vHeat = heat;
+            `
+          );
         shader.fragmentShader = shader.fragmentShader
           .replace(
             '#include <clipping_planes_pars_fragment>',
             /* glsl */`
             #include <clipping_planes_pars_fragment>
-            float directNoise(vec2 p) {
-              vec2 ip = floor(p);
-              vec2 u = fract(p);
-              u = u*u*(3.0-2.0*u);
-              float res = mix(
-                mix(rand(ip),rand(ip+vec2(1.0,0.0)),u.x),
-                mix(rand(ip+vec2(0.0,1.0)),rand(ip+vec2(1.0,1.0)),u.x),
-                u.y
-              );
-              return res*res;
-            }
-            float sum(vec4 v) { return v.x+v.y+v.z; }
-            vec4 textureNoTile(sampler2D mapper, in vec2 uv) {
-              // sample variation pattern
-              float k = directNoise(uv);
-              // compute index
-              float index = k*8.0;
-              float f = fract(index);
-              float ia = floor(index);
-              float ib = ia + 1.0;
-
-              // offsets for the different virtual patterns
-              vec2 offa = sin(vec2(3.0,7.0)*ia);
-              vec2 offb = sin(vec2(3.0,7.0)*ib);
-
-              // compute derivatives for mip-mapping
-              vec2 dx = dFdx(uv);
-              vec2 dy = dFdy(uv);
-
-              // sample the two closest virtual patterns
-              vec4 cola = textureGrad(mapper, uv + offa, dx, dy);
-              vec4 colb = textureGrad(mapper, uv + offb, dx, dy);
-
-              // interpolate between the two virtual patterns
-              return mix(cola, colb, smoothstep(0.2,0.8,f-0.1*sum(cola-colb)));
+            uniform sampler2D mapB;
+            uniform sampler2D normalMapB;
+            uniform sampler2D roughnessMapB;
+            varying float vHeat;
+            vec4 textureHeat(sampler2D mapperA, sampler2D mapperB, in vec2 uv) {
+              return mix(texture2D(mapperA, uv), texture2D(mapperB, uv), clamp(vHeat, 0.0, 1.0));
             }
             `
           )
           .replace(
             '#include <map_fragment>',
-            ShaderChunk.map_fragment.replace(/texture2D/g, 'textureNoTile')
+            ShaderChunk.map_fragment.replace(/texture2D\(/g, 'textureHeat(mapB,')
           )
           .replace(
             '#include <normal_fragment_maps>',
-            ShaderChunk.normal_fragment_maps.replace(/texture2D/g, 'textureNoTile')
+            ShaderChunk.normal_fragment_maps.replace(/texture2D\(/g, 'textureHeat(normalMapB,')
           )
           .replace(
             '#include <roughnessmap_fragment>',
-            ShaderChunk.roughnessmap_fragment.replace(/texture2D/g, 'textureNoTile')
+            ShaderChunk.roughnessmap_fragment.replace(/texture2D\(/g, 'textureHeat(roughnessMapB,')
           );
       };
       Terrain.material = material;
@@ -296,7 +310,7 @@ class Terrain extends Group {
       const key = `${aux.x}:${aux.z}`;
       if (!map.has(key)) {
         const chunk = pool.pop() || new TerrainChunk(Terrain.getMaterial());
-        chunk.update(aux, this.getHeight);
+        chunk.update(aux, this.getGrass, this.getHeight);
         physics.addCollider(
           chunk,
           RAPIER.ColliderDesc
