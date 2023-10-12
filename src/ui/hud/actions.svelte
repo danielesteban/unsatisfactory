@@ -15,6 +15,18 @@
     loader.importFile(file);
   };
 
+  let isFullscreen = false;
+  const fullscreen = () => {
+    isFullscreen = !!document.fullscreenElement;
+  };
+  const toggleFullscreen = () => {
+    if (isFullscreen) {
+      document.exitFullscreen();
+    } else {
+      document.body.requestFullscreen();
+    }
+  };
+
   const prevent = (e: DragEvent) => (
     e.preventDefault()
   );
@@ -51,7 +63,7 @@
   };
 </script>
 
-<svelte:document on:dragenter={prevent} on:dragover={prevent} on:drop={drop} />
+<svelte:document on:dragenter={prevent} on:dragover={prevent} on:drop={drop} on:fullscreenchange={fullscreen} />
 
 <div class="actions">
   <button class="save" on:click={save}>
@@ -82,6 +94,17 @@
       </svg>
     {/if}
   </button>
+  <button on:click={toggleFullscreen}>
+    {#if isFullscreen}
+      <svg viewBox="0 0 24 24">
+        <path d="M17.5,6.5 L20,6.5 C20.8284,6.5 21.5,7.17157 21.5,8 C21.5,8.82843 20.8284,9.5 20,9.5 L17,9.5 C15.6193,9.5 14.5,8.38071 14.5,7 L14.5,4 C14.5,3.17157 15.1716,2.5 16,2.5 C16.8284,2.5 17.5,3.17157 17.5,4 L17.5,6.5 Z M4,6.5 L6.5,6.5 L6.5,4 C6.5,3.17157 7.17157,2.5 8,2.5 C8.82843,2.5 9.5,3.17157 9.5,4 L9.5,7 C9.5,8.38071 8.38071,9.5 7,9.5 L4,9.5 C3.17157,9.5 2.5,8.82843 2.5,8 C2.5,7.17157 3.17157,6.5 4,6.5 Z M4,17.5 L6.5,17.5 L6.5,20 C6.5,20.8284 7.17157,21.5 8,21.5 C8.82843,21.5 9.5,20.8284 9.5,20 L9.5,17 C9.5,15.6193 8.38071,14.5 7,14.5 L4,14.5 C3.17157,14.5 2.5,15.1716 2.5,16 C2.5,16.8284 3.17157,17.5 4,17.5 Z M20,17.5 L17.5,17.5 L17.5,20 C17.5,20.8284 16.8284,21.5 16,21.5 C15.1716,21.5 14.5,20.8284 14.5,20 L14.5,17 C14.5,15.6193 15.6193,14.5 17,14.5 L20,14.5 C20.8284,14.5 21.5,15.1716 21.5,16 C21.5,16.8284 20.8284,17.5 20,17.5 Z"/>
+      </svg>
+    {:else}
+      <svg viewBox="0 0 24 24">
+        <path d="M18.5,5.5 L16,5.5 C15.1716,5.5 14.5,4.82843 14.5,4 C14.5,3.17157 15.1716,2.5 16,2.5 L19,2.5 C20.3807,2.5 21.5,3.61929 21.5,5 L21.5,8 C21.5,8.82843 20.8284,9.5 20,9.5 C19.1716,9.5 18.5,8.82843 18.5,8 L18.5,5.5 Z M8,5.5 L5.5,5.5 L5.5,8 C5.5,8.82843 4.82843,9.5 4,9.5 C3.17157,9.5 2.5,8.82843 2.5,8 L2.5,5 C2.5,3.61929 3.61929,2.5 5,2.5 L8,2.5 C8.82843,2.5 9.5,3.17157 9.5,4 C9.5,4.82843 8.82843,5.5 8,5.5 Z M8,18.5 L5.5,18.5 L5.5,16 C5.5,15.1716 4.82843,14.5 4,14.5 C3.17157,14.5 2.5,15.1716 2.5,16 L2.5,19 C2.5,20.3807 3.61929,21.5 5,21.5 L8,21.5 C8.82843,21.5 9.5,20.8284 9.5,20 C9.5,19.1716 8.82843,18.5 8,18.5 Z M16,18.5 L18.5,18.5 L18.5,16 C18.5,15.1716 19.1716,14.5 20,14.5 C20.8284,14.5 21.5,15.1716 21.5,16 L21.5,19 C21.5,20.3807 20.3807,21.5 19,21.5 L16,21.5 C15.1716,21.5 14.5,20.8284 14.5,20 C14.5,19.1716 15.1716,18.5 16,18.5 Z"/>
+      </svg>
+    {/if}
+  </button>
 </div>
 
 <style>
@@ -95,31 +118,28 @@
   :global(body.pointerlock) .actions {
     display: none;
   }
-  .save, .settings, .sfx {
+  :global(body.settings) .settings {
+    display: none;
+  }
+  button {
     background: transparent;
     min-width: auto;
     height: auto;
     padding: 0.5rem;
   }
-  .save > svg, .settings > svg, .sfx > svg {
+  button > svg {
     fill: currentColor;
     stroke: #000;
     width: 1.5rem;
     height: 1.5rem;
     pointer-events: none;
-    stroke-width: 0.8;
-  }
-  .save > svg {
-    stroke-width: 0.3;
-  }
-  .settings > svg {
     stroke-width: 0.4;
-  }
-  :global(body.settings) .settings {
-    display: none;
   }
   .save {
     position: relative;
+  }
+  .save > svg {
+    stroke-width: 0.3;
   }
   .saved {
     position: absolute;
@@ -129,5 +149,8 @@
     background: rgba(0, 0, 0, 0.2);
     padding: 0.125rem 0.5rem;
     border-radius: 0.25rem;
+  }
+  .sfx > svg {
+    stroke-width: 0.8;
   }
 </style>
