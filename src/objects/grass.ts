@@ -19,10 +19,16 @@ class Grass extends Mesh {
   private static geometry: BufferGeometry | undefined;
   static getGeometry() {
     if (!Grass.geometry) {
-      const quad = new PlaneGeometry(0.05, 0.05, 1, 1);
+      const aux = new Vector3();
+      const quad = new PlaneGeometry(0.075, 0.05, 1, 1);
+      const position = quad.getAttribute('position');
       Grass.geometry = mergeGeometries(Array.from({ length: 8 }, () => {
         const q = quad.clone();
         quad.translate(0, 0.05, 0);
+        for (let i = 0; i < position.count; i++) {
+          aux.fromBufferAttribute(position, i);
+          position.setXYZ(i, aux.x - ((aux.y * 0.2) ** 2) * Math.sign(aux.x), aux.y, aux.z);
+        }
         return q;
       }));
     }
