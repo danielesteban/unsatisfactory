@@ -70,7 +70,7 @@ export class TerrainChunk extends Mesh {
     for (let i = 0, x = 0; x < (TerrainChunk.size + 1); x++) {
       for (let z = 0; z < (TerrainChunk.size + 1); z++, i++) {
         aux.set(x - TerrainChunk.size * 0.5, 0, z - TerrainChunk.size * 0.5).add(origin);
-        heatmap[i] = getGrass(aux) + 1;
+        heatmap[i] = 1 - ((1 - Math.min(Math.max(((getGrass(aux) + 0.5) * 1.5), 0), 1)) ** 2);
         heightmap[i] = getHeight(aux);
       }
     }
@@ -163,7 +163,7 @@ class Terrain extends Group {
             uniform sampler2D roughnessMapB;
             varying float vHeat;
             vec4 textureHeat(sampler2D mapperA, sampler2D mapperB, in vec2 uv) {
-              return mix(texture2D(mapperA, uv), texture2D(mapperB, uv), clamp(vHeat, 0.0, 1.0));
+              return mix(texture2D(mapperA, uv), texture2D(mapperB, uv), vHeat);
             }
             `
           )
