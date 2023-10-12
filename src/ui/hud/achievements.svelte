@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
   import { derived } from 'svelte/store';
+  import Check from '../components/check.svelte';
   import completed, { Achievement } from '../stores/achievements';
 
   const Achievements = [
@@ -149,14 +150,7 @@
 {#if achievement}
   <div class="achievement" class:completed={achievement.completed}>
     <div class="heading">
-      <div class="status">
-        <svg viewBox="0 0 24 24">
-          <path d="M9 22H15C20 22 22 20 22 15V9C22 4 20 2 15 2H9C4 2 2 4 2 9V15C2 20 4 22 9 22Z" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          {#if achievement.completed}
-            <path d="M7.75 12L10.58 14.83L16.25 9.17004" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          {/if}
-        </svg>
-      </div>
+      <Check checked={achievement.completed} />
       <div>{achievement.name}</div>
     </div>
     <div class="help">
@@ -177,26 +171,16 @@
     backdrop-filter: blur(0.5rem);
     border-radius: 0.5rem;
   }
-
   .achievement.completed {
     background: rgba(90, 255, 90, 0.3);
-    color: #111; 
+    color: #111;
   }
-
   .heading {
     display: flex;
     gap: 0.5rem;
     font-size: 1rem;
   }
-
   .help > div {
     min-height: 1.125rem;
-  }
-
-  .status > svg {
-    fill: none;
-    stroke: currentColor;
-    width: 1rem;
-    height: 1rem;
   }
 </style>

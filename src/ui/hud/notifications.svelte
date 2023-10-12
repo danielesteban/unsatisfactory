@@ -1,11 +1,13 @@
 <script lang="ts">
   import Achievements from './achievements.svelte';
   import Alerts from './alerts.svelte';
+  import Research from './research.svelte';
 </script>
 
 <div class="notifications">
   <Achievements />
   <Alerts />
+  <Research />
 </div>
 
 <style>
