@@ -10,6 +10,7 @@
     "fflate": "^0.8.1",
     "js-base64": "^3.7.5",
     "n8ao": "^1.6.8",
+    "nanoid": "^5.0.1",
     "seedrandom": "^3.0.5",
     "three": "^0.157.0",
     "three-bvh-csg": "^0.0.10"

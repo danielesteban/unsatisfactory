@@ -54,6 +54,7 @@ import Sinks from './objects/sinks';
 import Smelters from './objects/smelters';
 import Storages from './objects/storages';
 import Terrain from './objects/terrain';
+import Tesseracts from './objects/tesseracts';
 import Turbines, { Turbine } from './objects/turbines';
 import Walls from './objects/walls';
 import Wires, { Wire } from './objects/wires';
@@ -147,6 +148,9 @@ viewport.scene.add(smelters);
 const storages = new Storages(viewport.physics);
 viewport.scene.add(storages);
 
+const tesseracts = new Tesseracts(viewport.physics);
+viewport.scene.add(tesseracts);
+
 const turbines = new Turbines(viewport.physics);
 viewport.scene.add(turbines);
 
@@ -182,6 +186,7 @@ const brushObjects = {
   [Brush.sink]: sinks,
   [Brush.smelter]: smelters,
   [Brush.storage]: storages,
+  [Brush.tesseract]: tesseracts,
   [Brush.turbine]: turbines,
   [Brush.wall]: walls,
   [Brush.wire]: wires,
@@ -224,6 +229,7 @@ const loader = new Loader(
     sinks,
     smelters,
     storages,
+    tesseracts,
     turbines,
     walls,
     wires,
@@ -271,6 +277,7 @@ const create = (intersection: Intersection) => {
     case Brush.sink:
     case Brush.smelter:
     case Brush.storage:
+    case Brush.tesseract:
     case Brush.turbine:
     case Brush.wall: {
       const object = brushObjects[brush];
@@ -563,7 +570,7 @@ const getConnector = (intersection: Intersection, raycaster: Raycaster) => {
 const center = new Vector2();
 const simulation = new Simulation(
   belts,
-  [aggregators, buffers, combinators, fabricators, foundries, generators, labs, miners, sinks, smelters, storages]
+  [aggregators, buffers, combinators, fabricators, foundries, generators, labs, miners, sinks, smelters, storages, tesseracts]
 );
 const animate = (buttons: Buttons, delta: number) => {
   birds.step(delta);

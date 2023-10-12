@@ -137,7 +137,7 @@ const processBrushQueue = () => {
   const capture = [6.5, 5.5].map((zoom) => {
     let rotation = 0;
     let y = 0;
-    if (brush === Brush.belt || brush === Brush.buffer) {
+    if (brush === Brush.belt || brush === Brush.buffer || brush === Brush.tesseract) {
       zoom -= 1.5;
     }
     if (brush === Brush.generator) {

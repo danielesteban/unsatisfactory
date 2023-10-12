@@ -17,6 +17,9 @@ dependencies:
   n8ao:
     specifier: ^1.6.8
     version: 1.6.8(postprocessing@6.33.0)(three@0.157.0)
+  nanoid:
+    specifier: ^5.0.1
+    version: 5.0.1
   seedrandom:
     specifier: ^3.0.5
     version: 3.0.5
@@ -970,6 +973,12 @@ packages:
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
     dev: true
+
+  /nanoid@5.0.1:
+    resolution: {integrity: sha512-vWeVtV5Cw68aML/QaZvqN/3QQXc6fBfIieAlu05m7FZW2Dgb+3f0xc0TTxuJW+7u30t7iSDTV/j3kVI0oJqIfQ==}
+    engines: {node: ^18 || >=20}
+    hasBin: true
+    dev: false
 
   /node-releases@2.0.13:
     resolution: {integrity: sha512-uYr7J37ae/ORWdZeQ1xxMJe3NtdmqMC/JZK+geofDrkLUApKRHPd18/TxtBOJ4A0/+uUIliorNrfYV6s1b02eQ==}

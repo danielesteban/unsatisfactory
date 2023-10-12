@@ -24,6 +24,7 @@ import Ramps from '../objects/ramps';
 import Sinks, { Sink } from '../objects/sinks';
 import Smelters, { Smelter } from '../objects/smelters';
 import Storages, { Storage } from '../objects/storages';
+import Tesseracts, { Tesseract }  from '../objects/tesseracts';
 import Turbines, { Turbine }  from '../objects/turbines';
 import Walls from '../objects/walls';
 import Wires, { Wire } from '../objects/wires';
@@ -54,6 +55,7 @@ type Objects = {
   sinks: Sinks;
   smelters: Smelters;
   storages: Storages;
+  tesseracts: Tesseracts;
   turbines: Turbines;
   walls: Walls;
   wires: Wires;
@@ -84,6 +86,7 @@ type Serialized = {
   sinks: [SerializedPosition, number, SerializedEnabled][];
   smelters: SerializedTransformer[];
   storages: [SerializedPosition, number, [Item, number][] | undefined][];
+  tesseracts: [SerializedPosition, number, SerializedEnabled, string | undefined, Item | undefined][];
   turbines: [SerializedPosition, number, SerializedEnabled][];
   walls: [SerializedPosition, number][];
   wires: [SerializedContainer, SerializedContainer][];
@@ -201,7 +204,7 @@ class Loader {
   private serialize(): Serialized {
     const {
       objects: {
-        aggregators, beacons, belts, buffers, columns, combinators, fabricators, foundations, foundries, generators, labs, miners, pillars, poles, ramps, sinks, smelters, storages, turbines, walls, wires,
+        aggregators, beacons, belts, buffers, columns, combinators, fabricators, foundations, foundries, generators, labs, miners, pillars, poles, ramps, sinks, smelters, storages, tesseracts, turbines, walls, wires,
       },
       viewport: { camera },
     } = this;
@@ -256,6 +259,9 @@ class Loader {
       if (instance instanceof Foundry) {
         key = 12;
       }
+      if (instance instanceof Tesseract) {
+        key = 13;
+      }
       return [key, containers.get(instance)];
     };
     return {
@@ -276,6 +282,7 @@ class Loader {
       sinks: serializeInstances(sinks) as Serialized['sinks'],
       smelters: serializeInstances(smelters) as Serialized['smelters'],
       storages: serializeInstances(storages) as Serialized['storages'],
+      tesseracts: serializeInstances(tesseracts) as Serialized['tesseracts'],
       turbines: serializeInstances(turbines) as Serialized['turbines'],
       walls: serializeInstances(walls) as Serialized['walls'],
       belts: (belts.children as Belt[]).map((belt) => {
@@ -305,7 +312,7 @@ class Loader {
   private deserialize(serialized: Serialized) {
     const {
       objects: {
-        aggregators, beacons, belts, buffers, columns, combinators, fabricators, foundations, foundries, generators, labs, miners, pillars, poles, ramps, sinks, smelters, storages, turbines, walls, wires,
+        aggregators, beacons, belts, buffers, columns, combinators, fabricators, foundations, foundries, generators, labs, miners, pillars, poles, ramps, sinks, smelters, storages, tesseracts, turbines, walls, wires,
       },
       viewport: { camera },
     } = this;
@@ -467,6 +474,19 @@ class Loader {
           }
         }
         return foundry;
+      }),
+      serialized.tesseracts.map(([position, rotation, enabled, id, buffer]) => {
+        const tesseract = tesseracts.create(aux.fromArray(position), rotation, false);
+        if (!enabled) {
+          tesseract.setEnabled(false);
+        }
+        if (buffer !== undefined) {
+          tesseract.setBuffer(buffer);
+        }
+        if (id !== undefined) {
+          tesseract.setId(id);
+        }
+        return tesseract;
       }),
     ];
     serialized.beacons.forEach(([position, rotation]) => (
@@ -659,9 +679,16 @@ class Loader {
         research: serialized.research.map((research) => research + (research > 1 ? 1 : 0)),
       };
     },
+    [24]: (serialized: Serialized) => {
+      return {
+        ...serialized,
+        research: serialized.research.map((research) => research + (research > 3 ? 1 : 0)),
+        tesseracts: [],
+      };
+    },
   };
 
-  private static readonly version: number = 24;
+  private static readonly version: number = 25;
 }
 
 export default Loader;

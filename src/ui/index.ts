@@ -16,6 +16,7 @@ import { Miner } from '../objects/miners';
 import { Sink } from '../objects/sinks';
 import { Smelter } from '../objects/smelters';
 import { Storage } from '../objects/storages';
+import { Tesseract } from '../objects/tesseracts';
 import { Turbine } from '../objects/turbines';
 import { Wire } from '../objects/wires';
 import Loading from './components/loading.svelte';
@@ -30,6 +31,7 @@ import MinerUI from './dialogs/miner.svelte';
 import SettingsUI from './dialogs/settings.svelte';
 import SinkUI from './dialogs/sink.svelte';
 import StorageUI from './dialogs/storage.svelte';
+import TesseractUI from './dialogs/tesseract.svelte';
 import TransformerUI from './dialogs/transformer.svelte';
 import TurbineUI from './dialogs/turbine.svelte';
 import WelcomeUI from './dialogs/welcome.svelte';
@@ -180,6 +182,11 @@ class UI {
           });
         } else if (instance instanceof Storage) {
           dialog = new StorageUI({
+            props: { close, instance },
+            target,
+          });
+        } else if (instance instanceof Tesseract) {
+          dialog = new TesseractUI({
             props: { close, instance },
             target,
           });

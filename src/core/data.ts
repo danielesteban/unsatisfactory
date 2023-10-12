@@ -22,6 +22,7 @@ export enum Brush {
   lab,
   beacon,
   foundry,
+  tesseract,
 }
 
 export const BrushGroups: Exclude<Brush, Brush.none>[][] = [
@@ -42,6 +43,7 @@ export const BrushGroups: Exclude<Brush, Brush.none>[][] = [
   [
     Brush.belt,
     Brush.buffer,
+    Brush.tesseract,
     Brush.pole,
     Brush.wire,
   ],
@@ -79,6 +81,7 @@ export const BrushName: Record<Brush, string> = {
   [Brush.sink]: 'Sink',
   [Brush.smelter]: 'Smelter',
   [Brush.storage]: 'Storage',
+  [Brush.tesseract]: 'Tesseract',
   [Brush.turbine]: 'Wind Turbine',
   [Brush.wall]: 'Wall',
   [Brush.wire]: 'Wire',
@@ -178,6 +181,10 @@ export const Building: Partial<Record<Brush, BuildCost>> = {
     { item: Item.ironPlate, count: 10 },
     { item: Item.ironRod, count: 10 },
   ],
+  [Brush.tesseract]: [
+    { item: Item.computer, count: 5 },
+    { item: Item.steelPlate, count: 20 },
+  ],
   [Brush.turbine]: [
     { item: Item.ironPlate, count: 20 },
     { item: Item.wire, count: 10 },
@@ -193,8 +200,9 @@ export const Consumption: Partial<Record<Brush, number>> = {
   [Brush.fabricator]: 10,
   [Brush.foundry]: 40,
   [Brush.lab]: 30,
-  [Brush.sink]: 100,
+  [Brush.sink]: 30,
   [Brush.smelter]: 10,
+  [Brush.tesseract]: 100,
 };
 
 export const Generation: Partial<Record<Item, { count: number; rate: number; power: number; }>> = {
@@ -292,6 +300,19 @@ export const Researching: { name: string, brushes: Exclude<Brush, Brush.none>[],
       },
     ],
     rate: 400,
+  },
+  {
+    name: 'Four-Dimensional Logistics',
+    brushes: [
+      Brush.tesseract,
+    ],
+    input: [
+      {
+        item: Item.computer,
+        count: 500,
+      },
+    ],
+    rate: 500,
   },
   {
     name: 'Architecture',
