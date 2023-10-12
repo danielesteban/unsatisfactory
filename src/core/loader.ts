@@ -653,9 +653,15 @@ class Loader {
         foundries: [],
       };
     },
+    [23]: (serialized: Serialized) => {
+      return {
+        ...serialized,
+        research: serialized.research.map((research) => research + (research > 1 ? 1 : 0)),
+      };
+    },
   };
 
-  private static readonly version: number = 23;
+  private static readonly version: number = 24;
 }
 
 export default Loader;

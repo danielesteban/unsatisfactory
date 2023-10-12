@@ -231,7 +231,6 @@ export const Researching: { name: string, brushes: Exclude<Brush, Brush.none>[],
     name: 'Manufacturing',
     brushes: [
       Brush.combinator,
-      Brush.generator,
       Brush.storage,
     ],
     input: [
@@ -251,10 +250,31 @@ export const Researching: { name: string, brushes: Exclude<Brush, Brush.none>[],
     rate: 200,
   },
   {
+    name: 'Coal & Steel',
+    brushes: [
+      Brush.generator,
+      Brush.foundry,
+    ],
+    input: [
+      {
+        item: Item.rotor,
+        count: 50,
+      },
+      {
+        item: Item.ironPlate,
+        count: 300,
+      },
+      {
+        item: Item.wire,
+        count: 600,
+      }
+    ],
+    rate: 300,
+  },
+  {
     name: 'Advanced Manufacturing',
     brushes: [
       Brush.aggregator,
-      Brush.foundry,
       Brush.sink,
     ],
     input: [
@@ -267,15 +287,11 @@ export const Researching: { name: string, brushes: Exclude<Brush, Brush.none>[],
         count: 100,
       },
       {
-        item: Item.ironPlate,
-        count: 300,
-      },
-      {
         item: Item.wire,
-        count: 500,
+        count: 1000,
       },
     ],
-    rate: 300,
+    rate: 400,
   },
   {
     name: 'Architecture',
