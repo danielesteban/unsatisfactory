@@ -9,6 +9,7 @@ import { Aggregator } from '../objects/aggregators';
 import { Belt } from '../objects/belts';
 import { Combinator } from '../objects/combinators';
 import { Fabricator } from '../objects/fabricators';
+import { Foundry } from '../objects/foundries';
 import { Generator } from '../objects/generators';
 import { Lab } from '../objects/labs';
 import { Miner } from '../objects/miners';
@@ -143,6 +144,8 @@ class UI {
           transformer = ItemTransformer.combinator;
         } else if (instance instanceof Fabricator) {
           transformer = ItemTransformer.fabricator;
+        } else if (instance instanceof Foundry) {
+          transformer = ItemTransformer.foundry;
         } else if (instance instanceof Smelter) {
           transformer = ItemTransformer.smelter;
         }

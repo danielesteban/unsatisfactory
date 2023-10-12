@@ -41,6 +41,7 @@ import Combinators from './objects/combinators';
 import Deposit from './objects/deposit';
 import Fabricators from './objects/fabricators';
 import Foundations from './objects/foundations';
+import Foundries from './objects/foundries';
 import Generators from './objects/generators';
 import Ghost from './objects/ghost';
 import Grass from './objects/grass';
@@ -116,6 +117,9 @@ viewport.scene.add(fabricators);
 const foundations = new Foundations(viewport.physics);
 viewport.scene.add(foundations);
 
+const foundries = new Foundries(viewport.physics, viewport.sfx);
+viewport.scene.add(foundries);
+
 const generators = new Generators(viewport.physics, viewport.sfx);
 viewport.scene.add(generators);
 
@@ -168,6 +172,7 @@ const brushObjects = {
   [Brush.combinator]: combinators,
   [Brush.fabricator]: fabricators,
   [Brush.foundation]: foundations,
+  [Brush.foundry]: foundries,
   [Brush.generator]: generators,
   [Brush.lab]: labs,
   [Brush.miner]: miners,
@@ -209,6 +214,7 @@ const loader = new Loader(
     combinators,
     fabricators,
     foundations,
+    foundries,
     generators,
     labs,
     miners,
@@ -256,6 +262,7 @@ const create = (intersection: Intersection) => {
     case Brush.combinator:
     case Brush.fabricator:
     case Brush.foundation:
+    case Brush.foundry:
     case Brush.generator:
     case Brush.lab:
     case Brush.pillar:
@@ -556,7 +563,7 @@ const getConnector = (intersection: Intersection, raycaster: Raycaster) => {
 const center = new Vector2();
 const simulation = new Simulation(
   belts,
-  [aggregators, buffers, combinators, fabricators, generators, labs, miners, sinks, smelters, storages]
+  [aggregators, buffers, combinators, fabricators, foundries, generators, labs, miners, sinks, smelters, storages]
 );
 const animate = (buttons: Buttons, delta: number) => {
   birds.step(delta);

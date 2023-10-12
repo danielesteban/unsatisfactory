@@ -157,7 +157,7 @@ const processBrushQueue = () => {
     if (brush === Brush.aggregator) {
       zoom += 3.75;
     }
-    if (brush === Brush.aggregator || brush === Brush.combinator || brush === Brush.fabricator || brush === Brush.smelter || brush === Brush.storage) {
+    if (brush === Brush.aggregator || brush === Brush.combinator || brush === Brush.fabricator || brush === Brush.foundry || brush === Brush.smelter || brush === Brush.storage) {
       rotation = Math.PI * -0.5;
     }
     if (brush === Brush.turbine) {
@@ -202,14 +202,14 @@ const processItemQueue = () => {
   scene.add(mesh);
   const capture = [1, 0.75].map((zoom) => {
     let y = 0.1;
-    if (item === Item.ironIngot || item === Item.copperIngot) {
+    if (item === Item.ironIngot || item === Item.copperIngot || item === Item.steelIngot) {
       y = 0.0625;
     }
     if (item === Item.coal || item === Item.computer || item === Item.ironOre || item === Item.copperOre || item === Item.frame) {
       y = 0.2;
       zoom *= 1.5;
     }
-    if (item === Item.ironPlate) {
+    if (item === Item.ironPlate || item === Item.steelPlate) {
       y = 0.03125;
     }
     if (item === Item.ironRod) {

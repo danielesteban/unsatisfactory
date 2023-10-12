@@ -21,6 +21,7 @@ import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 import { Item } from '../core/data';
 import {
+  BeltMaterial,
   CoalMaterial,
   ConnectorsMaterial,
   CopperMaterial,
@@ -245,6 +246,8 @@ class Items extends Group {
         [Item.ironPlate]: plate,
         [Item.ironRod]: rod,
         [Item.rotor]: rotor,
+        [Item.steelIngot]: ingot,
+        [Item.steelPlate]: plate,
         [Item.wire]: wire,
       };
     }
@@ -266,6 +269,8 @@ class Items extends Group {
     [Item.ironPlate]: IronMaterial,
     [Item.ironRod]: IronMaterial,
     [Item.rotor]: [RustMaterial, IronMaterial],
+    [Item.steelIngot]: BeltMaterial,
+    [Item.steelPlate]: BeltMaterial,
     [Item.wire]: WireMaterial,
   };
 

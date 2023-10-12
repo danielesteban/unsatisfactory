@@ -13,6 +13,7 @@ import Columns from '../objects/columns';
 import Combinators, { Combinator } from '../objects/combinators';
 import Fabricators, { Fabricator } from '../objects/fabricators';
 import Foundations from '../objects/foundations';
+import Foundries, { Foundry } from '../objects/foundries';
 import Generators, { Generator }  from '../objects/generators';
 import { SerializedItems, serializeItems, deserializeItems }  from '../objects/items';
 import Labs, { Lab } from '../objects/labs';
@@ -43,6 +44,7 @@ type Objects = {
   combinators: Combinators;
   fabricators: Fabricators;
   foundations: Foundations;
+  foundries: Foundries;
   generators: Generators;
   labs: Labs;
   miners: Miners;
@@ -72,6 +74,7 @@ type Serialized = {
   combinators: SerializedTransformer[];
   fabricators: SerializedTransformer[];
   foundations: [SerializedPosition, number][];
+  foundries: SerializedTransformer[];
   generators: [SerializedPosition, number, SerializedEnabled, number, number | undefined][];
   labs: [SerializedPosition, number, SerializedEnabled, number | undefined, number | undefined, number[] | undefined][];
   miners: [SerializedPosition, number, SerializedEnabled, Item, number, number, number | undefined][];
@@ -198,7 +201,7 @@ class Loader {
   private serialize(): Serialized {
     const {
       objects: {
-        aggregators, beacons, belts, buffers, columns, combinators, fabricators, foundations, generators, labs, miners, pillars, poles, ramps, sinks, smelters, storages, turbines, walls, wires,
+        aggregators, beacons, belts, buffers, columns, combinators, fabricators, foundations, foundries, generators, labs, miners, pillars, poles, ramps, sinks, smelters, storages, turbines, walls, wires,
       },
       viewport: { camera },
     } = this;
@@ -250,6 +253,9 @@ class Loader {
       if (instance instanceof Lab) {
         key = 11;
       }
+      if (instance instanceof Foundry) {
+        key = 12;
+      }
       return [key, containers.get(instance)];
     };
     return {
@@ -260,6 +266,7 @@ class Loader {
       combinators: serializeInstances(combinators) as Serialized['combinators'],
       fabricators: serializeInstances(fabricators) as Serialized['fabricators'],
       foundations: serializeInstances(foundations) as Serialized['foundations'],
+      foundries: serializeInstances(foundries) as Serialized['foundries'],
       generators: serializeInstances(generators) as Serialized['generators'],
       labs: serializeInstances(labs) as Serialized['labs'],
       miners: serializeInstances(miners) as Serialized['miners'],
@@ -298,7 +305,7 @@ class Loader {
   private deserialize(serialized: Serialized) {
     const {
       objects: {
-        aggregators, beacons, belts, buffers, columns, combinators, fabricators, foundations, generators, labs, miners, pillars, poles, ramps, sinks, smelters, storages, turbines, walls, wires,
+        aggregators, beacons, belts, buffers, columns, combinators, fabricators, foundations, foundries, generators, labs, miners, pillars, poles, ramps, sinks, smelters, storages, turbines, walls, wires,
       },
       viewport: { camera },
     } = this;
@@ -444,6 +451,22 @@ class Loader {
           }
         }
         return lab;
+      }),
+      serialized.foundries.map(([position, rotation, enabled, recipe, tick, buffers]) => {
+        const foundry = foundries.create(aux.fromArray(position), rotation, false);
+        if (!enabled) {
+          foundry.setEnabled(false);
+        }
+        if (recipe !== undefined && Recipes[recipe]) {
+          foundry.setRecipe(Recipes[recipe]);
+          if (buffers) {
+            foundry.setBuffers(buffers);
+          }
+          if (tick) {
+            foundry.setTick(tick);
+          }
+        }
+        return foundry;
       }),
     ];
     serialized.beacons.forEach(([position, rotation]) => (
@@ -624,9 +647,15 @@ class Loader {
         research: [],
       };
     },
+    [22]: (serialized: Serialized) => {
+      return {
+        ...serialized,
+        foundries: [],
+      };
+    },
   };
 
-  private static readonly version: number = 22;
+  private static readonly version: number = 23;
 }
 
 export default Loader;

@@ -21,6 +21,7 @@ export enum Brush {
   generator,
   lab,
   beacon,
+  foundry,
 }
 
 export const BrushGroups: Exclude<Brush, Brush.none>[][] = [
@@ -32,8 +33,6 @@ export const BrushGroups: Exclude<Brush, Brush.none>[][] = [
     Brush.wall,
   ],
   [
-    Brush.miner,
-    Brush.smelter,
     Brush.fabricator,
     Brush.combinator,
     Brush.aggregator,
@@ -41,18 +40,21 @@ export const BrushGroups: Exclude<Brush, Brush.none>[][] = [
   [
     Brush.belt,
     Brush.buffer,
-    Brush.storage,
+    Brush.pole,
+    Brush.wire,
   ],
   [
-    Brush.wire,
-    Brush.pole,
-    Brush.turbine,
+    Brush.miner,
+    Brush.foundry,
+    Brush.smelter,
     Brush.generator,
+    Brush.turbine,
   ],
   [
     Brush.beacon,
     Brush.lab,
     Brush.sink,
+    Brush.storage,
   ],
 ];
 
@@ -67,6 +69,7 @@ export const BrushName: Record<Brush, string> = {
   [Brush.combinator]: 'Combinator',
   [Brush.fabricator]: 'Fabricator',
   [Brush.foundation]: 'Foundation',
+  [Brush.foundry]: 'Foundry',
   [Brush.generator]: 'Power Plant',
   [Brush.lab]: 'Lab',
   [Brush.miner]: 'Miner',
@@ -94,6 +97,8 @@ export enum Item {
   frame,
   computer,
   coal,
+  steelIngot,
+  steelPlate,
 }
 
 export const ItemName: Record<Item, string>  = {
@@ -108,6 +113,8 @@ export const ItemName: Record<Item, string>  = {
   [Item.ironPlate]: 'Iron Plate',
   [Item.ironRod]: 'Iron Rod',
   [Item.rotor]: 'Rotor',
+  [Item.steelIngot]: 'Steel Ingot',
+  [Item.steelPlate]: 'Steel Plate',
   [Item.wire]: 'Wire',
 };
 
@@ -136,6 +143,10 @@ export const Building: Partial<Record<Brush, BuildCost>> = {
   ],
   [Brush.fabricator]: [
     { item: Item.ironRod, count: 5 },
+    { item: Item.wire, count: 10 },
+  ],
+  [Brush.foundry]: [
+    { item: Item.frame, count: 10 },
     { item: Item.wire, count: 10 },
   ],
   [Brush.generator]: [
@@ -180,6 +191,7 @@ export const Consumption: Partial<Record<Brush, number>> = {
   [Brush.aggregator]: 50,
   [Brush.combinator]: 20,
   [Brush.fabricator]: 10,
+  [Brush.foundry]: 40,
   [Brush.lab]: 30,
   [Brush.sink]: 100,
   [Brush.smelter]: 10,
@@ -242,6 +254,7 @@ export const Researching: { name: string, brushes: Exclude<Brush, Brush.none>[],
     name: 'Advanced Manufacturing',
     brushes: [
       Brush.aggregator,
+      Brush.foundry,
       Brush.sink,
     ],
     input: [
@@ -290,9 +303,11 @@ export const Sinking: Partial<Record<Item, number>> = {
   [Item.copperIngot]: 2,
   [Item.frame]: 32,
   [Item.ironIngot]: 2,
-  [Item.ironPlate]: 6,
+  [Item.ironPlate]: 4,
   [Item.ironRod]: 4,
   [Item.rotor]: 32,
+  [Item.steelIngot]: 4,
+  [Item.steelPlate]: 8,
   [Item.wire]: 4,
 };
 
@@ -300,6 +315,7 @@ export enum Transformer {
   aggregator,
   combinator,
   fabricator,
+  foundry,
   smelter,
 }
 
@@ -307,6 +323,7 @@ export const TransformerName = {
   [Transformer.aggregator]: 'Aggregator',
   [Transformer.combinator]: 'Combinator',
   [Transformer.fabricator]: 'Fabricator',
+  [Transformer.foundry]: 'Foundry',
   [Transformer.smelter]: 'Smelter',
 };
 
@@ -435,5 +452,35 @@ export const Recipes: Recipe[] = [
     },
     rate: 120,
     transformer: Transformer.aggregator,
+  },
+  {
+    input: [
+      {
+        item: Item.ironOre,
+        count: 1,
+      },
+      {
+        item: Item.coal,
+        count: 1,
+      }
+    ],
+    output: {
+      item: Item.steelIngot,
+      count: 1,
+    },
+    rate: 10,
+    transformer: Transformer.foundry,
+  },
+  {
+    input: [{
+      item: Item.steelIngot,
+      count: 1,
+    }],
+    output: {
+      item: Item.steelPlate,
+      count: 1,
+    },
+    rate: 10,
+    transformer: Transformer.fabricator,
   },
 ];

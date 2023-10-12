@@ -17,6 +17,7 @@ import Deposit from '../objects/deposit';
 import Combinators, { Combinator }  from '../objects/combinators';
 import Fabricators, { Fabricator }  from '../objects/fabricators';
 import Foundations, { Foundation } from '../objects/foundations';
+import Foundries, { Foundry } from '../objects/foundries';
 import Generators, { Generator } from '../objects/generators';
 import Labs, { Lab } from '../objects/labs';
 import Miners, { Miner } from '../objects/miners';
@@ -77,6 +78,9 @@ export const getFromObject = (instance?: Instance | Belt | Wire) => {
   if (instance instanceof Foundation) {
     return Brush.foundation;
   }
+  if (instance instanceof Foundry) {
+    return Brush.foundry;
+  }
   if (instance instanceof Generator) {
     return Brush.generator;
   }
@@ -132,6 +136,8 @@ export const getGeometry = (brush: Brush) => {
       return Fabricators.getGeometry();
     case Brush.foundation:
       return Foundations.getGeometry();
+    case Brush.foundry:
+      return Foundries.getGeometry();
     case Brush.generator:
       return Generators.getGeometry();
     case Brush.lab:
@@ -177,6 +183,8 @@ export const getMaterial = (brush: Brush) => {
       return Fabricators.getMaterial();
     case Brush.foundation:
       return Foundations.getMaterial();
+    case Brush.foundry:
+      return Foundries.getMaterial();
     case Brush.generator:
       return Generators.getMaterial();
     case Brush.lab:
@@ -236,6 +244,7 @@ const offsets = {
   [Brush.dismantle]: new Vector3(),
   [Brush.fabricator]: new Vector3(2, 2, 1),
   [Brush.foundation]: new Vector3(2, 0.5, 2),
+  [Brush.foundry]: new Vector3(2, 2, 1),
   [Brush.generator]: new Vector3(3, 4, 1),
   [Brush.lab]: new Vector3(2, 2, 2),
   [Brush.miner]: new Vector3(1, 2, 1),
