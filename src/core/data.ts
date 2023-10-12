@@ -36,6 +36,8 @@ export const BrushGroups: Exclude<Brush, Brush.none>[][] = [
     Brush.fabricator,
     Brush.combinator,
     Brush.aggregator,
+    Brush.smelter,
+    Brush.foundry,
   ],
   [
     Brush.belt,
@@ -44,17 +46,15 @@ export const BrushGroups: Exclude<Brush, Brush.none>[][] = [
     Brush.wire,
   ],
   [
-    Brush.miner,
-    Brush.foundry,
-    Brush.smelter,
-    Brush.generator,
-    Brush.turbine,
-  ],
-  [
     Brush.beacon,
     Brush.lab,
     Brush.sink,
     Brush.storage,
+  ],
+  [
+    Brush.miner,
+    Brush.generator,
+    Brush.turbine,
   ],
 ];
 
