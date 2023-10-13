@@ -1,9 +1,11 @@
 <script lang="ts" context="module">
+  import { writable } from 'svelte/store';
   import { tap } from '../../sounds';
+  
+  const clipboard =  writable<string>('');
+
   const sfx = new Audio(tap);
   sfx.volume = 0.2;
-
-  let lastId: string;
 </script>
 
 <script lang="ts">
@@ -24,7 +26,7 @@
   let hasCopied = false;
   let hasCopiedTimer = 0;
   const copy = () => {
-    lastId = instance.resetId();
+    $clipboard = instance.resetId();
     $Settings.sfx && sfx.paused && sfx.play();
     hasCopied = true;
     clearTimeout(hasCopiedTimer);
@@ -36,8 +38,8 @@
   let hasPasted = false;
   let hasPastedTimer = 0;
   const paste = () => {
-    instance.setId(lastId);
-    lastId = '';
+    instance.setId($clipboard);
+    $clipboard = '';
     $Settings.sfx && sfx.paused && sfx.play();
     hasPasted = true;
     clearTimeout(hasPastedTimer);
@@ -85,7 +87,7 @@
               {hasCopied ? 'Copied!' : 'Copy'}
             </button>
             <button
-              disabled={!lastId}
+              disabled={!$clipboard}
               on:click={paste}
             >
               {hasPasted ? 'Pasted!' : 'Paste'}
