@@ -318,6 +318,10 @@ class Controls {
     }
   }
 
+  getMode() {
+    return this.mode;
+  }
+
   setMode(mode: ControlsMode) {
     const { camera, controller, movement } = this;
     this.mode = mode;

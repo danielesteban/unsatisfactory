@@ -81,7 +81,7 @@ input[type="checkbox"], input[type="range"] {
   cursor: pointer;
 }
 
-input[type="text"], input[type="password"] {
+input[type="number"], input[type="text"], input[type="password"] {
   box-sizing: border-box;
   border: 0;
   margin: 0;
@@ -96,7 +96,7 @@ input[type="text"], input[type="password"] {
   width: 100%;
 }
 
-input[type="text"]::placeholder, input[type="password"]::placeholder {
+input[type="number"]::placeholder, input[type="text"]::placeholder, input[type="password"]::placeholder {
   color: #aaa;
 }
 

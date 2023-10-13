@@ -23,6 +23,7 @@ import Loading from './components/loading.svelte';
 import HUD from './hud/index.svelte';
 import { Action } from './hud/cursor';
 import BuildUI from './dialogs/build.svelte';
+import CheatsUI from './dialogs/cheats.svelte';
 import CodexUI from './dialogs/codex.svelte';
 import GeneratorUI from './dialogs/generator.svelte';
 import InventoryUI from './dialogs/inventory.svelte';
@@ -40,6 +41,7 @@ import Settings from './stores/settings';
 export { Action };
 export enum Dialog {
   build,
+  cheats,
   codex,
   container,
   inventory,
@@ -76,6 +78,22 @@ class UI {
       target,
     });
     this.show(Dialog.welcome);
+
+    // @dani Nothing to see here. Move along.
+    const secret = {
+      combo: [38, 38, 40, 40, 37, 39, 37, 39, 66, 65],
+      sequence: 0,
+    };
+    document.addEventListener('keydown', ({ keyCode: code }: KeyboardEvent) => {
+      if (code !== secret.combo[secret.sequence]) {
+        secret.sequence = code === secret.combo[0] ? 1 : 0;
+        return;
+      }
+      if (++secret.sequence === secret.combo.length) {
+        secret.sequence = 0;
+        this.show(Dialog.cheats);
+      }
+    });
   }
 
   setCompass(orientation: number, position: { x: number; z: number; }) {
@@ -128,6 +146,12 @@ class UI {
     switch (type) {
       case Dialog.build:
         dialog = new BuildUI({
+          props: { close },
+          target,
+        });
+        break;
+      case Dialog.cheats:
+        dialog = new CheatsUI({
           props: { close },
           target,
         });
