@@ -76,6 +76,9 @@ export default {
       sfx: enabled,
     }));
   },
+  takeScreenshot(width: number, height: number) {
+    return viewport.capture(width, height);
+  },
   toggleControlsMode() {
     viewport.controls.setMode((viewport.controls.getMode() + 1) % 2);
   },

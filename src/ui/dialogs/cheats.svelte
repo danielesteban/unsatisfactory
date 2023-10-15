@@ -6,10 +6,10 @@
   import Heading from '../components/heading.svelte';
   import Modules from '../components/modules.svelte';
   import Module from '../components/module.svelte';
-  import Settings from '../stores/settings';
   import Achievements, { Achievement } from '../stores/achievements';
   import Inventory from '../stores/inventory';
   import Research from '../stores/research';
+  import Settings from '../stores/settings';
 
   export let close: () => void;
 
@@ -51,6 +51,19 @@
     Researching.forEach((_v, research) => Research.complete(research))
   );
 
+  let lastScreenshotURL: string;
+  const takeScreenshot = () => (
+    Settings.takeScreenshot(3840, 2160)
+      .then((blob) => {
+        const downloader = document.createElement('a');
+        downloader.download = 'screenshot.png';
+        URL.revokeObjectURL(lastScreenshotURL);
+        downloader.href = lastScreenshotURL = URL.createObjectURL(blob);
+        downloader.click();
+      })
+      .catch(() => {})
+  );
+
   const toggleControlsMode = () => {
     Settings.toggleControlsMode();
     close();
@@ -65,7 +78,7 @@
     <Modules>
       <Module>
         <div slot="name">Progression</div>
-        <div class="cheats">
+        <div class="buttons">
           <button on:click={completeAchievements}>
             Complete all Achievements
           </button>
@@ -76,9 +89,15 @@
       </Module>
       <Module>
         <div slot="name">Debug</div>
-        <div class="cheats">
-          <button on:click={toggleControlsMode}>
-            Toggle debug controls
+        <div class="buttons">
+          <button on:click={takeScreenshot}>
+            Download 4K Screenshot
+          </button>
+          <button class="toggle" on:click={toggleControlsMode}>
+            Toggle debug Controls
+            <span class="info">
+              WASD: move, SPACEBAR/SHIFT: up/down, Wheel: velocity
+            </span>
           </button>
         </div>
       </Module>
@@ -105,10 +124,19 @@
 </Dialog>
 
 <style>
-  .cheats {
+  .buttons {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+  }
+  .toggle {
+    height: 4rem;
+    flex-direction: column;
+    white-space: normal;
+  }
+  .info {
+    display: block;
+    color: #aaa;
   }
   form {
     display: flex;
