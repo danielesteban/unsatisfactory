@@ -37,7 +37,7 @@
     clearTimeout(hasGivenItemTimer);
   });
 
-  const achievements = Object.keys(Achievements)
+  const achievements = Object.keys(Achievement)
     .filter((key) => !isNaN(parseInt(key, 10)))
     .map((key) => parseInt(key, 10) as Achievement);
 

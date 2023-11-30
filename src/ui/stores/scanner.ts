@@ -1,7 +1,8 @@
 import { get, writable } from 'svelte/store';
 import { Vector3 } from 'three';
 import { Item } from '../../core/data';
-import Terrain, { TerrainChunk } from '../../objects/terrain';
+import { ChunkSize } from '../../objects/world/constants';
+import Terrain from '../../objects/world/terrain';
 import { ping } from '../../sounds';
 import Achievements, { Achievement } from './achievements';
 import Settings from './settings';
@@ -23,9 +24,32 @@ const { subscribe, set } = writable<{
   results: [],
 });
 
+let terrain: Terrain;
+
 export default {
   subscribe,
-  scan(terrain: Terrain) {
+  setTerrain(instance: Terrain) {
+    terrain = instance;
+  },
+  map(width: number, depth: number, scale: number) {
+    const aux = new Vector3();
+    const offset = terrain.getAnchor().clone().multiplyScalar(ChunkSize * 2);
+    offset.x += ChunkSize - width * 0.5 * scale;
+    offset.z += ChunkSize - depth * 0.5 * scale;
+
+    const altitude = new Float32Array(width * depth);
+    for (let i = 0, z = 0; z < depth; z++) {
+      for (let x = 0; x < width; x++, i++) {
+        aux.set(offset.x + x * scale, 0, offset.z + z * scale);
+        altitude[i] = terrain.getHeight(aux);
+      }
+    }
+    return {
+      altitude,
+      offset,
+    };
+  },
+  scan(radius: number = 12) {
     if (isRunning) {
       return;
     }
@@ -36,23 +60,30 @@ export default {
 
     const results: ScannerResult[] = [];
     const aux = new Vector3();
+    const chunk = new Vector3();
     const anchor = terrain.getAnchor();
-    const grid = [...Terrain.getRenderGrid(16)];
+    const center = new Vector3(ChunkSize * 0.5, 0, ChunkSize * 0.5);
+    const grid = [...Terrain.getRenderGrid(radius).map(({ offset }) => offset)];
     const count = grid.length;
     const isMuted = !get(Settings).sfx;
     const scan = () => {
-      const position = grid.shift();
-      if (!position) {
+      const offset = grid.shift();
+      if (!offset) {
         set({ isRunning: false, results, progress: 100 });
         isRunning = false;
         timer = setTimeout(() => set({ isRunning: false, results: [], progress: 0 }), 30000);
         return;
       }
-      aux.addVectors(position, anchor).multiplyScalar(TerrainChunk.size);
-      const deposit = terrain.getDeposit(aux);
-      if (deposit) {
-        results.push({ item: deposit.item, position: aux.clone() });
-        !isMuted && sfx.paused && sfx.play();
+      chunk.addVectors(anchor, offset).multiplyScalar(2);
+      for (let z = 0; z < 2; z++) {
+        for (let x = 0; x < 2; x++) {
+          aux.set(chunk.x + x, 0, chunk.z + z).multiplyScalar(ChunkSize).add(center);
+          const deposit = terrain.getDeposit(aux);
+          if (deposit) {
+            results.push({ item: deposit.item, position: aux.clone() });
+            !isMuted && sfx.paused && sfx.play();
+          }
+        }
       }
       set({ isRunning: true, results, progress: 1 - (grid.length / count)});
       setTimeout(scan, 5);

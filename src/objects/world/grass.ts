@@ -10,11 +10,10 @@ import {
   Vector3,
 } from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { ChunkSize, GrassDensity } from './constants';
 
 class Grass extends Mesh {
-  private static readonly density: number = 6;
-  private static readonly size: number = 16;
-  private static readonly maxInstances: number = Math.floor(Grass.size * Grass.size * Grass.density * Grass.density * 0.5);
+  private static readonly maxInstances: number = Math.floor(ChunkSize * ChunkSize * GrassDensity * GrassDensity * 0.5);
 
   private static geometry: BufferGeometry | undefined;
   static getGeometry() {
@@ -136,22 +135,29 @@ class Grass extends Mesh {
     super(geometry, Grass.getMaterial());
     this.matrixAutoUpdate = false;
     this.renderOrder = 2;
+    this.visible = false;
   }
 
   private static readonly aux: Vector3 = new Vector3();
-  update(origin: Vector3, getGrass: (position: Vector3) => number, getHeight: (position: Vector3) => number) {
+  update(origin: Vector3, lod: number, getGrass: (position: Vector3) => number, getHeight: (position: Vector3) => number) {
     const geometry = this.geometry as InstancedBufferGeometry;
-    const { aux, density, maxInstances, size } = Grass;
+    const { aux, maxInstances } = Grass;
+    const offset = ChunkSize * 0.5 + (1 / GrassDensity) * 0.5;
     const instances = geometry.getAttribute('instance');
-    const stride = size * density;
+    const stride = ChunkSize * GrassDensity;
     geometry.instanceCount = 0;
     for (let z = 0; z < stride; z++) {
       for (let x = 0; x < stride; x++) {
-        aux.set((x / density) - size * 0.5 + (1 / density) * 0.5, 0, (z / density) - size * 0.5 + (1 / density) * 0.5).add(origin);
+        aux.set((x / GrassDensity) - offset, 0, (z / GrassDensity) - offset).multiplyScalar(lod).add(origin);
         let grass = getGrass(aux);
         if (grass > 0) {
           aux.x += Math.cos(grass * 100 / Math.PI * 2);
           aux.z += Math.sin(grass * 100 / Math.PI * 2);
+          // @dani
+          // This height is too exact for it's own good.
+          // This should come from the heightmap
+          // The height doesn't match the interpolation
+          // It's mostly noticeable in the scaled LOD
           const y = getHeight(aux);
           aux.sub(origin);
           instances.setXYZW(geometry.instanceCount, aux.x, y, aux.z, (grass + 0.15) * 2.0);

@@ -19,6 +19,7 @@ import { Storage } from '../objects/storages';
 import { Tesseract } from '../objects/tesseracts';
 import { Turbine } from '../objects/turbines';
 import { Wire } from '../objects/wires';
+import Terrain from '../objects/world/terrain';
 import Loading from './components/loading.svelte';
 import HUD from './hud/index.svelte';
 import { Action } from './hud/cursor';
@@ -28,6 +29,7 @@ import CodexUI from './dialogs/codex.svelte';
 import GeneratorUI from './dialogs/generator.svelte';
 import InventoryUI from './dialogs/inventory.svelte';
 import LabUI from './dialogs/lab.svelte';
+import MapUI from './dialogs/map.svelte';
 import MinerUI from './dialogs/miner.svelte';
 import SettingsUI from './dialogs/settings.svelte';
 import SinkUI from './dialogs/sink.svelte';
@@ -36,6 +38,7 @@ import TesseractUI from './dialogs/tesseract.svelte';
 import TransformerUI from './dialogs/transformer.svelte';
 import TurbineUI from './dialogs/turbine.svelte';
 import WelcomeUI from './dialogs/welcome.svelte';
+import Scanner from './stores/scanner';
 import Settings from './stores/settings';
 
 export { Action };
@@ -45,6 +48,7 @@ export enum Dialog {
   codex,
   container,
   inventory,
+  map,
   settings,
   welcome,
 };
@@ -59,9 +63,11 @@ class UI {
 
   constructor(
     loader: Loader,
+    terrain: Terrain,
     viewport: Viewport
   ) {
     this.loader = loader;
+    Scanner.setTerrain(terrain);
     Settings.setViewport(viewport);
   }
 
@@ -224,6 +230,12 @@ class UI {
       }
       case Dialog.inventory:
         dialog = new InventoryUI({
+          props: { close },
+          target,
+        });
+        break;
+      case Dialog.map:
+        dialog = new MapUI({
           props: { close },
           target,
         });

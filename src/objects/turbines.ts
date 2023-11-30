@@ -309,7 +309,7 @@ class Turbines extends Instances<Turbine> {
       const count = this.getCount();
       for (let i = 0; i < count; i++) {
         const turbine = this.getInstance(i);
-        let efficiency = MathUtils.clamp(turbine.position.y / 10, 0.3, 1);
+        let efficiency = MathUtils.clamp((turbine.position.y + 24) / 32, 0.3, 1);
         let reasons = efficiency < 1 ? TurbineEfficiencyReason.altitude : 0;
         for (let j = 0; j < count; j++) {
           if (j === i) {

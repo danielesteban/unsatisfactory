@@ -36,11 +36,11 @@
     />
   </Module>
   <Module>
-    <div slot="name">Render Radius <span class="info">({$Settings.renderRadius * 16}m)</span></div>
+    <div slot="name">Render Radius <span class="info">({$Settings.renderRadius * 32}m)</span></div>
     <input
       type="range"
       min={2}
-      max={24}
+      max={20}
       step={1}
       value={$Settings.renderRadius}
       on:input={setRenderRadius}

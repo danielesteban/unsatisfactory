@@ -16,9 +16,11 @@ export type Buttons = {
   dismantle: boolean;
   interact: boolean;
   inventory: boolean;
+  map: boolean;
   rotateCW: boolean;
   rotateCCW: boolean;
   scan: boolean;
+  snap: boolean;
 };
 
 enum ControlsMode {
@@ -37,7 +39,7 @@ class Controls {
   private readonly target: HTMLElement;
 
   constructor(camera: PerspectiveCamera, physics: Physics, target: HTMLElement) {
-    camera.position.set(0, 10, 0);
+    camera.position.set(0, 16, 0);
     camera.rotation.order = 'YXZ';
     camera.userData.movementScale = 1;
     camera.userData.targetPosition = camera.position.clone();
@@ -52,9 +54,11 @@ class Controls {
       dismantle: false,
       interact: false,
       inventory: false,
+      map: false,
       rotateCW: false,
       rotateCCW: false,
       scan: false,
+      snap: false,
     };
     this.camera = camera;
     this.isLocked = false;
@@ -86,26 +90,21 @@ class Controls {
     buttons.dismantle = false;
     buttons.interact = false;
     buttons.inventory = false;
+    buttons.map = false;
     buttons.rotateCW = false;
     buttons.rotateCCW = false;
     buttons.scan = false;
+    buttons.snap = false;
   }
 
-  lock() {
+  private lock() {
     const { isLocked, target } = this;
     if (!isLocked) {
       target.requestPointerLock();
     }
   }
 
-  unlock() {
-    const { isLocked } = this;
-    if (isLocked) {
-      document.exitPointerLock();
-    }
-  }
-
-  onLock() {
+  private onLock() {
     const { movement } = this;
     this.isLocked = !!document.pointerLockElement;
     document.body.classList[this.isLocked ? 'add' : 'remove']('pointerlock');
@@ -115,7 +114,7 @@ class Controls {
     }
   }
 
-  onPointerDown(e: PointerEvent) {
+  private onPointerDown(e: PointerEvent) {
     const { buttons, isLocked } = this;
     if (!e.isPrimary) {
       return;
@@ -137,7 +136,7 @@ class Controls {
     }
   }
 
-  onPointerMove(e: PointerEvent) {
+  private onPointerMove(e: PointerEvent) {
     const { camera, isLocked } = this;
     if (!e.isPrimary || !isLocked) {
       return;
@@ -148,7 +147,7 @@ class Controls {
     camera.userData.targetRotation.x = Math.min(Math.max(camera.userData.targetRotation.x, Math.PI * -0.5), Math.PI * 0.5);
   }
 
-  onPointerUp(e: PointerEvent) {
+  private onPointerUp(e: PointerEvent) {
     const { buttons, isLocked } = this;
     if (!e.isPrimary || !isLocked) {
       return;
@@ -166,7 +165,7 @@ class Controls {
     }
   }
 
-  onKeyDown(e: KeyboardEvent) {
+  private onKeyDown(e: KeyboardEvent) {
     const { buttons, isLocked, mode, movement } = this;
     if (!isLocked || e.repeat) {
       return;
@@ -213,6 +212,9 @@ class Controls {
       case 'KeyI':
         buttons.inventory = true;
         break;
+      case 'KeyM':
+        buttons.map = true;
+        break;
       case 'KeyR':
         buttons.rotateCCW = true;
         break;
@@ -222,10 +224,13 @@ class Controls {
       case 'KeyX':
         buttons.scan = true;
         break;
+      case 'KeyC':
+        buttons.snap = true;
+        break;
     }
   }
 
-  onKeyUp(e: KeyboardEvent) {
+  private onKeyUp(e: KeyboardEvent) {
     const { buttons, isLocked, mode, movement } = this;
     if (!isLocked) {
       return;
@@ -272,6 +277,9 @@ class Controls {
       case 'KeyI':
         buttons.inventory = false;
         break;
+      case 'KeyM':
+        buttons.map = false;
+        break;
       case 'KeyR':
         buttons.rotateCCW = false;
         break;
@@ -281,13 +289,16 @@ class Controls {
       case 'KeyX':
         buttons.scan = false;
         break;
+      case 'KeyC':
+        buttons.snap = false;
+        break;
     }
   }
 
   private static readonly speedMin = Math.log(2);
   private static readonly speedMax = Math.log(64);
   private static readonly speedRange = Controls.speedMax - Controls.speedMin;
-  onWheel(e: WheelEvent) {
+  private onWheel(e: WheelEvent) {
     const { buttons, isLocked, mode, movementSpeed } = this;
     if (e.ctrlKey || e.metaKey) {
       e.preventDefault();
@@ -325,6 +336,7 @@ class Controls {
   setMode(mode: ControlsMode) {
     const { camera, controller, movement } = this;
     this.mode = mode;
+    this.movementSpeed = 8;
     if (controller && mode === ControlsMode.physics) {
       camera.position.copy(controller.body.translation() as Vector3);
       camera.position.y += controller.offset;
@@ -371,8 +383,8 @@ class Controls {
         }
         // @dani @hack
         // This shouldn't happen, but... better safe than sorry.
-        if (camera.userData.targetPosition.y < -32) {
-          camera.userData.targetPosition.y = 64;
+        if (camera.userData.targetPosition.y < -64) {
+          camera.userData.targetPosition.y = 128;
           controller.body.setTranslation(camera.userData.targetPosition, true);
         }
         break;

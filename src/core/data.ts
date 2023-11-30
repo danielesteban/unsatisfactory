@@ -129,8 +129,8 @@ export const defaultBuildCost: BuildCost = [
 
 export const Building: Partial<Record<Brush, BuildCost>> = {
   [Brush.aggregator]: [
-    { item: Item.rotor, count: 5 },
     { item: Item.frame, count: 10 },
+    { item: Item.rotor, count: 20 },
     { item: Item.wire, count: 50 },
   ],
   [Brush.beacon]: [
@@ -150,11 +150,12 @@ export const Building: Partial<Record<Brush, BuildCost>> = {
   ],
   [Brush.foundry]: [
     { item: Item.frame, count: 10 },
-    { item: Item.wire, count: 10 },
+    { item: Item.wire, count: 20 },
   ],
   [Brush.generator]: [
-    { item: Item.ironPlate, count: 20 },
-    { item: Item.wire, count: 10 },
+    { item: Item.frame, count: 5 },
+    { item: Item.rotor, count: 10 },
+    { item: Item.wire, count: 50 },
   ],
   [Brush.lab]: [
     { item: Item.ironPlate, count: 10 },
@@ -204,6 +205,12 @@ export const Consumption: Partial<Record<Brush, number>> = {
   [Brush.smelter]: 10,
   [Brush.tesseract]: 100,
 };
+
+export const DepositItems: (Item.ironOre | Item.copperOre | Item.coal)[] = [
+  Item.ironOre, Item.ironOre,
+  Item.copperOre, Item.copperOre,
+  Item.coal
+];
 
 export const Generation: Partial<Record<Item, { count: number; rate: number; power: number; }>> = {
   [Item.coal]: { count: 10, rate: 60, power: 500 },
@@ -266,11 +273,11 @@ export const Researching: { name: string, brushes: Exclude<Brush, Brush.none>[],
     input: [
       {
         item: Item.rotor,
-        count: 50,
+        count: 100,
       },
       {
         item: Item.ironPlate,
-        count: 300,
+        count: 400,
       },
       {
         item: Item.wire,
@@ -288,11 +295,11 @@ export const Researching: { name: string, brushes: Exclude<Brush, Brush.none>[],
     input: [
       {
         item: Item.frame,
-        count: 100,
+        count: 200,
       },
       {
         item: Item.rotor,
-        count: 100,
+        count: 300,
       },
       {
         item: Item.wire,
@@ -454,18 +461,18 @@ export const Recipes: Recipe[] = [
     input: [
       {
         item: Item.ironPlate,
-        count: 12,
+        count: 6,
       },
       {
         item: Item.ironRod,
-        count: 12,
+        count: 6,
       }
     ],
     output: {
       item: Item.frame,
       count: 1,
     },
-    rate: 60,
+    rate: 30,
     transformer: Transformer.combinator,
   },
   {

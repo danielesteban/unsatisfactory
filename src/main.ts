@@ -12,6 +12,7 @@ import {
   pick,
   rotate as rotateBrush,
   snap,
+  toggleSnapMode,
 } from './core/brush';
 import Container, { PoweredContainer } from './core/container';
 import { Buttons } from './core/controls';
@@ -34,17 +35,14 @@ import Viewport from './core/viewport';
 import Aggregators  from './objects/aggregators';
 import Beacons  from './objects/beacons';
 import Belts, { Belt, Connection } from './objects/belts';
-import Birds from './objects/birds';
 import Buffers, { Buffer } from './objects/buffers';
 import Columns from './objects/columns';
 import Combinators from './objects/combinators';
-import Deposit from './objects/deposit';
 import Fabricators from './objects/fabricators';
 import Foundations from './objects/foundations';
 import Foundries from './objects/foundries';
 import Generators from './objects/generators';
 import Ghost from './objects/ghost';
-import Grass from './objects/grass';
 import Labs from './objects/labs';
 import Miners from './objects/miners';
 import Pillars from './objects/pillars';
@@ -53,11 +51,15 @@ import Ramps from './objects/ramps';
 import Sinks from './objects/sinks';
 import Smelters from './objects/smelters';
 import Storages from './objects/storages';
-import Terrain from './objects/terrain';
 import Tesseracts from './objects/tesseracts';
 import Turbines, { Turbine } from './objects/turbines';
 import Walls from './objects/walls';
 import Wires, { Wire } from './objects/wires';
+import Birds from './objects/world/birds';
+import Deposit from './objects/world/deposit';
+import Grass from './objects/world/grass';
+import Heightmap from './objects/world/heightmap';
+import Terrain from './objects/world/terrain';
 import UI, { Action, Dialog } from './ui';
 import Achievements, { Achievement } from './ui/stores/achievements';
 import Scanner from './ui/stores/scanner';
@@ -79,8 +81,8 @@ const viewport = new Viewport();
   IronMaterial,
   RustMaterial,
   WireMaterial,
+  Heightmap.getMaterial(),
   Turbines.getRotorMaterial(),
-  Terrain.getMaterial(),
 ].forEach(viewport.setupMaterialCSM.bind(viewport));
 
 [
@@ -237,7 +239,7 @@ const loader = new Loader(
   viewport
 );
 
-const ui = new UI(loader, viewport);
+const ui = new UI(loader, terrain, viewport);
 
 const canInteract = (intersection: Intersection) => (
   intersection.object instanceof Container
@@ -375,7 +377,7 @@ const remove = (intersection: Intersection) => {
 };
 
 const handleInput = (
-  { primary, secondary, tertiary, build, codex, dismantle, interact, inventory, scan }: Buttons,
+  { primary, secondary, tertiary, build, codex, dismantle, interact, inventory, map, scan }: Buttons,
   intersection?: Intersection
 ) => {
   const hasConnection = connection.container !== undefined;
@@ -413,8 +415,12 @@ const handleInput = (
     ui.show(Dialog.inventory);
     Achievements.complete(Achievement.inventory);
   }
+  if (map) {
+    setBrush(Brush.none);
+    ui.show(Dialog.map);
+  }
   if (scan) {
-    Scanner.scan(terrain);
+    Scanner.scan();
   }
   if (hasConnection) {
     connection.container = undefined;
@@ -594,8 +600,11 @@ const animate = (buttons: Buttons, delta: number) => {
   if (brush !== Brush.none && brush !== Brush.dismantle && (buttons.rotateCCW || buttons.rotateCW)) {
     rotateBrush(buttons.rotateCCW ? 1 : -1);
   }
+  if (buttons.snap) {
+    toggleSnapMode();
+  }
   hover(hit);
-  if (buttons.primary || buttons.secondary || buttons.tertiary || buttons.build || buttons.codex || buttons.dismantle || buttons.interact || buttons.inventory || buttons.scan) {
+  if (buttons.primary || buttons.secondary || buttons.tertiary || buttons.build || buttons.codex || buttons.dismantle || buttons.interact || buttons.inventory || buttons.map || buttons.scan) {
     handleInput(buttons, hit);
   }
   ui.setCompass(viewport.camera.rotation.y, viewport.camera.position);

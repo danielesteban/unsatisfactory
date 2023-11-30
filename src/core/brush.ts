@@ -13,7 +13,7 @@ import Beacons, { Beacon } from '../objects/beacons';
 import Belts, { Belt } from '../objects/belts';
 import Buffers, { Buffer } from '../objects/buffers';
 import Columns, { Column } from '../objects/columns';
-import Deposit from '../objects/deposit';
+import Deposit from '../objects/world/deposit';
 import Combinators, { Combinator }  from '../objects/combinators';
 import Fabricators, { Fabricator }  from '../objects/fabricators';
 import Foundations, { Foundation } from '../objects/foundations';
@@ -36,6 +36,7 @@ import Wires, { Wire } from '../objects/wires';
 
 export let brush: Brush = Brush.none;
 export let rotation: number = 0;
+export let snapLock: boolean = false;
 
 const listeners: ((brush: Brush) => void)[] = [];
 export const set = (type: Brush) => {
@@ -241,6 +242,10 @@ export const rotate = (direction: number) => {
   while (rotation < -Math.PI) rotation += Math.PI * 2;
 };
 
+export const toggleSnapMode = () => {
+  snapLock = !snapLock;
+};
+
 const offsets = {
   [Brush.none]: new Vector3(),
   [Brush.aggregator]: new Vector3(4, 2, 4),
@@ -291,15 +296,19 @@ export const snap = (intersection: Intersection) => {
     const objectQuaternion = Instance.getQuaternion(intersection.object, true);
     objectNormal.copy(intersection.normal).applyQuaternion(objectQuaternion);
 
-    objectPosition.copy(intersection.point).sub(intersection.object.position).applyQuaternion(objectQuaternion);
-    if (Math.abs(objectNormal.dot(Object3D.DEFAULT_UP)) > 0.001) {  
-      objectPosition.y = 0;
-    } else if (Math.abs(objectNormal.dot(worldEast)) > 0.001) {  
-      objectPosition.x = 0;
-    } else if (Math.abs(objectNormal.dot(worldSouth)) > 0.001) {  
-      objectPosition.z = 0;
+    if (snapLock) {
+      objectPosition.set(0, 0, 0)
+    } else {
+      objectPosition.copy(intersection.point).sub(intersection.object.position).applyQuaternion(objectQuaternion);
+      if (Math.abs(objectNormal.dot(Object3D.DEFAULT_UP)) > 0.001) {  
+        objectPosition.y = 0;
+      } else if (Math.abs(objectNormal.dot(worldEast)) > 0.001) {  
+        objectPosition.x = 0;
+      } else if (Math.abs(objectNormal.dot(worldSouth)) > 0.001) {  
+        objectPosition.z = 0;
+      }
+      objectPosition.round();
     }
-    objectPosition.round();
   
     rotatedOffset
       .copy(offset)

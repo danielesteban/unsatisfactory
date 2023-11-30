@@ -11,10 +11,10 @@ import {
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 import seedrandom from 'seedrandom';
-import { Item } from '../core/data';
-import { CoalMaterial, CopperMaterial, IronMaterial } from '../core/materials';
+import { Item } from '../../core/data';
+import { CoalMaterial, CopperMaterial, IronMaterial } from '../../core/materials';
 
-export class Deposit extends Mesh {
+class Deposit extends Mesh {
   private static collider: RAPIER.ColliderDesc | undefined;
   static getCollider() {
     if (!Deposit.collider) {
@@ -84,6 +84,7 @@ export class Deposit extends Mesh {
     super(Deposit.getGeometry());
     this.castShadow = this.receiveShadow = true;
     this.matrixAutoUpdate = false;
+    this.visible = false;
     this.item = Item.none;
     this.purity = 0;
   }

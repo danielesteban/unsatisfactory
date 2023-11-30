@@ -613,82 +613,15 @@ class Loader {
   }
 
   private static readonly migrations: Record<number, (serialized: Serialized) => Serialized> = {
-    [16]: (serialized: Serialized) => {
-      const remap = (container: SerializedContainer): SerializedContainer => [container[0] + 1, container[1]];
-      return {
-        ...serialized,
-        aggregators: [],
-        belts: serialized.belts.map(([from, fromConnector, to, toConnector, items]) => [remap(from), fromConnector, remap(to), toConnector, items]),
-        wires: serialized.wires.map(([from, to]) => [remap(from), remap(to)]),
-      };
-    },
-    [17]: (serialized: Serialized) => {
-      return {
-        ...serialized,
-        storages: [],
-        inventory: [],
-      };
-    },
-    [18]: (serialized: Serialized) => {
-      return {
-        ...serialized,
-        aggregators: serialized.aggregators.map(([position, rotation, enabled, recipe, tick, buffers]) => ([
-          position, rotation, enabled, recipe ? recipe + 1 : undefined, tick, buffers,
-        ])),
-      };
-    },
-    [19]: (serialized: Serialized) => {
-      return {
-        ...serialized,
-        columns: [],
-      };
-    },
-    [20]: (serialized: Serialized) => {
-      return {
-        ...serialized,
-        // generators -> turbines
-        generators: [],
-        turbines: serialized.generators as any as Serialized['turbines'],
-        // remove all miners
-        miners: [],
-        belts: serialized.belts.filter(([from, _fromConnector, to, _toConnector, _items]) => (
-          from[0] !== 5 && to[0] !== 5
-        )),
-        wires: serialized.wires.filter(([from, to]) => (
-          from[0] !== 5 && to[0] !== 5
-        )),
-      };
-    },
-    [21]: (serialized: Serialized) => {
-      return {
-        ...serialized,
-        beacons: [],
-        labs: [],
-        research: [],
-      };
-    },
-    [22]: (serialized: Serialized) => {
-      return {
-        ...serialized,
-        foundries: [],
-      };
-    },
-    [23]: (serialized: Serialized) => {
-      return {
-        ...serialized,
-        research: serialized.research.map((research) => research + (research > 1 ? 1 : 0)),
-      };
-    },
-    [24]: (serialized: Serialized) => {
-      return {
-        ...serialized,
-        research: serialized.research.map((research) => research + (research > 3 ? 1 : 0)),
-        tesseracts: [],
-      };
-    },
+    // Sorry. New worldgen. Full wipe.
+    // [25]: (serialized: Serialized) => {
+    //   return {
+    //     ...serialized,
+    //   };
+    // },
   };
 
-  private static readonly version: number = 25;
+  private static readonly version: number = 26;
 }
 
 export default Loader;

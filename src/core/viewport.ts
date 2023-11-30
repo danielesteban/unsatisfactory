@@ -50,13 +50,13 @@ class Viewport extends EventDispatcher {
     }
     const antialias = localStorage.getItem('viewport:antialias') !== '0';
     const fov = parseInt(localStorage.getItem('viewport:fov') || '75', 10);
-    this.renderRadius = parseInt(localStorage.getItem('viewport:renderRadius') || '8', 10);
+    this.renderRadius = parseInt(localStorage.getItem('viewport:renderRadius') || '9', 10);
     this.resolution = parseFloat(localStorage.getItem('viewport:resolution') || '1');
     this.camera = new PerspectiveCamera(
       fov,
       window.innerWidth / window.innerHeight,
       0.1,
-      this.renderRadius * 16
+      this.renderRadius * 32
     );
     this.clock = new Clock();
     this.physics = new Physics();
@@ -148,7 +148,7 @@ class Viewport extends EventDispatcher {
   setRenderRadius(radius: number) {
     const { camera, csm, raycaster } = this;
     this.renderRadius = radius;
-    camera.far = csm.maxFar = raycaster.far = radius * 16;
+    camera.far = csm.maxFar = raycaster.far = radius * 32;
     camera.updateProjectionMatrix();
     csm.updateFrustums();
     localStorage.setItem('viewport:renderRadius', `${radius}`);

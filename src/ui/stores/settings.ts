@@ -14,7 +14,7 @@ const { subscribe, set, update } = writable<{
   fov: 75,
   gpu: 'Unknown',
   lastSave: new Date(),
-  renderRadius: 8,
+  renderRadius: 9,
   resolution: 1,
   sfx: true,
 });
